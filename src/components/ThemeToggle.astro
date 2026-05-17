@@ -1,0 +1,82 @@
+---
+// Theme toggle. Session 1 placeholder.
+// In Session 2 this expands into the full Prism control panel with
+// mode, mixing model, hue slider, and contrast toggle.
+---
+
+<button id="theme-toggle" aria-label="Cycle theme">
+  <span class="theme-toggle-label">Theme</span>
+  <span class="theme-toggle-state" id="theme-toggle-state">hybrid</span>
+</button>
+
+<style>
+  #theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--color-surface);
+    color: var(--color-fg);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform 0.15s ease, background 0.2s ease;
+  }
+
+  #theme-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  #theme-toggle:active {
+    transform: translateY(0);
+  }
+
+  .theme-toggle-state {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--color-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+
+<script>
+  const button = document.getElementById('theme-toggle');
+  const stateEl = document.getElementById('theme-toggle-state');
+  const themes = ['light', 'dark', 'hybrid'];
+  const root = document.documentElement;
+
+  function getCurrent(): string {
+    const attr = root.getAttribute('data-theme');
+    return attr && themes.includes(attr) ? attr : 'hybrid';
+  }
+
+  function setTheme(theme: string) {
+    root.setAttribute('data-theme', theme);
+    if (stateEl) stateEl.textContent = theme;
+    try {
+      localStorage.setItem('prism-theme', theme);
+    } catch (e) {
+      // localStorage unavailable; theme will not persist across reloads.
+    }
+  }
+
+  // Initialize state display.
+  if (stateEl) stateEl.textContent = getCurrent();
+
+  button?.addEventListener('click', () => {
+    const current = getCurrent();
+    const idx = themes.indexOf(current);
+    const next = themes[(idx + 1) % themes.length];
+    setTheme(next);
+  });
+</script>

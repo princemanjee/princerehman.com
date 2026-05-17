@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = 'P. R. Manjee. Senior technology consultant. AI adoption, digital transformation, MIT Sloan.'
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="hybrid">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url.href} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={Astro.url.href} />
+
+    <title>{title}</title>
+
+    <script is:inline>
+      // Theme initialization script. Runs synchronously before paint to
+      // prevent flash-of-unstyled-content when a stored theme exists.
+      // Will be expanded in Session 2 to include mixing model, hue, and contrast.
+      (function () {
+        try {
+          var stored = localStorage.getItem('prism-theme');
+          if (stored) {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (e) {
+          // localStorage unavailable. Use the default theme attribute.
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
