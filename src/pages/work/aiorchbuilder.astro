@@ -1,0 +1,288 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import CaseStudy from "../../components/CaseStudy.astro";
+import GlassPanel from "../../components/GlassPanel.astro";
+import GlassButton from "../../components/GlassButton.astro";
+import { getCaseStudy, caseStudiesByOrder } from "../../data/caseStudies";
+
+const study = getCaseStudy("aiorchbuilder");
+if (!study) {
+  throw new Error("AIOrchBuilder case study data not found in src/data/caseStudies.ts");
+}
+
+/*
+ * Other case studies (for the "Continue reading" section at the bottom)
+ * filters out the current one so the user is shown options other than
+ * what they are already on.
+ */
+const otherStudies = caseStudiesByOrder.filter((cs) => cs.slug !== study.slug);
+---
+
+<BaseLayout
+  title={`${study.title} — Selected Work — P. R. Manjee`}
+  description={`Case study: ${study.tagline}`}>
+  <article class="case-study-page">
+    <PageHeader pageTitle={study.title} meta="Selected work case study" />
+
+    <p class="case-study-page-lede">{study.tagline}</p>
+
+    <CaseStudy
+      title={study.title}
+      tagline={study.tagline}
+      problem={study.problem}
+      approach={study.approach}
+      status={study.status}
+      techStack={study.techStack}
+      repoUrl={study.repoUrl}
+    />
+
+    {/*
+      "Continue reading" section: links to the other case studies so the
+      user has an obvious next path through the work pages without
+      bouncing back to the overview.
+    */}
+    {otherStudies.length > 0 && (
+      <section class="case-study-continue">
+        <h2 class="continue-heading">Continue reading</h2>
+        <div class="continue-grid">
+          {otherStudies.map((other) => (
+            <a href={`/work/${other.slug}`} class="continue-card">
+              <span class="continue-label">Case study</span>
+              <span class="continue-title">{other.title}</span>
+              <span class="continue-tagline">{other.tagline}</span>
+            </a>
+          ))}
+          <a href="/work" class="continue-card continue-card--overview">
+            <span class="continue-label">Index</span>
+            <span class="continue-title">All Selected Work</span>
+            <span class="continue-tagline">
+              Return to the overview of case studies and additional repositories.
+            </span>
+          </a>
+        </div>
+      </section>
+    )}
+
+    {/* Engagement band */}
+    <section class="case-study-engagement">
+      <GlassPanel size="lg" class="engagement-panel">
+        <h2 class="engagement-heading">Want this approach for your organization?</h2>
+        <p class="engagement-body">
+          The patterns shown in this case study apply directly to client engagements
+          in AI Adoption and Digital Transformation. If you are evaluating whether
+          this approach fits your situation, the fastest path is a short conversation.
+        </p>
+        <div class="engagement-actions">
+          <GlassButton href="mailto:princemanjee@gmail.com" variant="primary" size="md">
+            Start a conversation
+          </GlassButton>
+          <GlassButton href="/about" variant="secondary" size="md">
+            Read more about me
+          </GlassButton>
+        </div>
+        <div class="engagement-links" aria-label="External profiles">
+          <a href="https://www.linkedin.com/in/princemanjee/" rel="noopener">LinkedIn</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/princemanjee" rel="noopener">GitHub</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://cv.princerehman.com" rel="noopener">CV</a>
+        </div>
+      </GlassPanel>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .case-study-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-xl);
+  }
+
+  /*
+   * Lede paragraph: serves as a bridge between the PageHeader (which
+   * shows the case study name) and the CaseStudy component (which
+   * contains the structured body). The tagline repeats here in larger
+   * display serif so visitors arriving from any other source get the
+   * elevator pitch immediately.
+   */
+  .case-study-page-lede {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    max-width: 64ch;
+    margin: 0 0 var(--space-3xl) 0;
+  }
+
+  /*
+   * Continue reading section: provides clear navigation between case
+   * studies for users who want to evaluate methodology across projects
+   * without returning to the overview each time.
+   */
+  .case-study-continue {
+    margin-top: var(--space-2xl);
+    margin-bottom: var(--space-4xl);
+  }
+
+  .continue-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-2xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-xl) 0;
+  }
+
+  .continue-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .continue-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-xl);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform var(--duration-slow) var(--easing-out),
+      background var(--duration-slow) var(--easing-out),
+      box-shadow var(--duration-slow) var(--easing-out);
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 4px 12px rgba(0, 0, 0, 0.25),
+      0 12px 32px rgba(0, 0, 0, 0.30);
+  }
+
+  .continue-card:hover {
+    transform: translateY(-3px);
+    background: var(--glass-bg-hover);
+    box-shadow:
+      inset 0 2px 1px rgba(255, 255, 255, 1),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 8px 20px rgba(0, 0, 0, 0.35),
+      0 20px 48px rgba(0, 0, 0, 0.40),
+      0 0 80px rgba(91, 140, 255, 0.20);
+  }
+
+  .continue-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+  }
+
+  .continue-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-xl);
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+  }
+
+  .continue-tagline {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-tertiary);
+    margin-top: 4px;
+  }
+
+  /* Engagement band */
+  .case-study-engagement {
+    margin-bottom: var(--space-4xl);
+  }
+
+  :global(.engagement-panel) {
+    padding: var(--space-3xl);
+  }
+
+  .engagement-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-2xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-md) 0;
+  }
+
+  .engagement-body {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0 0 var(--space-xl) 0;
+    max-width: 64ch;
+  }
+
+  .engagement-actions {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-xl);
+  }
+
+  .engagement-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+  }
+
+  .engagement-links a {
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition:
+      border-color var(--duration-fast) var(--easing-out),
+      color var(--duration-fast) var(--easing-out);
+  }
+
+  .engagement-links a:hover {
+    color: var(--color-fg-primary);
+    border-bottom-color: var(--color-fg-primary);
+  }
+
+  .engagement-links span {
+    color: var(--color-fg-muted);
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .case-study-page {
+      padding: 0 var(--space-lg);
+    }
+    .case-study-page-lede {
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-2xl);
+    }
+    .continue-grid {
+      grid-template-columns: 1fr;
+    }
+    .continue-card {
+      padding: var(--space-lg);
+    }
+    :global(.engagement-panel) {
+      padding: var(--space-xl);
+    }
+    .engagement-heading {
+      font-size: var(--text-xl);
+    }
+  }
+</style>

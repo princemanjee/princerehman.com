@@ -1,0 +1,229 @@
+---
+/**
+ * CaseStudyCard: compact teaser card for the /work overview page.
+ *
+ * Renders a single case study as a clickable card with title, tagline,
+ * brief description, tech stack tags, and a "Read case study" CTA.
+ * Differs from the full CaseStudy component (which is the body of a
+ * dedicated case study page) by showing only the brief description
+ * rather than the full problem/approach/status sections.
+ *
+ * The entire card is clickable as an anchor, with the visible CTA
+ * serving as an affordance signal. Hover lifts the card slightly to
+ * match the skeuomorphic interaction language used elsewhere.
+ */
+
+import type { CaseStudyData } from "../data/caseStudies";
+
+interface Props {
+  caseStudy: CaseStudyData;
+}
+
+const { caseStudy } = Astro.props;
+const href = `/work/${caseStudy.slug}`;
+---
+
+<a href={href} class="case-study-card" aria-label={`Read the ${caseStudy.title} case study`}>
+  <header class="case-study-card-header">
+    <h2 class="case-study-card-title">{caseStudy.title}</h2>
+    <p class="case-study-card-tagline">{caseStudy.tagline}</p>
+  </header>
+
+  <p class="case-study-card-description">{caseStudy.briefDescription}</p>
+
+  <div class="case-study-card-tech">
+    <ul class="case-study-card-tech-list">
+      {caseStudy.techStack.slice(0, 6).map((tech) => (
+        <li class="case-study-card-tech-tag">{tech}</li>
+      ))}
+      {caseStudy.techStack.length > 6 && (
+        <li class="case-study-card-tech-more">+{caseStudy.techStack.length - 6} more</li>
+      )}
+    </ul>
+  </div>
+
+  <footer class="case-study-card-footer">
+    <span class="case-study-card-cta">
+      Read case study
+      <svg viewBox="0 0 16 12" class="case-study-card-cta-arrow" aria-hidden="true">
+        <path
+          d="M1 6 L14 6 M9 1 L14 6 L9 11"
+          stroke="currentColor"
+          stroke-width="1.5"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+      </svg>
+    </span>
+  </footer>
+</a>
+
+<style>
+  /*
+   * Card: glass treatment matching other panels but at a slightly lighter
+   * weight than the full CaseStudy panel. Clickable entire surface with
+   * hover lift to indicate interactivity.
+   */
+  .case-study-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-2xl);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    color: inherit;
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 6px 16px rgba(0, 0, 0, 0.30),
+      0 18px 48px rgba(0, 0, 0, 0.35);
+    transition:
+      transform var(--duration-slow) var(--easing-out),
+      background var(--duration-slow) var(--easing-out),
+      box-shadow var(--duration-slow) var(--easing-out);
+  }
+
+  .case-study-card:hover {
+    transform: translateY(-4px);
+    background: var(--glass-bg-hover);
+    box-shadow:
+      inset 0 2px 1px rgba(255, 255, 255, 1),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px rgba(255, 255, 255, 0.60),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 12px 28px rgba(0, 0, 0, 0.40),
+      0 30px 72px rgba(0, 0, 0, 0.45),
+      0 0 100px rgba(91, 140, 255, 0.25);
+  }
+
+  /* Header: title in display serif, tagline below in body sans */
+  .case-study-card-header {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .case-study-card-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-2xl);
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    margin: 0 0 var(--space-sm) 0;
+  }
+
+  .case-study-card-tagline {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-tertiary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0;
+  }
+
+  /* Description paragraph: body copy at standard size */
+  .case-study-card-description {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0 0 var(--space-lg) 0;
+    flex-grow: 1;
+  }
+
+  /* Tech tags: compact pills, truncated to 6 with overflow indicator */
+  .case-study-card-tech {
+    margin-bottom: var(--space-lg);
+  }
+
+  .case-study-card-tech-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .case-study-card-tech-tag,
+  .case-study-card-tech-more {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-fg-tertiary);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  .case-study-card-tech-more {
+    color: var(--color-fg-muted);
+    font-style: italic;
+  }
+
+  /* Footer with CTA */
+  .case-study-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .case-study-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent-royal-bright);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    transition: gap var(--duration-base) var(--easing-out);
+  }
+
+  .case-study-card:hover .case-study-card-cta {
+    gap: 12px;
+  }
+
+  .case-study-card-cta-arrow {
+    width: 16px;
+    height: 12px;
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 1024px) {
+    .case-study-card {
+      padding: var(--space-xl);
+    }
+    .case-study-card-title {
+      font-size: var(--text-xl);
+    }
+  }
+
+  /* Mobile: smaller padding, smaller display */
+  @media (max-width: 768px) {
+    .case-study-card {
+      padding: var(--space-lg);
+    }
+    .case-study-card-title {
+      font-size: var(--text-xl);
+    }
+    .case-study-card-description {
+      font-size: var(--text-sm);
+    }
+  }
+</style>

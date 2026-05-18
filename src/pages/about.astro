@@ -1,0 +1,384 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import FactsPanel from "../components/FactsPanel.astro";
+import GlassPanel from "../components/GlassPanel.astro";
+import GlassButton from "../components/GlassButton.astro";
+
+/*
+ * Facts panel content. Education intentionally omitted per the
+ * brand voice rule established for the GitHub README: institutional
+ * credentialing belongs on the CV, not in surface positioning copy.
+ * If you want MIT Sloan listed here, add the fact and it will
+ * appear in the panel automatically.
+ */
+const aboutFacts = [
+  { label: "Based in", value: "Chicago, Illinois" },
+  { label: "Experience", value: "30 years across infrastructure, architecture, advisory, and IT leadership" },
+  {
+    label: "Industries",
+    value: [
+      "Financial services",
+      "Public sector",
+      "Healthcare",
+      "SMB technology",
+      "Professional services",
+    ],
+  },
+  {
+    label: "Functions",
+    value: [
+      "Senior consulting",
+      "IT leadership",
+      "Solutions architecture",
+      "Full-stack engineering",
+      "AI strategy",
+    ],
+  },
+  {
+    label: "Current focus",
+    value: [
+      "AI Adoption",
+      "Workplace Modernization",
+      "Microsoft 365 environments",
+      "Cloud modernization",
+    ],
+  },
+  { label: "Coverage", value: "North America, remote-first, travel as engagements require" },
+  { label: "Open to", value: "Senior consulting engagements and IT leadership roles" },
+];
+---
+
+<BaseLayout
+  title="About — P. R. Manjee"
+  description="P. R. Manjee. Senior Technology Consultant based in Chicago. Workplace Modernization through AI Adoption and Digital Transformation for SMB, Mid-Market, and Enterprise.">
+  <article class="about">
+    <PageHeader
+      pageTitle="About"
+      meta="Senior Technology Consultant. Workplace Modernization through AI Adoption and Digital Transformation."
+    />
+
+    {/*
+      Lede paragraph: matches the social card composition's positioning
+      statement. Acts as the page's brand anchor at the top of the
+      reading surface. Slightly larger than body copy to function as
+      a lead-in.
+    */}
+    <p class="about-lede">
+      Thirty years of building technology that sticks, from electrons to executive
+      strategy. I help SMB, mid-market, and enterprise organizations modernize how
+      their teams actually work, then ship the technical execution to get them there.
+    </p>
+
+    {/* Two-column body: narrative left, facts right. */}
+    <div class="about-body">
+      <div class="about-narrative">
+        <p>
+          I started in the wires. Cable runs in network closets, command-line debugging,
+          weekend cutovers at three in the morning because that was when the maintenance
+          windows landed. Thirty years later I still know what's actually happening at
+          the infrastructure layer when an enterprise architect waves their hands at a
+          Visio diagram. That foundation matters, because most of the AI and digital
+          transformation work I do today still grounds out at infrastructure, identity,
+          and data flow. Strategy that ignores those layers does not ship.
+        </p>
+
+        <p>
+          The career arc moved from infrastructure to solutions architecture to advisory
+          and IT leadership roles. Same throughline the whole way. I get called when the
+          existing approach has stopped working and the team needs someone who can both
+          think strategically about where to go and ship the technical work to get there.
+          Bridge-builder, not specialist.
+        </p>
+
+        <p>
+          What that looks like in a real engagement: a mid-market CFO knows their team
+          needs better tooling but does not know which AI investments will actually move
+          the business and which are theater. I help leadership separate the two. Then
+          I work with their people to adopt the tools that survived the cut, without
+          throwing the existing org chart in the trash. Pragmatic, not utopian.
+          Outcomes first.
+        </p>
+
+        <p>
+          Today's work centers on Workplace Modernization for SMB, mid-market, and
+          enterprise organizations. AI Adoption is one of two primary execution paths,
+          the other being Digital Transformation of the underlying systems and processes.
+          Both methods serve the same goal: a workplace where employees are more
+          productive, processes are more efficient, and the organization can actually
+          compete at the speed the market now expects.
+        </p>
+
+        <p>
+          I am based in Chicago and work primarily remotely with travel as engagements
+          require. The longest client relationships I have had run six to eight years
+          because I do what I said I would and tell the truth about what is working
+          and what is not.
+        </p>
+      </div>
+
+      <aside class="about-facts">
+        <FactsPanel facts={aboutFacts} title="At a glance" />
+      </aside>
+    </div>
+
+    {/*
+      Background section: expanded version of the README's career-spanning
+      pattern. Full width below the two-column body so the longer-form
+      thinking can breathe.
+    */}
+    <section class="about-background">
+      <h2 class="section-heading">Background and approach</h2>
+
+      <p>
+        Industries I have worked across include financial services, public sector,
+        healthcare, SMB technology, and professional services. Each one has its own
+        regulatory posture, its own legacy stack, its own pace of change. The pattern
+        is consistent across all of them: someone at the leadership table has decided
+        the way they are working today will not get them to where they need to be in
+        eighteen months, and they need outside help to figure out what to change and
+        how to change it without breaking what currently works.
+      </p>
+
+      <p>
+        My job is to be useful at both ends of that. I can sit in the strategy
+        conversation with the executive sponsor and design the roadmap. I can also
+        sit at the keyboard at two in the morning during a critical migration and
+        write the PowerShell that unblocks the team. Most consultants who can do
+        the first cannot do the second. Most engineers who can do the second do not
+        get invited to the first. The combination is the differentiator.
+      </p>
+
+      <p>
+        The current AI moment in particular is full of people who can write impressive
+        slide decks about agentic workflows but cannot actually wire one up. There is
+        also no shortage of engineers who can ship a working prototype but cannot
+        explain to the CFO why the prototype matters. I work in the gap between those
+        two failure modes. That is what I am being paid for.
+      </p>
+    </section>
+
+    {/*
+      Engagement band: hybrid neutral-with-soft-scarcity per choice C.
+      Frames availability honestly without manufactured urgency, while
+      signaling selectivity through the "small number per quarter"
+      phrasing. Buttons go to the most direct contact paths.
+    */}
+    <section class="about-engagement">
+      <GlassPanel size="lg" class="engagement-panel">
+        <h2 class="engagement-heading">Working together</h2>
+        <p class="engagement-body">
+          Currently taking on a small number of engagements per quarter to ensure
+          each one gets the attention it deserves. Reach out early in your evaluation
+          process so we have time to talk through fit before commitments need to be
+          made on either side.
+        </p>
+        <div class="engagement-actions">
+          <GlassButton href="mailto:princemanjee@gmail.com" variant="primary" size="md">
+            Start a conversation
+          </GlassButton>
+          <GlassButton href="https://cv.princerehman.com" variant="secondary" size="md">
+            View CV
+          </GlassButton>
+        </div>
+        <div class="engagement-links" aria-label="External profiles">
+          <a href="https://www.linkedin.com/in/princemanjee/" rel="noopener">LinkedIn</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/princemanjee" rel="noopener">GitHub</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://cv.princerehman.com" rel="noopener">CV</a>
+        </div>
+      </GlassPanel>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .about {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-xl);
+  }
+
+  /*
+   * Lede paragraph: larger than body copy so it functions as the lead
+   * positioning statement after the header. Uses Cormorant Garamond to
+   * carry the same display tone as the brand name, with relaxed line
+   * height so the longer sentences breathe.
+   */
+  .about-lede {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    max-width: 60ch;
+    margin: 0 0 var(--space-3xl) 0;
+  }
+
+  /*
+   * Two-column body: 1.6fr narrative, 1fr facts panel.
+   * The narrative gets the majority of the width because reading-flow
+   * paragraphs are the primary content. The facts panel stays compact
+   * on the right as a scannable reference.
+   */
+  .about-body {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: var(--space-3xl);
+    margin-bottom: var(--space-4xl);
+    align-items: start;
+  }
+
+  .about-narrative p {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0 0 var(--space-lg) 0;
+    max-width: 64ch;
+  }
+
+  .about-narrative p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Right column facts panel: sticky to top so it stays in view as user reads */
+  .about-facts {
+    position: sticky;
+    top: var(--space-xl);
+  }
+
+  /*
+   * Background section: full width below the two-column body.
+   * Uses a wider max-width on paragraphs since it is full-bleed.
+   */
+  .about-background {
+    margin-bottom: var(--space-4xl);
+  }
+
+  .section-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-3xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-xl) 0;
+  }
+
+  .about-background p {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0 0 var(--space-lg) 0;
+    max-width: 76ch;
+  }
+
+  .about-background p:last-child {
+    margin-bottom: 0;
+  }
+
+  /*
+   * Engagement band: glass panel call-to-action at the bottom of the
+   * page. Generous padding because this is where prospects make the
+   * decision to reach out.
+   */
+  .about-engagement {
+    margin-bottom: var(--space-4xl);
+  }
+
+  :global(.engagement-panel) {
+    padding: var(--space-3xl);
+  }
+
+  .engagement-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-2xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-md) 0;
+  }
+
+  .engagement-body {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0 0 var(--space-xl) 0;
+    max-width: 64ch;
+  }
+
+  .engagement-actions {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-xl);
+  }
+
+  .engagement-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+  }
+
+  .engagement-links a {
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition:
+      border-color var(--duration-fast) var(--easing-out),
+      color var(--duration-fast) var(--easing-out);
+  }
+
+  .engagement-links a:hover {
+    color: var(--color-fg-primary);
+    border-bottom-color: var(--color-fg-primary);
+  }
+
+  .engagement-links span {
+    color: var(--color-fg-muted);
+  }
+
+  /* Tablet: tighter columns */
+  @media (max-width: 1024px) {
+    .about-body {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+
+  /* Mobile: stack columns, smaller display sizes */
+  @media (max-width: 768px) {
+    .about {
+      padding: 0 var(--space-lg);
+    }
+    .about-lede {
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-2xl);
+    }
+    .about-body {
+      grid-template-columns: 1fr;
+      gap: var(--space-2xl);
+      margin-bottom: var(--space-3xl);
+    }
+    .about-facts {
+      position: static;
+    }
+    .section-heading {
+      font-size: var(--text-2xl);
+    }
+    :global(.engagement-panel) {
+      padding: var(--space-xl);
+    }
+    .engagement-heading {
+      font-size: var(--text-xl);
+    }
+  }
+</style>

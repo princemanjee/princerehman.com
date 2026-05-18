@@ -1,0 +1,325 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import CaseStudyCard from "../components/CaseStudyCard.astro";
+import GlassPanel from "../components/GlassPanel.astro";
+import GlassButton from "../components/GlassButton.astro";
+import { caseStudiesByOrder } from "../data/caseStudies";
+---
+
+<BaseLayout
+  title="Selected Work — P. R. Manjee"
+  description="Selected open-source work demonstrating methodology in AI orchestration, local LLM infrastructure, and production-grade application architecture. P. R. Manjee, Senior Technology Consultant.">
+  <article class="work">
+    <PageHeader
+      pageTitle="Selected Work"
+      meta="Open-source demonstrations of methodology. Real client and commercial work is kept private."
+    />
+
+    <p class="work-lede">
+      The case studies below show how I approach distinct kinds of problems in AI
+      engineering. They are not redacted client engagements, they are demonstration
+      work that exists publicly so the methodology can be evaluated before a
+      conversation starts. Each card links to the full case study with the problem,
+      approach, and current status. Source repositories are linked from there.
+    </p>
+
+    {/*
+      Case study card grid: one card per entry in src/data/caseStudies.ts.
+      Each card is a compact teaser linking to the dedicated case study page
+      at /work/<slug>. Two-column on desktop, single column on mobile.
+    */}
+    <div class="work-grid">
+      {caseStudiesByOrder.map((cs) => (
+        <CaseStudyCard caseStudy={cs} />
+      ))}
+    </div>
+
+    {/*
+      "Also building" section: brief mentions of the other pinned repos that
+      are research, archives, or smaller in scope than full case studies.
+      Each links directly to its own GitHub README for the full thinking.
+    */}
+    <section class="work-also-building">
+      <h2 class="section-heading">Also building</h2>
+      <p class="work-also-lede">
+        Three additional public repositories that round out the work. Research papers
+        and archives rather than full case studies. Each links to its own README.
+      </p>
+
+      <div class="work-also-grid">
+        <a href="https://github.com/princemanjee/EngineeredPromptLibrary" class="also-card">
+          <h3 class="also-card-title">Engineered Prompt Library</h3>
+          <p class="also-card-body">
+            Versioned prompt and context engineering archive. Includes the Reasoning
+            Strategies for AI Decision Making paper that informed the AIOrchBuilder
+            agent contracts.
+          </p>
+        </a>
+
+        <a href="https://github.com/princemanjee/PhotonicComputing" class="also-card">
+          <h3 class="also-card-title">Photonic Computing</h3>
+          <p class="also-card-body">
+            Research paper on light-based architectural responses to the end of
+            electronic scaling, with companion video, infographics, and supporting
+            documents.
+          </p>
+        </a>
+
+        <a href="https://github.com/princemanjee/PanopticonParadigm" class="also-card">
+          <h3 class="also-card-title">Panopticon Paradigm</h3>
+          <p class="also-card-body">
+            Research paper examining the structural mechanisms behind digital
+            surveillance and why consumer-grade privacy controls are illusory by
+            design.
+          </p>
+        </a>
+      </div>
+    </section>
+
+    {/*
+      Engagement band: same visual treatment as About page for cross-page
+      coherence, with copy tuned to the post-evaluation moment.
+    */}
+    <section class="work-engagement">
+      <GlassPanel size="lg" class="engagement-panel">
+        <h2 class="engagement-heading">Want similar work for your organization?</h2>
+        <p class="engagement-body">
+          The architectural patterns shown here apply directly to client engagements
+          in AI Adoption and Digital Transformation. If you are evaluating whether
+          this approach fits your situation, the fastest path is a short conversation.
+          I take on a small number of engagements per quarter so each one gets the
+          attention it deserves.
+        </p>
+        <div class="engagement-actions">
+          <GlassButton href="mailto:princemanjee@gmail.com" variant="primary" size="md">
+            Start a conversation
+          </GlassButton>
+          <GlassButton href="/about" variant="secondary" size="md">
+            Read more about me
+          </GlassButton>
+        </div>
+        <div class="engagement-links" aria-label="External profiles">
+          <a href="https://www.linkedin.com/in/princemanjee/" rel="noopener">LinkedIn</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/princemanjee" rel="noopener">GitHub</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://cv.princerehman.com" rel="noopener">CV</a>
+        </div>
+      </GlassPanel>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .work {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-xl);
+  }
+
+  /*
+   * Lede sits between the header and the case study grid. Display serif
+   * at larger size so it functions as a page-level positioning statement
+   * before the structured cards begin.
+   */
+  .work-lede {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    max-width: 64ch;
+    margin: 0 0 var(--space-3xl) 0;
+  }
+
+  /*
+   * Case study grid: two columns on desktop, single column on mobile.
+   * Cards have equal height via grid auto-rows for visual rhythm.
+   */
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xl);
+    margin-bottom: var(--space-4xl);
+  }
+
+  /* "Also building" section: lighter treatment than case studies */
+  .work-also-building {
+    margin-top: var(--space-2xl);
+    margin-bottom: var(--space-4xl);
+  }
+
+  .section-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-3xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-md) 0;
+  }
+
+  .work-also-lede {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-tertiary);
+    margin: 0 0 var(--space-xl) 0;
+    max-width: 64ch;
+  }
+
+  .work-also-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+  }
+
+  /* Compact card for non-case-study repositories */
+  .also-card {
+    display: block;
+    padding: var(--space-xl);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform var(--duration-slow) var(--easing-out),
+      background var(--duration-slow) var(--easing-out),
+      box-shadow var(--duration-slow) var(--easing-out);
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 4px 12px rgba(0, 0, 0, 0.25),
+      0 12px 32px rgba(0, 0, 0, 0.30);
+  }
+
+  .also-card:hover {
+    transform: translateY(-3px);
+    background: var(--glass-bg-hover);
+    box-shadow:
+      inset 0 2px 1px rgba(255, 255, 255, 1),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 8px 20px rgba(0, 0, 0, 0.35),
+      0 20px 48px rgba(0, 0, 0, 0.40),
+      0 0 80px rgba(91, 140, 255, 0.20);
+  }
+
+  .also-card-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-xl);
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    margin: 0 0 var(--space-sm) 0;
+  }
+
+  .also-card-body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-tertiary);
+    margin: 0;
+  }
+
+  /* Engagement band */
+  .work-engagement {
+    margin-bottom: var(--space-4xl);
+  }
+
+  :global(.engagement-panel) {
+    padding: var(--space-3xl);
+  }
+
+  .engagement-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-2xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-md) 0;
+  }
+
+  .engagement-body {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0 0 var(--space-xl) 0;
+    max-width: 64ch;
+  }
+
+  .engagement-actions {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-xl);
+  }
+
+  .engagement-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+  }
+
+  .engagement-links a {
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition:
+      border-color var(--duration-fast) var(--easing-out),
+      color var(--duration-fast) var(--easing-out);
+  }
+
+  .engagement-links a:hover {
+    color: var(--color-fg-primary);
+    border-bottom-color: var(--color-fg-primary);
+  }
+
+  .engagement-links span {
+    color: var(--color-fg-muted);
+  }
+
+  /* Tablet: two-up cards still works, also-building goes to two columns */
+  @media (max-width: 1024px) {
+    .work-also-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Mobile: single column everywhere, tighter spacing */
+  @media (max-width: 768px) {
+    .work {
+      padding: 0 var(--space-lg);
+    }
+    .work-lede {
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-2xl);
+    }
+    .work-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-lg);
+    }
+    .work-also-grid {
+      grid-template-columns: 1fr;
+    }
+    .section-heading {
+      font-size: var(--text-2xl);
+    }
+    .also-card {
+      padding: var(--space-lg);
+    }
+    :global(.engagement-panel) {
+      padding: var(--space-xl);
+    }
+    .engagement-heading {
+      font-size: var(--text-xl);
+    }
+  }
+</style>

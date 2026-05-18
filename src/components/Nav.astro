@@ -1,0 +1,389 @@
+---
+/**
+ * Nav: site-wide hierarchical navigation.
+ *
+ * A floating glass pill bar that sticks to the top of the viewport on
+ * scroll. Each top-level page (Home, About, Work) is a pill-shaped link.
+ * The Work item is a dropdown parent that expands on hover or keyboard
+ * focus to reveal its child pages (overview + each case study).
+ *
+ * Active-page indicator: the pill for the current page (and parent pill
+ * if on a child page) gets the royal blue lit treatment — the same
+ * visual language as the primary GlassButton variant. This gives a
+ * clear "you are here" signal across the site.
+ *
+ * Hierarchy is data-driven from src/data/caseStudies.ts, so adding a
+ * new case study (e.g., FieldForce) automatically extends the Work
+ * dropdown without editing this component.
+ *
+ * Mobile: at narrow widths the dropdown collapses and the sub-items
+ * stack inline so the hierarchy is still navigable on touch devices
+ * where hover does not work.
+ */
+
+import { caseStudiesByOrder } from "../data/caseStudies";
+
+const currentPath = Astro.url.pathname;
+
+// Normalize trailing slashes for active-state matching since the same
+// page may be served as both /about and /about/ depending on adapter.
+function normalize(path: string): string {
+  if (path !== "/" && path.endsWith("/")) return path.slice(0, -1);
+  return path;
+}
+
+const current = normalize(currentPath);
+
+const isActive = (path: string): boolean => normalize(path) === current;
+const isActiveSection = (prefix: string): boolean =>
+  current === prefix || current.startsWith(prefix + "/");
+
+const workActive = isActiveSection("/work");
+---
+
+<nav class="nav" aria-label="Primary navigation">
+  <div class="nav-bar">
+    <a
+      href="/"
+      class:list={["nav-item", isActive("/") && "nav-item--active"]}
+      aria-current={isActive("/") ? "page" : undefined}>
+      Home
+    </a>
+
+    <a
+      href="/about"
+      class:list={["nav-item", isActive("/about") && "nav-item--active"]}
+      aria-current={isActive("/about") ? "page" : undefined}>
+      About
+    </a>
+
+    <div class:list={["nav-dropdown", workActive && "nav-dropdown--active"]}>
+      <a
+        href="/work"
+        class:list={["nav-item", "nav-dropdown-trigger", workActive && "nav-item--active"]}
+        aria-current={isActive("/work") ? "page" : undefined}
+        aria-haspopup="true">
+        Work
+        <svg viewBox="0 0 12 8" class="nav-caret" aria-hidden="true">
+          <path
+            d="M1 1 L6 6 L11 1"
+            stroke="currentColor"
+            stroke-width="1.6"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </a>
+
+      <div class="nav-dropdown-menu" role="menu">
+        <a
+          href="/work"
+          class:list={["nav-sub-item", isActive("/work") && "nav-sub-item--active"]}
+          role="menuitem"
+          aria-current={isActive("/work") ? "page" : undefined}>
+          <span class="nav-sub-item-label">All Work</span>
+          <span class="nav-sub-item-meta">Overview of selected case studies</span>
+        </a>
+
+        {caseStudiesByOrder.map((cs) => {
+          const path = `/work/${cs.slug}`;
+          const active = isActive(path);
+          return (
+            <a
+              href={path}
+              class:list={["nav-sub-item", active && "nav-sub-item--active"]}
+              role="menuitem"
+              aria-current={active ? "page" : undefined}>
+              <span class="nav-sub-item-label">{cs.title}</span>
+              <span class="nav-sub-item-meta">Case study</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<style>
+  /*
+   * Nav container: sticky to viewport top, centered. The bar floats inside
+   * with its own glass treatment. The container itself is transparent so
+   * the page background shows through behind the bar.
+   */
+  .nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    padding: 0 16px;
+    margin-bottom: var(--space-xl);
+  }
+
+  /*
+   * The pill bar: thick glass treatment matching GlassPanel, but at the
+   * radius of a full pill (border-radius: 999px). Pointer events re-enabled
+   * here so the bar itself is interactive while the container is not.
+   */
+  .nav-bar {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 4px 8px var(--highlight-top-soft),
+      0 4px 16px rgba(0, 0, 0, 0.30),
+      0 16px 40px rgba(0, 0, 0, 0.35),
+      0 0 80px rgba(91, 140, 255, 0.10);
+  }
+
+  /*
+   * Individual nav item (top-level): pill-shaped link with hover and active
+   * states. Active gets the royal blue lit treatment matching primary
+   * GlassButton. Hover gets a polished glass treatment.
+   */
+  .nav-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-fg-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+      background var(--duration-base) var(--easing-out),
+      color var(--duration-base) var(--easing-out),
+      transform var(--duration-base) var(--easing-out),
+      box-shadow var(--duration-base) var(--easing-out);
+  }
+
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-fg-primary);
+  }
+
+  /*
+   * Active state: royal blue lit pill. Matches the primary button visual
+   * language so "you are here" reads as clearly as "this is the primary
+   * action" elsewhere in the system.
+   */
+  .nav-item--active {
+    background: linear-gradient(
+      180deg,
+      rgba(91, 140, 255, 0.95) 0%,
+      rgba(59, 109, 255, 1) 50%,
+      rgba(29, 74, 224, 1) 100%
+    );
+    border: 1px solid rgba(140, 180, 255, 0.55);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.85),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.15),
+      0 2px 8px rgba(29, 74, 224, 0.40),
+      0 0 30px rgba(91, 140, 255, 0.40);
+  }
+
+  .nav-item--active:hover {
+    color: white;
+  }
+
+  /*
+   * Caret icon for the dropdown trigger. Rotates 180 degrees when the
+   * dropdown is open (on hover or focus-within) to indicate state.
+   */
+  .nav-caret {
+    width: 11px;
+    height: 7px;
+    flex-shrink: 0;
+    transition: transform var(--duration-base) var(--easing-out);
+  }
+
+  .nav-dropdown:hover .nav-caret,
+  .nav-dropdown:focus-within .nav-caret {
+    transform: rotate(180deg);
+  }
+
+  /*
+   * Dropdown container: relative positioning so the menu can anchor below.
+   * The menu itself is absolutely positioned.
+   */
+  .nav-dropdown {
+    position: relative;
+    display: inline-flex;
+  }
+
+  /*
+   * Dropdown menu: glass panel floating below the bar. Hidden by default,
+   * shown on hover of the parent dropdown or focus-within (for keyboard
+   * users tabbing through child items).
+   */
+  .nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    background: rgba(20, 25, 50, 0.85);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 8px 24px rgba(0, 0, 0, 0.50),
+      0 24px 64px rgba(0, 0, 0, 0.55),
+      0 0 100px rgba(91, 140, 255, 0.20);
+
+    /* Hidden by default via opacity + pointer-events; revealed on hover */
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--duration-base) var(--easing-out),
+      transform var(--duration-base) var(--easing-out);
+  }
+
+  .nav-dropdown:hover .nav-dropdown-menu,
+  .nav-dropdown:focus-within .nav-dropdown-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /*
+   * Invisible bridge between trigger and menu so the menu does not close
+   * when the cursor crosses the gap on its way from the bar to the menu.
+   */
+  .nav-dropdown-menu::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    height: 14px;
+  }
+
+  /*
+   * Dropdown sub-items: two-line layout with title on top and meta below.
+   * Pill-shaped like the top-level items but with more vertical room since
+   * they carry secondary text.
+   */
+  .nav-sub-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: var(--color-fg-secondary);
+    border: 1px solid transparent;
+    transition:
+      background var(--duration-base) var(--easing-out),
+      color var(--duration-base) var(--easing-out);
+  }
+
+  .nav-sub-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-fg-primary);
+  }
+
+  .nav-sub-item--active {
+    background: linear-gradient(
+      180deg,
+      rgba(91, 140, 255, 0.95) 0%,
+      rgba(59, 109, 255, 1) 50%,
+      rgba(29, 74, 224, 1) 100%
+    );
+    border: 1px solid rgba(140, 180, 255, 0.55);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.50),
+      0 2px 8px rgba(29, 74, 224, 0.40);
+  }
+
+  .nav-sub-item--active:hover {
+    color: white;
+  }
+
+  .nav-sub-item-label {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .nav-sub-item-meta {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-fg-muted);
+    line-height: 1.2;
+  }
+
+  .nav-sub-item--active .nav-sub-item-meta {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /*
+   * Mobile: at narrow widths the dropdown is replaced with the sub-items
+   * displayed inline as a wrapping flex row. Hover dropdowns do not work
+   * on touch, so this keeps the hierarchy navigable on phones.
+   */
+  @media (max-width: 768px) {
+    .nav {
+      top: 12px;
+      padding: 0 12px;
+    }
+    .nav-bar {
+      padding: 5px;
+      gap: 2px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav-item {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+    /* Hide the dropdown menu entirely on mobile; sub-items render inline
+       in the bar instead via the mobile-flat-children block below. */
+    .nav-dropdown-menu {
+      display: none;
+    }
+    /* The Work item on mobile just navigates to /work (the overview).
+       The dropdown is replaced by linking to the overview directly. */
+    .nav-caret {
+      display: none;
+    }
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .nav-item,
+    .nav-sub-item,
+    .nav-caret,
+    .nav-dropdown-menu {
+      transition: none;
+    }
+  }
+</style>

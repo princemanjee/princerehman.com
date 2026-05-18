@@ -1,0 +1,123 @@
+---
+/**
+ * PageHeader: the page-level identity lockup.
+ *
+ * Renders the polished orb mark at hero size beside the wordmark,
+ * with an optional page title and meta line beneath. Matches the
+ * composition of the social card image so visitors arriving from
+ * a shared link feel continuity between the preview and the live
+ * page.
+ *
+ * Use this on About, Work, and any other content pages that need
+ * a brand-anchored header. The home page hero is its own composition
+ * (Hero.astro) and does not use this component.
+ */
+
+import BrandMark from "./BrandMark.astro";
+import BrandName from "./BrandName.astro";
+
+interface Props {
+  pageTitle?: string;
+  meta?: string;
+}
+
+const { pageTitle, meta } = Astro.props;
+---
+
+<header class="page-header">
+  <div class="page-header-lockup">
+    <BrandMark size="hero" ariaLabel="P. R. Manjee" />
+    <div class="page-header-text">
+      <a href="/" class="page-header-home-link" aria-label="Back to home">
+        <BrandName variant="full" size="xl" />
+      </a>
+      {pageTitle && <div class="page-header-title">{pageTitle}</div>}
+      {meta && <div class="page-header-meta">{meta}</div>}
+    </div>
+  </div>
+</header>
+
+<style>
+  .page-header {
+    margin-bottom: var(--space-3xl);
+    padding-top: var(--space-2xl);
+  }
+
+  /*
+   * Lockup matches the social card composition: orb left, wordmark right,
+   * vertically center-aligned, generous gap. The wordmark links back to
+   * home so the orb-plus-name reads as a clickable identity element on
+   * every page that isn't home.
+   */
+  .page-header-lockup {
+    display: flex;
+    align-items: center;
+    gap: 56px;
+    flex-wrap: wrap;
+  }
+
+  .page-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /*
+   * BrandName wrapped in an anchor links back to home. The anchor itself
+   * has no underline and no color shift so the brand visual treatment
+   * stays exactly as designed; only cursor changes on hover.
+   */
+  .page-header-home-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  /*
+   * Page title sits below the wordmark in the same column. Smaller than
+   * the wordmark but larger than meta. Uses the display serif for
+   * visual continuity with the brand name treatment.
+   */
+  .page-header-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-2xl);
+    color: var(--color-fg-secondary);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.1;
+    margin-top: 4px;
+  }
+
+  /*
+   * Meta line: small descriptive text under the page title. Used for
+   * positioning statements, section descriptors, or one-line summaries.
+   */
+  .page-header-meta {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    color: var(--color-fg-tertiary);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-snug);
+    max-width: 56ch;
+  }
+
+  /* Mobile: stack the lockup and reduce orb visual weight */
+  @media (max-width: 768px) {
+    .page-header {
+      margin-bottom: var(--space-2xl);
+      padding-top: var(--space-xl);
+    }
+    .page-header-lockup {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 32px;
+    }
+    .page-header-title {
+      font-size: var(--text-xl);
+    }
+    .page-header-meta {
+      font-size: var(--text-base);
+    }
+  }
+</style>
