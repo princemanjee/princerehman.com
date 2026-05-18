@@ -1,0 +1,60 @@
+---
+/**
+ * GlassPanel: a thick-glass container with crisp curved bevel highlights.
+ *
+ * The technique:
+ *   - Very transparent base background
+ *   - Inset box-shadow with tight spread (1-2px) creates curved bright
+ *     highlight lines that trace the rounded edges (because inset shadows
+ *     respect border-radius)
+ *   - Brighter highlight at top, dimmer at bottom (light from above)
+ *   - Subtle dark insets on left/right suggest the thickness of the glass
+ *   - Strong layered outer drop shadow grounds it as a 3D object
+ *
+ * Sizes control the border-radius. Use `lg` (default) or `xl` for hero panels;
+ * `md` for cards; `sm` for inline elements.
+ */
+
+interface Props {
+  size?: "sm" | "md" | "lg" | "xl";
+  class?: string;
+}
+
+const { size = "lg", class: className = "" } = Astro.props;
+---
+
+<div class:list={[`glass-panel glass-panel--${size}`, className]}>
+  <slot />
+</div>
+
+<style>
+  .glass-panel {
+    position: relative;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+
+    /* The signature thick-glass bevel:
+       - Top inset shadow at 1-2px = bright curved arc on rounded top edge
+       - Bottom inset shadow at 1-2px = dimmer curved arc on rounded bottom edge
+       - Side insets = visible thickness at left/right edges
+       - Outer drop shadows = grounded 3D object hovering above surface
+    */
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 8px 24px rgba(0, 0, 0, 0.35),
+      0 24px 64px rgba(0, 0, 0, 0.45),
+      0 48px 120px rgba(0, 0, 0, 0.25);
+  }
+
+  .glass-panel--sm { border-radius: var(--radius-md); }
+  .glass-panel--md { border-radius: var(--radius-lg); }
+  .glass-panel--lg { border-radius: var(--radius-2xl); }
+  .glass-panel--xl { border-radius: var(--radius-3xl); }
+</style>

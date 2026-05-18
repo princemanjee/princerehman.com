@@ -1,0 +1,113 @@
+/*
+ * Prism tokens. Phase 1 hardcoded palette.
+ *
+ * In Phase 2 these values are generated dynamically from
+ * (mode, mixing-model, hue, contrast) by lib/prism.ts and
+ * applied via inline styles on document.documentElement.
+ *
+ * Phase 1 baseline:
+ *   mode:           hybrid (default), with light and dark variants
+ *   mixing model:   analogous (-30 / 0 / +30 degrees around base)
+ *   base hue:       260 (deep royal blue)
+ *   contrast:       WCAG AA
+ *
+ * Analogous palette derivation (in OKLCH):
+ *   primary    = 0.30  0.18  260   (deep royal blue, base)
+ *   secondary  = 0.32  0.17  230   (cyan-blue, -30 degrees)
+ *   tertiary   = 0.34  0.17  295   (deep purple, +30 degrees)
+ *   accent     = 0.55  0.20  230   (bright electric cyan-blue)
+ */
+
+:root {
+  /* Surface tokens. */
+  --color-bg-base: oklch(0.97 0.005 260);
+  --color-bg-elevated: oklch(1 0 0 / 0.70);
+  --color-bg-overlay: oklch(1 0 0 / 0.50);
+
+  /* Foreground tokens. */
+  --color-fg-primary: oklch(0.20 0.05 260);
+  --color-fg-secondary: oklch(0.45 0.05 260);
+  --color-fg-tertiary: oklch(0.60 0.04 260);
+
+  /* Brand tokens. */
+  --color-brand-primary: oklch(0.30 0.18 260);
+  --color-brand-secondary: oklch(0.32 0.17 230);
+  --color-brand-tertiary: oklch(0.34 0.17 295);
+  --color-brand-accent: oklch(0.55 0.20 230);
+  --color-brand-accent-fg: oklch(0.20 0.05 230);
+
+  /* Border tokens. */
+  --color-border-subtle: oklch(0.20 0.05 260 / 0.10);
+  --color-border-strong: oklch(0.20 0.05 260 / 0.20);
+
+  /* Glass effect tokens. */
+  --glass-blur: 24px;
+  --glass-saturate: 180%;
+
+  /* Shadow tokens. */
+  --shadow-sm: 0 1px 3px oklch(0.20 0.05 260 / 0.08);
+  --shadow-md: 0 4px 16px oklch(0.20 0.05 260 / 0.12);
+  --shadow-lg: 0 12px 40px oklch(0.20 0.10 260 / 0.20);
+
+  /* Spacing scale (rem-based). */
+  --space-2xs: 0.25rem;
+  --space-xs:  0.5rem;
+  --space-sm:  0.75rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  /* Radius scale. */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* Animation timing. */
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.4s;
+  --easing-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --easing-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[data-theme="light"] {
+  --color-bg-base: oklch(0.97 0.005 260);
+  --color-bg-elevated: oklch(1 0 0 / 0.70);
+  --color-bg-overlay: oklch(1 0 0 / 0.50);
+  --color-fg-primary: oklch(0.20 0.05 260);
+  --color-fg-secondary: oklch(0.45 0.05 260);
+  --color-fg-tertiary: oklch(0.60 0.04 260);
+  --color-border-subtle: oklch(0.20 0.05 260 / 0.10);
+  --color-border-strong: oklch(0.20 0.05 260 / 0.20);
+}
+
+[data-theme="dark"] {
+  --color-bg-base: oklch(0.10 0.02 260);
+  --color-bg-elevated: oklch(0.16 0.04 260 / 0.70);
+  --color-bg-overlay: oklch(0.16 0.04 260 / 0.50);
+  --color-fg-primary: oklch(0.95 0.01 260);
+  --color-fg-secondary: oklch(0.78 0.02 260);
+  --color-fg-tertiary: oklch(0.55 0.03 260);
+  --color-border-subtle: oklch(1 0 0 / 0.06);
+  --color-border-strong: oklch(1 0 0 / 0.12);
+}
+
+[data-theme="hybrid"] {
+  /*
+   * Hybrid uses a deep royal-blue gradient as the page background
+   * with translucent glass surfaces over it. This is the launch default.
+   */
+  --color-bg-base: oklch(0.20 0.10 260);
+  --color-bg-elevated: oklch(1 0 0 / 0.06);
+  --color-bg-overlay: oklch(1 0 0 / 0.10);
+  --color-fg-primary: oklch(0.97 0.01 260);
+  --color-fg-secondary: oklch(0.80 0.03 260);
+  --color-fg-tertiary: oklch(0.62 0.04 260);
+  --color-border-subtle: oklch(1 0 0 / 0.10);
+  --color-border-strong: oklch(1 0 0 / 0.18);
+}

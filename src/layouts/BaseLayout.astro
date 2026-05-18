@@ -1,5 +1,5 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 
 interface Props {
   title: string;
@@ -8,12 +8,12 @@ interface Props {
 
 const {
   title,
-  description = 'P. R. Manjee. Senior technology consultant. AI adoption, digital transformation, MIT Sloan.'
+  description = "P. R. Manjee. Senior Technology Consultant. AI Adoption, Digital Transformation, MIT Sloan.",
 } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" data-theme="hybrid">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,25 +28,52 @@ const {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={Astro.url.href} />
 
-    <title>{title}</title>
+    {/*
+      Google Fonts:
+        Cormorant Garamond — display, brand name, section headings
+        Inter — body text
+        Geist — UI labels and button text
+        JetBrains Mono — code and technical text
+    */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300..900&family=Geist:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap"
+    />
 
-    <script is:inline>
-      // Theme initialization script. Runs synchronously before paint to
-      // prevent flash-of-unstyled-content when a stored theme exists.
-      // Will be expanded in Session 2 to include mixing model, hue, and contrast.
-      (function () {
-        try {
-          var stored = localStorage.getItem('prism-theme');
-          if (stored) {
-            document.documentElement.setAttribute('data-theme', stored);
-          }
-        } catch (e) {
-          // localStorage unavailable. Use the default theme attribute.
-        }
-      })();
-    </script>
+    <title>{title}</title>
   </head>
   <body>
+    {/*
+      Global SVG filter for the polished glass brand-name treatment.
+      feGaussianBlur on alpha creates a rounded height map.
+      feSpecularLighting with point light produces a real specular highlight.
+      The result is smooth rounded bevels, not layer-striated text-shadows.
+    */}
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+      <defs>
+        <filter id="prism-polished" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="blur" />
+          <feSpecularLighting
+            in="blur"
+            surfaceScale="5"
+            specularConstant="1.6"
+            specularExponent="30"
+            lighting-color="#ffffff"
+            result="specular"
+          >
+            <fePointLight x="-100" y="-200" z="350" />
+          </feSpecularLighting>
+          <feComposite in="specular" in2="SourceAlpha" operator="in" result="masked" />
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="masked" />
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
+
     <main>
       <slot />
     </main>

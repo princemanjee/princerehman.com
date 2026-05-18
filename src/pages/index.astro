@@ -1,24 +1,10 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
 ---
 
-<BaseLayout title="P. R. Manjee">
-  <h1>P. R. Manjee</h1>
-  <p>
-    Senior technology consultant. AI adoption, digital transformation, MIT Sloan.
-  </p>
-
-  <p class="muted" style="margin-top: 48px;">
-    This site is being rebuilt. New version coming soon.
-  </p>
-
-  <p class="muted" style="margin-top: 16px;">
-    In the meantime:
-    <a href="https://www.linkedin.com/in/princemanjee/">LinkedIn</a>,
-    <a href="https://github.com/princemanjee">GitHub</a>,
-    <a href="https://cv.princerehman.com">current CV</a>.
-  </p>
-
-  <ThemeToggle />
+<BaseLayout
+  title="P. R. Manjee — Senior Technology Consultant"
+  description="P. R. Manjee. Senior Technology Consultant. AI Adoption, Digital Transformation, MIT Sloan.">
+  <Hero />
 </BaseLayout>

@@ -1,0 +1,88 @@
+---
+/**
+ * BrandName: the wordmark "P. R. Manjee" in Cormorant Garamond,
+ * rendered with the polished glass treatment via SVG filter.
+ *
+ * The polished treatment combines:
+ *   - color: rgba(220,232,250,0.85) — clear blue-tinted glass base
+ *   - filter: url(#prism-polished) — SVG filter creates rounded specular bevel
+ *   - drop-shadows — ground shadow + atmospheric royal blue glow halo
+ *
+ * Size variants:
+ *   sm — inline mentions, header signature
+ *   md — card titles, secondary placements
+ *   lg — standard placements, default
+ *   xl — hero only, with intensified glow and larger letterspacing
+ *
+ * Brand-protected styles use !important to resist accidental override.
+ */
+
+interface Props {
+  variant?: "full" | "short" | "initials";
+  size?: "sm" | "md" | "lg" | "xl";
+  inline?: boolean;
+  as?: "span" | "h1" | "h2" | "div";
+}
+
+const {
+  variant = "full",
+  size = "lg",
+  inline = false,
+  as: Tag = "span",
+} = Astro.props;
+
+const text = {
+  full: "P. R. Manjee",
+  short: "Manjee",
+  initials: "PRM",
+}[variant];
+---
+
+<Tag
+  class:list={[
+    "brand-name",
+    `brand-name--${size}`,
+    inline && "brand-name--inline",
+  ]}>{text}</Tag>
+
+<style>
+  .brand-name {
+    /* Protected brand styles. !important guards against accidental override. */
+    font-family: var(--font-display) !important;
+    font-weight: 600 !important;
+    letter-spacing: var(--tracking-tight) !important;
+    color: var(--brand-color) !important;
+
+    display: block;
+    line-height: 1;
+    padding-bottom: 0.2em;
+    margin: 0;
+
+    /* Polished glass treatment: SVG filter for rounded specular bevel
+       plus drop-shadows for the ambient ground and the royal blue halo. */
+    filter:
+      url(#prism-polished)
+      drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 24px 48px rgba(0, 0, 0, 0.25))
+      drop-shadow(0 0 60px var(--brand-glow))
+      drop-shadow(0 0 140px rgba(180, 210, 255, 0.30));
+  }
+
+  .brand-name--inline { display: inline-block; }
+
+  .brand-name--sm { font-size: 32px; }
+  .brand-name--md { font-size: 56px; }
+  .brand-name--lg { font-size: 76px; }
+
+  /* Hero size: bigger letterspacing reduction, stronger glow */
+  .brand-name--xl {
+    font-size: clamp(64px, 8vw + 1rem, 104px);
+    letter-spacing: var(--tracking-tighter) !important;
+    filter:
+      url(#prism-polished)
+      drop-shadow(0 16px 32px rgba(0, 0, 0, 0.50))
+      drop-shadow(0 32px 64px rgba(0, 0, 0, 0.30))
+      drop-shadow(0 0 70px var(--brand-glow))
+      drop-shadow(0 0 180px rgba(180, 210, 255, 0.30));
+  }
+</style>

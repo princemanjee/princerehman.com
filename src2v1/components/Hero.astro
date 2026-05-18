@@ -1,0 +1,111 @@
+---
+/**
+ * Hero section. The first thing visitors see.
+ *
+ * Structure:
+ *   - Brand name in display size
+ *   - Tagline (one line)
+ *   - Description paragraph (two sentences)
+ *   - Primary + secondary action buttons
+ *   - Tertiary in-line links (LinkedIn, GitHub, CV)
+ */
+
+import BrandName from "./BrandName.astro";
+import GlassButton from "./GlassButton.astro";
+---
+
+<section class="hero">
+  <div class="hero-content">
+    <BrandName variant="full" size="xl" />
+
+    <p class="hero-tagline">
+      Senior Technology Consultant. AI Adoption, Digital Transformation, MIT Sloan.
+    </p>
+
+    <p class="hero-description">
+      Mid-market and enterprise organizations call me when they need digital
+      transformation and AI adoption done right the first time. Thirty years
+      of building systems that stick, from electrons to executive strategy.
+    </p>
+
+    <div class="hero-actions">
+      <GlassButton href="#work" variant="primary">View Selected Work</GlassButton>
+      <GlassButton href="mailto:princemanjee@gmail.com" variant="secondary">
+        Get in Touch
+      </GlassButton>
+    </div>
+
+    <div class="hero-links">
+      <a href="https://www.linkedin.com/in/princemanjee/">LinkedIn</a>
+      <span class="hero-link-sep" aria-hidden="true">·</span>
+      <a href="https://github.com/princemanjee">GitHub</a>
+      <span class="hero-link-sep" aria-hidden="true">·</span>
+      <a href="https://cv.princerehman.com">CV</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    padding: var(--space-3xl) 0;
+  }
+
+  .hero-content {
+    max-width: 720px;
+    width: 100%;
+  }
+
+  .hero-tagline {
+    margin-top: var(--space-md);
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-lg), 2.2vw, var(--text-xl));
+    font-weight: 400;
+    color: var(--color-fg-secondary);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-snug);
+    max-width: 56ch;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .hero-description {
+    margin-top: var(--space-lg);
+    font-size: var(--text-md);
+    color: var(--color-fg-secondary);
+    line-height: var(--leading-relaxed);
+    max-width: 56ch;
+  }
+
+  .hero-actions {
+    margin-top: var(--space-xl);
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .hero-links {
+    margin-top: var(--space-2xl);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    font-size: var(--text-sm);
+  }
+
+  .hero-link-sep {
+    color: var(--color-fg-tertiary);
+    opacity: 0.5;
+  }
+
+  .hero-links a {
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+  }
+
+  .hero-links a:hover {
+    color: var(--color-fg-primary);
+    border-bottom-color: var(--color-fg-primary);
+  }
+</style>

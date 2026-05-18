@@ -1,0 +1,83 @@
+---
+/**
+ * BrandName: protected rendering of the author's name.
+ *
+ * Brand guideline rules (modeled on the SOPHUCKIT brand-mark pattern):
+ *   - Always rendered in the display font (Fraunces).
+ *   - Weight 500 by default, 600 on light theme for proper visual weight.
+ *   - Optical sizing axis set to 144 (display-grade rendering).
+ *   - Letter-spacing tightened for display use.
+ *   - On dark and hybrid themes: subtle electric-blue glow.
+ *   - On light theme: no glow, heavier weight.
+ *   - These styles use !important to prevent accidental override from
+ *     parent components or future style refactors. The brand-mark is
+ *     a protected element.
+ *
+ * Use this component anywhere the author's name appears. Do not write
+ * the name as plain text in markup.
+ */
+
+interface Props {
+  variant?: "full" | "short" | "initials";
+  size?: "sm" | "md" | "lg" | "xl";
+  inline?: boolean;
+}
+
+const { variant = "full", size = "md", inline = false } = Astro.props;
+
+const text = {
+  full: "P. R. Manjee",
+  short: "Manjee",
+  initials: "PRM",
+}[variant];
+---
+
+<span
+  class:list={[
+    "brand-name",
+    `brand-name--${size}`,
+    inline && "brand-name--inline",
+  ]}
+  data-brand-protected="true"
+>
+  {text}
+</span>
+
+<style>
+  .brand-name {
+    /* Protected styles. Marked important to resist accidental overrides. */
+    font-family: var(--font-display) !important;
+    font-weight: 500 !important;
+    font-variation-settings: "opsz" 144 !important;
+    letter-spacing: var(--tracking-tight) !important;
+    color: var(--color-fg-primary) !important;
+    display: block;
+    line-height: var(--leading-tight);
+  }
+
+  .brand-name--inline {
+    display: inline-block;
+  }
+
+  /* Size variants. */
+  .brand-name--sm { font-size: var(--text-md); }
+  .brand-name--md { font-size: var(--text-xl); }
+  .brand-name--lg { font-size: var(--text-3xl); }
+  .brand-name--xl {
+    font-size: clamp(var(--text-3xl), 5vw + 1rem, var(--text-5xl));
+    letter-spacing: var(--tracking-tighter) !important;
+  }
+
+  /* Glow on dark and hybrid themes. */
+  :global([data-theme="dark"]) .brand-name,
+  :global([data-theme="hybrid"]) .brand-name {
+    text-shadow:
+      0 0 24px oklch(0.72 0.16 230 / 0.30),
+      0 0 64px oklch(0.55 0.20 230 / 0.18);
+  }
+
+  /* Slightly heavier on light theme to retain visual weight. */
+  :global([data-theme="light"]) .brand-name {
+    font-weight: 600 !important;
+  }
+</style>
