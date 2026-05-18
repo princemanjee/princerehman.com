@@ -1,0 +1,145 @@
+---
+/**
+ * BrandMark: the secondary brand identity — a polished glass orb
+ * containing an embossed rounded chevron.
+ *
+ * The orb frame uses the v8 polished-orb treatment with backdrop blur,
+ * inset bevel highlights, and atmospheric royal-blue glow.
+ * The chevron is rendered as a custom SVG path (not a font glyph) so
+ * it's perfectly centered and scales pixel-perfect at any size.
+ * The chevron applies the prism-embossed-pronounced SVG filter
+ * (defined globally in BaseLayout.astro) to read as physically raised
+ * from the orb surface.
+ *
+ * Size variants:
+ *   sm   — 32px, for inline use and small nav placements
+ *   md   — 48px, for cards and secondary placements
+ *   lg   — 96px, for the hero corner or about-page sidebar
+ *   xl   — 140px, for hero lockup primary placement
+ *   hero — 280px, for standalone hero panels (rarely used)
+ *
+ * Skeuomorphic note: the orb reads as a physical glass medallion.
+ * Hover state (when used inside a link) gives a subtle lift transform.
+ */
+
+interface Props {
+  size?: "sm" | "md" | "lg" | "xl" | "hero";
+  class?: string;
+  ariaLabel?: string;
+}
+
+const {
+  size = "md",
+  class: className = "",
+  ariaLabel = "P. R. Manjee brand mark",
+} = Astro.props;
+---
+
+<span
+  class:list={["brand-mark", `brand-mark--${size}`, className]}
+  role="img"
+  aria-label={ariaLabel}>
+  <svg
+    class="brand-mark-svg"
+    viewBox="0 0 100 100"
+    aria-hidden="true"
+    focusable="false">
+    <path
+      class="brand-mark-chevron"
+      d="M 34 20 L 70 50 L 34 80" />
+  </svg>
+</span>
+
+<style>
+  /*
+   * Orb frame: a circular container with backdrop blur, layered inset
+   * bevel highlights creating curved arcs at top and bottom edges, and
+   * a strong outer drop shadow grounding it as a 3D object.
+   * Atmospheric royal-blue glow extends beyond the orb.
+   */
+  .brand-mark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.20) 0%, transparent 50%),
+      rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    box-shadow:
+      inset 0 4px 2px rgba(255, 255, 255, 1),
+      inset 0 8px 16px rgba(255, 255, 255, 0.35),
+      inset 0 -4px 2px rgba(255, 255, 255, 0.65),
+      inset 0 -8px 16px rgba(255, 255, 255, 0.15),
+      inset 6px 0 14px rgba(0, 0, 0, 0.15),
+      inset -6px 0 14px rgba(0, 0, 0, 0.15),
+      0 12px 32px rgba(0, 0, 0, 0.50),
+      0 32px 80px rgba(0, 0, 0, 0.45),
+      0 0 100px rgba(91, 140, 255, 0.35);
+    flex-shrink: 0;
+    transition: transform var(--duration-slow) var(--easing-out);
+  }
+
+  /* Subtle lift when the brand mark is inside an interactive parent (a/button). */
+  :global(a:hover) .brand-mark,
+  :global(button:hover) .brand-mark {
+    transform: translateY(-2px);
+  }
+
+  /* SVG container fills 75% of the orb diameter, centered. */
+  .brand-mark-svg {
+    width: 75%;
+    height: 75%;
+    color: rgba(220, 232, 250, 0.92);
+    filter:
+      url(#prism-embossed-pronounced)
+      drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55))
+      drop-shadow(0 12px 24px rgba(0, 0, 0, 0.35))
+      drop-shadow(0 0 24px rgba(200, 220, 255, 0.55));
+  }
+
+  /*
+   * The chevron path itself.
+   * stroke-linecap: round  → soft elegant terminals
+   * stroke-linejoin: round → smooth apex curve
+   * stroke-width: 10       → medium weight, reads clearly at all sizes
+   */
+  .brand-mark-chevron {
+    stroke: currentColor;
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  /* Size variants */
+  .brand-mark--sm   { width: 32px;  height: 32px; }
+  .brand-mark--md   { width: 48px;  height: 48px; }
+  .brand-mark--lg   { width: 96px;  height: 96px; }
+  .brand-mark--xl   { width: 140px; height: 140px; }
+  .brand-mark--hero { width: 280px; height: 280px; }
+
+  /* Reduced shadow weight for tiny sizes to prevent visual mud */
+  .brand-mark--sm {
+    box-shadow:
+      inset 0 2px 1px rgba(255, 255, 255, 0.95),
+      inset 0 -2px 1px rgba(255, 255, 255, 0.55),
+      inset 3px 0 6px rgba(0, 0, 0, 0.12),
+      inset -3px 0 6px rgba(0, 0, 0, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.40),
+      0 0 30px rgba(91, 140, 255, 0.30);
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .brand-mark {
+      transition: none;
+    }
+    :global(a:hover) .brand-mark,
+    :global(button:hover) .brand-mark {
+      transform: none;
+    }
+  }
+</style>

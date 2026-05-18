@@ -1,11 +1,15 @@
 ---
+import BrandMark from "./BrandMark.astro";
 import BrandName from "./BrandName.astro";
 import GlassButton from "./GlassButton.astro";
 import GlassPanel from "./GlassPanel.astro";
 ---
 
 <GlassPanel size="xl" class="hero">
-  <BrandName variant="full" size="xl" as="h1" />
+  <div class="hero-lockup">
+    <BrandMark size="xl" ariaLabel="P. R. Manjee" />
+    <BrandName variant="full" size="xl" as="h1" />
+  </div>
 
   <p class="hero-tagline">
     Senior Technology Consultant. AI Adoption, Digital Transformation, MIT Sloan.
@@ -36,12 +40,23 @@ import GlassPanel from "./GlassPanel.astro";
 </GlassPanel>
 
 <style>
-  /* :global(.hero) targets the GlassPanel root class added via the
-     `class` prop above. Component-scoped styles cannot reach into
-     a child component's rendered markup without :global(). */
   :global(.hero) {
     padding: 96px 56px;
     margin-bottom: 64px;
+  }
+
+  /*
+   * Hero lockup: brand mark above wordmark, both left-aligned.
+   * The mark sits as a deliberate object before the wordmark establishes
+   * the full identity below it. Vertical spacing tuned so the two read
+   * as one composed unit, not two separate elements.
+   */
+  .hero-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+    margin-bottom: 8px;
   }
 
   .hero-tagline {
@@ -99,9 +114,13 @@ import GlassPanel from "./GlassPanel.astro";
     color: var(--color-fg-muted);
   }
 
+  /* Responsive: stack tighter on mobile, smaller mark */
   @media (max-width: 768px) {
     :global(.hero) {
       padding: 64px 28px;
+    }
+    .hero-lockup {
+      gap: 20px;
     }
     .hero-tagline { font-size: 18px; }
     .hero-description { font-size: 15px; }

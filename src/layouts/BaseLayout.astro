@@ -4,12 +4,17 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
 }
 
 const {
   title,
   description = "P. R. Manjee. Senior Technology Consultant. AI Adoption, Digital Transformation, MIT Sloan.",
+  ogImage = "/social-card.png",
 } = Astro.props;
+
+const ogImageUrl = new URL(ogImage, Astro.url).href;
+const canonicalUrl = Astro.url.href;
 ---
 
 <!doctype html>
@@ -20,13 +25,34 @@ const {
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
 
+    <!-- Open Graph (LinkedIn, Slack, Discord, iMessage, etc) -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="P. R. Manjee — Senior Technology Consultant" />
+    <meta property="og:site_name" content="P. R. Manjee" />
+    <meta property="og:locale" content="en_US" />
 
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content="P. R. Manjee — Senior Technology Consultant" />
+
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={Astro.url.href} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0a0e27" />
+
+    <link rel="canonical" href={canonicalUrl} />
 
     {/*
       Google Fonts:
@@ -42,17 +68,48 @@ const {
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300..900&family=Geist:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap"
     />
 
+    <!-- Structured data for search engines (Person schema) -->
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "P. R. Manjee",
+      "alternateName": "Prince Rehman Manjee",
+      "jobTitle": "Senior Technology Consultant",
+      "description": description,
+      "url": "https://princerehman.com",
+      "sameAs": [
+        "https://www.linkedin.com/in/princemanjee/",
+        "https://github.com/princemanjee"
+      ],
+      "knowsAbout": [
+        "AI Adoption",
+        "Digital Transformation",
+        "Workplace Modernization",
+        "Cloud Computing",
+        "Solutions Architecture"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Chicago",
+        "addressRegion": "IL",
+        "addressCountry": "US"
+      }
+    })} />
+
     <title>{title}</title>
   </head>
   <body>
     {/*
-      Global SVG filter for the polished glass brand-name treatment.
-      feGaussianBlur on alpha creates a rounded height map.
-      feSpecularLighting with point light produces a real specular highlight.
-      The result is smooth rounded bevels, not layer-striated text-shadows.
+      Global SVG filters used by brand identity components.
+      Defined once here so all components can reference them via filter URL.
     */}
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
       <defs>
+        {/*
+          prism-polished: smooth rounded specular bevel for the wordmark.
+          feGaussianBlur on alpha creates a rounded height map.
+          feSpecularLighting with point light produces a real specular highlight.
+        */}
         <filter id="prism-polished" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="blur" />
           <feSpecularLighting
@@ -69,6 +126,43 @@ const {
           <feMerge>
             <feMergeNode in="SourceGraphic" />
             <feMergeNode in="masked" />
+          </feMerge>
+        </filter>
+
+        {/*
+          prism-embossed-pronounced: stronger 3D raised-relief effect for
+          the brand mark chevron inside the orb. Doubled surface scale
+          versus prism-polished, plus a secondary cool fill light for
+          dimensional form. Reads as substantively raised material.
+        */}
+        <filter id="prism-embossed-pronounced" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+          <feSpecularLighting
+            in="blur"
+            surfaceScale="12"
+            specularConstant="2.5"
+            specularExponent="20"
+            lighting-color="#ffffff"
+            result="specKey"
+          >
+            <fePointLight x="-60" y="-150" z="220" />
+          </feSpecularLighting>
+          <feComposite in="specKey" in2="SourceAlpha" operator="in" result="keyMasked" />
+          <feSpecularLighting
+            in="blur"
+            surfaceScale="8"
+            specularConstant="0.9"
+            specularExponent="30"
+            lighting-color="#b8c8e0"
+            result="specFill"
+          >
+            <fePointLight x="120" y="200" z="160" />
+          </feSpecularLighting>
+          <feComposite in="specFill" in2="SourceAlpha" operator="in" result="fillMasked" />
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="fillMasked" />
+            <feMergeNode in="keyMasked" />
           </feMerge>
         </filter>
       </defs>
