@@ -12,13 +12,13 @@ import GlassPanel from "./GlassPanel.astro";
   </div>
 
   <p class="hero-tagline">
-    Senior Technology Consultant. AI Adoption, Digital Transformation, MIT Sloan.
+    Senior Technology Consultant · Workplace Modernization through AI Adoption and Digital Transformation
   </p>
 
   <p class="hero-description">
-    Mid-market and enterprise organizations call me when they need digital transformation
-    and AI adoption done right the first time. Thirty years of building systems that stick,
-    from electrons to executive strategy.
+    SMB, mid-market, and enterprise organizations call me when they need workplace modernization
+    done right the first time. Thirty years of executing through AI adoption and digital
+    transformation, building systems that stick, from electrons to executive strategy.
   </p>
 
   <div class="hero-actions">
@@ -46,17 +46,18 @@ import GlassPanel from "./GlassPanel.astro";
   }
 
   /*
-   * Hero lockup: brand mark above wordmark, both left-aligned.
-   * The mark sits as a deliberate object before the wordmark establishes
-   * the full identity below it. Vertical spacing tuned so the two read
-   * as one composed unit, not two separate elements.
+   * Hero lockup: brand mark inline LEFT of the wordmark, vertically
+   * centered with it. The mark and wordmark read as one composed
+   * identity unit at the top of the hero. On narrow mobile screens
+   * falls back to stacked column so the wordmark doesn't get squeezed.
    */
   .hero-lockup {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 28px;
+    flex-direction: row;
+    align-items: center;
+    gap: 36px;
     margin-bottom: 8px;
+    flex-wrap: wrap;
   }
 
   .hero-tagline {
@@ -120,7 +121,9 @@ import GlassPanel from "./GlassPanel.astro";
       padding: 64px 28px;
     }
     .hero-lockup {
-      gap: 20px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
     }
     .hero-tagline { font-size: 18px; }
     .hero-description { font-size: 15px; }
