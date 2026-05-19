@@ -247,7 +247,15 @@ function wrapHue(h: number): number {
   return wrapped < 0 ? wrapped + 360 : wrapped;
 }
 
-function altHueFor(model: MixingModel, baseHue: number): number {
+/**
+ * Primary accent hue: rotated away from the base by the mixing-model
+ * angle. The background sits at the base hue; the accent sits at this
+ * derived hue so it reads as a deliberate contrasting accent.
+ *   analogous           -> base + 30  (subtle, harmonious)
+ *   split-complementary -> base + 150 (strong)
+ *   complementary       -> base + 180 (maximum contrast)
+ */
+function accentHueFor(model: MixingModel, baseHue: number): number {
   switch (model) {
     case "analogous":
       return wrapHue(baseHue + 30);
@@ -255,6 +263,21 @@ function altHueFor(model: MixingModel, baseHue: number): number {
       return wrapHue(baseHue + 150);
     case "complementary":
       return wrapHue(baseHue + 180);
+  }
+}
+
+/**
+ * Secondary accent hue (the "emerald" slot): a different derived angle so
+ * the alt accent stays distinct from both base and primary accent.
+ */
+function secondaryHueFor(model: MixingModel, baseHue: number): number {
+  switch (model) {
+    case "analogous":
+      return wrapHue(baseHue - 30);
+    case "split-complementary":
+      return wrapHue(baseHue + 210);
+    case "complementary":
+      return wrapHue(baseHue + 150);
   }
 }
 
@@ -444,7 +467,10 @@ function brandGlowFor(kind: ResolvedMode["kind"], baseHue: number): string {
 export function generatePalette(request: PaletteRequest): GeneratedPalette {
   const resolved = resolveMode(request.mode);
   const baseHue = wrapHue(request.hue);
-  const altHue = altHueFor(request.model, baseHue);
+  // Background sits at the base hue; the primary accent rotates away from
+  // it by the mixing-model angle; the secondary accent takes a third angle.
+  const accentHue = accentHueFor(request.model, baseHue);
+  const secondaryHue = secondaryHueFor(request.model, baseHue);
 
   // Background regeneration: rotate the mode's template stop hues by the
   // delta from the reference hue so the default hue reproduces Phase 1
@@ -454,12 +480,12 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   const bg = bgConfig.stops.map((s) =>
     formatOklch(s.l, s.c, wrapHue(s.h + rotation)),
   );
-  // overlay-1 follows the base hue (rotated); overlay-2 follows the
-  // mixing-model alt hue so the secondary atmospheric glow visibly
-  // reflects the chosen model (analogous / split-comp / complementary).
+  // overlay-1 follows the base hue (rotated); overlay-2 follows the primary
+  // accent hue so the secondary atmospheric glow echoes the accent and the
+  // mixing-model choice is visible in the page glow.
   const overlays = bgConfig.overlays.map((o, i) => {
     if (o.a <= 0) return "transparent";
-    const oHue = i === 1 && bgConfig.rotate ? altHue : wrapHue(o.h + rotation);
+    const oHue = i === 1 ? accentHue : wrapHue(o.h + rotation);
     return formatOklch(o.l, o.c, oHue, o.a);
   });
 
@@ -472,7 +498,7 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   // Contrast guardrail: shift the primary accent away from the surface L if
   // the candidate accent fails the 3:1 floor. Apply the same delta to bright
   // and deep so the triad stays coherent.
-  const delta = adjustForSurfaceContrast(Lbase, C, baseHue, resolved.surfaceL);
+  const delta = adjustForSurfaceContrast(Lbase, C, accentHue, resolved.surfaceL);
   const LbaseAdj = clamp01(Lbase + delta);
   const LbrightAdj = clamp01(Lbright + delta);
   const LdeepAdj = clamp01(Ldeep + delta);
@@ -491,8 +517,8 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   let LbrightPrim = LbrightAdj;
   let LdeepPrim = LdeepAdj;
   if (request.contrast === "AAA") {
-    const surface = oklchToSrgb(resolved.surfaceL, 0, baseHue);
-    const accent = oklchToSrgb(LbasePrim, C, baseHue);
+    const surface = oklchToSrgb(resolved.surfaceL, 0, accentHue);
+    const accent = oklchToSrgb(LbasePrim, C, accentHue);
     const ratio = wcagContrast(accent, surface);
     if (ratio < 4.5) {
       const direction = resolved.surfaceL < 0.5 ? +1 : -1;
@@ -509,12 +535,12 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     "--bg-4": bg[3],
     "--bg-overlay-1": overlays[0],
     "--bg-overlay-2": overlays[1],
-    "--accent-royal": formatOklch(LbasePrim, C, baseHue),
-    "--accent-royal-bright": formatOklch(LbrightPrim, C, baseHue),
-    "--accent-royal-deep": formatOklch(LdeepPrim, C, baseHue),
-    "--accent-emerald": formatOklch(LbaseAlt, C, altHue),
-    "--accent-emerald-bright": formatOklch(LbrightAlt, C, altHue),
-    "--accent-emerald-deep": formatOklch(LdeepAlt, C, altHue),
+    "--accent-royal": formatOklch(LbasePrim, C, accentHue),
+    "--accent-royal-bright": formatOklch(LbrightPrim, C, accentHue),
+    "--accent-royal-deep": formatOklch(LdeepPrim, C, accentHue),
+    "--accent-emerald": formatOklch(LbaseAlt, C, secondaryHue),
+    "--accent-emerald-bright": formatOklch(LbrightAlt, C, secondaryHue),
+    "--accent-emerald-deep": formatOklch(LdeepAlt, C, secondaryHue),
     "--brand-color": brandColorFor(resolved.kind, baseHue),
     "--brand-glow": brandGlowFor(resolved.kind, baseHue),
   };

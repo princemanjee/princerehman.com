@@ -215,24 +215,27 @@ function resolveSystemMode(): "light" | "dark" {
  * generator can pick canonical surface/text constants.
  */
 export function computePalette(state: PrismState): GeneratedPalette {
-  const swatch: Swatch | undefined = getSwatchById(state.swatchId);
-  let hue = state.hue;
-  if (swatch && isMono(swatch)) {
-    hue = swatch.oklch.h;
-  } else if (swatch) {
-    const h = extractHueFromOklch(swatch.groups[0]?.colors[0]?.value);
-    if (h !== null) hue = h;
-  }
-
+  // state.hue is the single source of truth for the base hue. Selecting a
+  // swatch sets state.hue (see setUserSelection / applyEntryToState); the
+  // hue slider sets it directly. Do not re-derive from the swatch here, or
+  // the slider would be silently overridden.
   const resolvedMode: ThemeMode =
     state.mode === "system" ? resolveSystemMode() : state.mode;
 
   return generatePalette({
     mode: resolvedMode,
     model: state.model,
-    hue,
+    hue: state.hue,
     contrast: state.contrast,
   });
+}
+
+/** Resolve a swatch id to its base hue (mono hue, or first preset color). */
+function swatchHue(swatchId: string): number | null {
+  const swatch: Swatch | undefined = getSwatchById(swatchId);
+  if (!swatch) return null;
+  if (isMono(swatch)) return swatch.oklch.h;
+  return extractHueFromOklch(swatch.groups[0]?.colors[0]?.value);
 }
 
 // ─── DOM application ────────────────────────────────────────────────
@@ -295,6 +298,12 @@ export function setUserSelection(partial: Partial<PrismState>): {
     ...partial,
     pickedAt: new Date().toISOString(),
   };
+  // Selecting a swatch without an explicit hue sets the base hue from that
+  // swatch. An explicit hue (from the slider) always wins.
+  if (partial.swatchId !== undefined && partial.hue === undefined) {
+    const h = swatchHue(partial.swatchId);
+    if (h !== null) merged.hue = h;
+  }
   const palette = computePalette(merged);
   applyState(merged, palette);
   saveState(merged, palette);
