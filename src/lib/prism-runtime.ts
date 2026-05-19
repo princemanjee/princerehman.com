@@ -25,6 +25,7 @@
 
 import {
   generatePalette,
+  generatePresetPalette,
   type ContrastLevel,
   type GeneratedPalette,
   type MixingModel,
@@ -37,6 +38,7 @@ import {
 import {
   getSwatchById,
   isMono,
+  isPalette,
   type Swatch,
 } from "../data/prismSwatches";
 
@@ -215,13 +217,21 @@ function resolveSystemMode(): "light" | "dark" {
  * generator can pick canonical surface/text constants.
  */
 export function computePalette(state: PrismState): GeneratedPalette {
-  // state.hue is the single source of truth for the base hue. Selecting a
-  // swatch sets state.hue (see setUserSelection / applyEntryToState); the
-  // hue slider sets it directly. Do not re-derive from the swatch here, or
-  // the slider would be silently overridden.
   const resolvedMode: ThemeMode =
     state.mode === "system" ? resolveSystemMode() : state.mode;
 
+  // Palette presets bypass the mixing-model generator and apply their own
+  // fixed color scheme directly. Mono swatches use the hue + mixing model.
+  const swatch = getSwatchById(state.swatchId);
+  if (swatch && isPalette(swatch)) {
+    const colors = swatch.groups.flatMap((g) => g.colors.map((c) => c.value));
+    return generatePresetPalette(colors, resolvedMode);
+  }
+
+  // Mono path: state.hue is the single source of truth for the base hue.
+  // Selecting a swatch sets state.hue (see setUserSelection /
+  // applyEntryToState); the hue slider sets it directly. Do not re-derive
+  // from the swatch here, or the slider would be silently overridden.
   return generatePalette({
     mode: resolvedMode,
     model: state.model,
@@ -240,27 +250,57 @@ function swatchHue(swatchId: string): number | null {
 
 // ─── DOM application ────────────────────────────────────────────────
 
+/**
+ * Every CSS custom property either palette path can set. Cleared before
+ * each apply so switching between mono swatches and palette presets (which
+ * emit different key sets, e.g. presets add text tokens) never leaves a
+ * stale inline override behind.
+ */
+const CLEARABLE_KEYS: string[] = [
+  "--bg-1", "--bg-2", "--bg-3", "--bg-4", "--bg-overlay-1", "--bg-overlay-2",
+  "--glass-bg", "--glass-bg-hover", "--glass-border", "--glass-border-strong",
+  "--highlight-top", "--highlight-top-soft", "--highlight-bottom",
+  "--highlight-bottom-soft", "--shadow-side",
+  "--neo-surface", "--neo-shadow-light", "--neo-shadow-dark",
+  "--accent-royal", "--accent-royal-bright", "--accent-royal-deep",
+  "--accent-emerald", "--accent-emerald-bright", "--accent-emerald-deep",
+  "--brand-color", "--brand-glow",
+  "--color-fg-primary", "--color-fg-secondary", "--color-fg-tertiary",
+  "--color-fg-muted",
+  "--prism-active-hue", "--oz-color",
+];
+
 export function applyState(state: PrismState, palette: GeneratedPalette): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.setAttribute("data-theme", state.mode);
-  for (const key of Object.keys(palette) as Array<keyof GeneratedPalette>) {
-    root.style.setProperty(key, palette[key]);
-  }
-  // Expose the active base hue as a CSS custom property so the .oz
-  // alternate accent can switch to ruby when the hue lands in the green
-  // band. See global.css for the .oz rule.
-  root.style.setProperty("--prism-active-hue", String(Math.round(state.hue)));
 
-  // .oz alternate accent: defaults to emerald, switches to ruby when
-  // the active base hue is in the green band (100-180 degrees) so the
-  // CTA still reads as distinct against a green-keyed palette.
-  // Dorothy's ruby slippers when the world is the Emerald City.
+  // Clear stale overrides from a previous palette/mode before applying.
+  for (const key of CLEARABLE_KEYS) root.style.removeProperty(key);
+
+  for (const key of Object.keys(palette) as Array<keyof GeneratedPalette>) {
+    const v = palette[key];
+    if (v !== undefined) root.style.setProperty(key, v);
+  }
+
+  // Expose the active base hue so the .oz alternate accent can switch to
+  // ruby when the hue lands in the green band. See global.css.
+  root.style.setProperty("--prism-active-hue", String(Math.round(state.hue)));
   const inGreenBand = state.hue >= 100 && state.hue <= 180;
   root.style.setProperty(
     "--oz-color",
     inGreenBand ? "oklch(0.45 0.20 15)" : "var(--accent-emerald)",
   );
+
+  // Flag palette presets via a data attribute so special renders (the
+  // Pride ROYGBIV gradient background) can key off it in global.css. Mono
+  // swatches clear the attribute.
+  const swatch = getSwatchById(state.swatchId);
+  if (swatch && isPalette(swatch)) {
+    root.setAttribute("data-prism-palette", state.swatchId);
+  } else {
+    root.removeAttribute("data-prism-palette");
+  }
 }
 
 // ─── Entry points ────────────────────────────────────────────────────

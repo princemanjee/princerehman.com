@@ -93,6 +93,13 @@ export interface GeneratedPalette {
   "--accent-emerald-deep": string;
   "--brand-color": string;
   "--brand-glow": string;
+  // Text tokens are only emitted by the preset path (palettes define their
+  // own text color). Mono swatches leave these undefined so the static
+  // theme text tokens apply. applyState clears them on mode/palette switch.
+  "--color-fg-primary"?: string;
+  "--color-fg-secondary"?: string;
+  "--color-fg-tertiary"?: string;
+  "--color-fg-muted"?: string;
 }
 
 /**
@@ -554,6 +561,102 @@ function brandGlowFor(kind: ResolvedMode["kind"], baseHue: number): string {
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Palette preset path (multi-color schemes, bypass the mixing model)
+// ---------------------------------------------------------------------------
+
+interface ParsedOklch { l: number; c: number; h: number; a: number; }
+
+function parseOklch(value: string): ParsedOklch | null {
+  const m = value.match(
+    /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)/i,
+  );
+  if (!m) return null;
+  return {
+    l: Number(m[1]),
+    c: Number(m[2]),
+    h: Number(m[3]),
+    a: m[4] !== undefined ? Number(m[4]) : 1,
+  };
+}
+
+/**
+ * Generate a complete palette from a fixed multi-color scheme (Patriotic,
+ * Christmas, etc.), bypassing the mixing-model generator. Auto-role rule
+ * (option A): darkest color -> background, lightest -> text, most chromatic
+ * -> accent, second-darkest -> surface. The whole token set including text
+ * is emitted so the palette fully defines the page; the runtime clears any
+ * stale overrides before applying so mono <-> palette switches stay clean.
+ *
+ * Pride is handled separately (a gradient render keyed by data attribute);
+ * this function still returns a sensible dark base for it so text stays
+ * readable beneath the gradient overlay.
+ */
+export function generatePresetPalette(
+  colors: string[],
+  mode: ThemeMode,
+): GeneratedPalette {
+  const parsed = colors
+    .map(parseOklch)
+    .filter((x): x is ParsedOklch => x !== null);
+
+  if (parsed.length === 0) {
+    return generatePalette({ mode, model: "analogous", hue: 263, contrast: "AA" });
+  }
+
+  const byL = [...parsed].sort((a, b) => a.l - b.l);
+  const byC = [...parsed].sort((a, b) => b.c - a.c);
+
+  const darkest = byL[0];
+  const lightest = byL[byL.length - 1];
+  const surface = byL[Math.min(1, byL.length - 1)];
+  const accent = byC[0];
+  const accent2 = byC[Math.min(1, byC.length - 1)];
+
+  const fmt = (p: ParsedOklch, a?: number) =>
+    formatOklch(p.l, p.c, p.h, a ?? p.a);
+  const shift = (p: ParsedOklch, dl: number) =>
+    formatOklch(clamp01(p.l + dl), p.c, p.h);
+
+  // Determine whether the scheme reads dark or light by comparing the
+  // background lightness, so text/surface contrast is chosen sensibly.
+  const bgIsDark = darkest.l < 0.5;
+  const textP = bgIsDark ? lightest : darkest;
+
+  return {
+    "--bg-1": fmt(darkest),
+    "--bg-2": fmt(surface),
+    "--bg-3": fmt(darkest),
+    "--bg-4": fmt(surface),
+    "--bg-overlay-1": fmt(accent, 0.10),
+    "--bg-overlay-2": fmt(accent2, 0.08),
+    "--glass-bg": fmt(surface, bgIsDark ? 0.10 : 0.55),
+    "--glass-bg-hover": fmt(surface, bgIsDark ? 0.18 : 0.72),
+    "--glass-border": fmt(textP, 0.18),
+    "--glass-border-strong": fmt(textP, 0.32),
+    "--highlight-top": bgIsDark ? "oklch(1 0 0 / 0.6)" : "oklch(1 0 0 / 0.9)",
+    "--highlight-top-soft": "oklch(1 0 0 / 0.3)",
+    "--highlight-bottom": "oklch(1 0 0 / 0.4)",
+    "--highlight-bottom-soft": "oklch(1 0 0 / 0.12)",
+    "--shadow-side": "oklch(0 0 0 / 0.12)",
+    "--neo-surface": fmt(surface),
+    "--neo-shadow-light": "oklch(1 0 0 / 0.7)",
+    "--neo-shadow-dark": "oklch(0 0 0 / 0.18)",
+    "--accent-royal": fmt(accent),
+    "--accent-royal-bright": shift(accent, +0.08),
+    "--accent-royal-deep": shift(accent, -0.10),
+    "--accent-emerald": fmt(accent2),
+    "--accent-emerald-bright": shift(accent2, +0.08),
+    "--accent-emerald-deep": shift(accent2, -0.10),
+    "--brand-color": fmt(textP, 0.95),
+    "--brand-glow": fmt(accent, 0.4),
+    "--color-fg-primary": fmt(textP, 0.96),
+    "--color-fg-secondary": fmt(textP, 0.84),
+    "--color-fg-tertiary": fmt(textP, 0.68),
+    "--color-fg-muted": fmt(textP, 0.52),
+  };
+}
 
 export function generatePalette(request: PaletteRequest): GeneratedPalette {
   const resolved = resolveMode(request.mode);

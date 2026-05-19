@@ -80,7 +80,7 @@ const mixingModels = [
     </section>
 
     {/* Mixing model */}
-    <section class="prism-section">
+    <section class="prism-section" data-prism-axis="model">
       <span class="prism-section-label">Mixing model</span>
       <div class="prism-segmented" role="radiogroup" aria-label="Color mixing model">
         {mixingModels.map((m) => (
@@ -97,7 +97,7 @@ const mixingModels = [
     </section>
 
     {/* Hue slider */}
-    <section class="prism-section">
+    <section class="prism-section" data-prism-axis="hue">
       <div class="prism-section-row">
         <span class="prism-section-label">Hue</span>
         <span class="prism-section-value" data-prism-hue-display>263°</span>
@@ -162,8 +162,16 @@ const mixingModels = [
     resetToDefault,
     type PrismState,
   } from "../lib/prism-runtime";
+  import { getSwatchById, isPalette } from "../data/prismSwatches";
 
   function syncUI(state: PrismState): void {
+    // Palette presets define their own fixed scheme, so the hue slider and
+    // mixing-model axes don't apply. Grey them out when a palette is active.
+    const swatch = getSwatchById(state.swatchId);
+    const paletteActive = !!swatch && isPalette(swatch);
+    document.querySelectorAll<HTMLElement>("[data-prism-axis]").forEach((sec) => {
+      sec.classList.toggle("prism-section--disabled", paletteActive);
+    });
     // Mode
     document.querySelectorAll<HTMLButtonElement>("[data-prism-mode]").forEach((btn) => {
       const sel = btn.dataset.prismMode === state.mode;
@@ -429,6 +437,12 @@ const mixingModels = [
   }
   .prism-section:last-of-type {
     border-bottom: none;
+  }
+  /* Axis disabled when a palette preset is active (hue + mixing model
+     don't apply to fixed multi-color schemes). */
+  .prism-section--disabled {
+    opacity: 0.4;
+    pointer-events: none;
   }
   .prism-section-label {
     display: block;
