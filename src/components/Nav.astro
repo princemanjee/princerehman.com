@@ -155,7 +155,7 @@ const workActive = isActiveSection("/work");
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 22px;
+    padding: 5px 30px;
     border-radius: 999px;
     font-family: var(--font-ui);
     font-size: 14px;
@@ -343,6 +343,41 @@ const workActive = isActiveSection("/work");
 
   .nav-sub-item--active .nav-sub-item-meta {
     color: rgba(255, 255, 255, 0.75);
+  }
+
+  /*
+   * Cross-theme legibility: the dropdown menu has a hardcoded dark navy
+   * background (independent of theme tokens), so on light-surfaced themes
+   * the inherited dark text becomes dark-on-dark. Force the sub-item
+   * label and its hover state to render against the dark menu surface
+   * regardless of the active theme. Meta keeps its own --color-fg-muted
+   * which already reads in the same band.
+   */
+  :root[data-theme="light"] .nav-sub-item,
+  :root[data-theme="neomorphic"] .nav-sub-item {
+    color: oklch(1 0 0 / 0.86);
+  }
+
+  :root[data-theme="light"] .nav-sub-item:hover,
+  :root[data-theme="neomorphic"] .nav-sub-item:hover {
+    color: oklch(1 0 0 / 0.96);
+  }
+
+  :root[data-theme="light"] .nav-sub-item-meta,
+  :root[data-theme="neomorphic"] .nav-sub-item-meta {
+    color: oklch(1 0 0 / 0.62);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] .nav-sub-item {
+      color: oklch(1 0 0 / 0.86);
+    }
+    :root[data-theme="system"] .nav-sub-item:hover {
+      color: oklch(1 0 0 / 0.96);
+    }
+    :root[data-theme="system"] .nav-sub-item-meta {
+      color: oklch(1 0 0 / 0.62);
+    }
   }
 
   /*

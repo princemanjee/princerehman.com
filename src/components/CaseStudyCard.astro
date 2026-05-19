@@ -160,10 +160,47 @@ const href = `/work/${caseStudy.slug}`;
     border: 1px solid rgba(80, 180, 130, 0.30);
   }
 
+  /*
+   * Light-surfaced themes: darken text to a readable emerald.
+   * Mirrors the full case-study page override in CaseStudy.astro.
+   */
+  :root[data-theme="light"] .case-study-card-availability--open-source,
+  :root[data-theme="neomorphic"] .case-study-card-availability--open-source {
+    color: oklch(0.40 0.13 153);
+    background: oklch(0.65 0.18 150 / 0.18);
+    border-color: oklch(0.50 0.15 153 / 0.45);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] .case-study-card-availability--open-source {
+      color: oklch(0.40 0.13 153);
+      background: oklch(0.65 0.18 150 / 0.18);
+      border-color: oklch(0.50 0.15 153 / 0.45);
+    }
+  }
+
   .case-study-card-availability--commercial-preserved {
     color: rgba(240, 210, 160, 0.95);
     background: rgba(220, 170, 90, 0.12);
     border: 1px solid rgba(220, 170, 90, 0.30);
+  }
+
+  /*
+   * Light-surfaced themes: parallel amber fix to the open-source variant.
+   */
+  :root[data-theme="light"] .case-study-card-availability--commercial-preserved,
+  :root[data-theme="neomorphic"] .case-study-card-availability--commercial-preserved {
+    color: oklch(0.42 0.12 75);
+    background: oklch(0.75 0.14 75 / 0.22);
+    border-color: oklch(0.55 0.13 75 / 0.45);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] .case-study-card-availability--commercial-preserved {
+      color: oklch(0.42 0.12 75);
+      background: oklch(0.75 0.14 75 / 0.22);
+      border-color: oklch(0.55 0.13 75 / 0.45);
+    }
   }
 
   .case-study-card-tagline {
