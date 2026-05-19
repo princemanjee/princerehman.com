@@ -1,0 +1,509 @@
+---
+/**
+ * PrismPanel: the Phase 1 surface of the namesake Prism control panel.
+ *
+ * A floating glass disc anchored to the bottom-left corner of every page.
+ * Clicking it reveals a vertical theme picker exposing the five Phase 1
+ * theme modes. The button itself is the entry point that Phase 2 will
+ * expand into the full four-axis control surface (theme mode, color
+ * mixing model, hue slider, contrast level).
+ *
+ * Phase 1 surface area:
+ *   - Theme mode picker (Light, Dark, Hybrid, System, Neomorphic)
+ *   - Persistence to localStorage under key "prism-theme"
+ *   - Pre-paint bootstrap script lives in BaseLayout to prevent FOUC
+ *
+ * Phase 2 will add:
+ *   - Hue slider (0-360)
+ *   - Color mixing model selector (strict comp, split comp, analogous)
+ *   - Contrast level toggle (AA / AAA)
+ *   - Quick-select brand swatch buttons
+ *
+ * Mounted once in BaseLayout so it appears site-wide.
+ */
+
+const themes = [
+  { id: "dark",       label: "Dark",       hint: "Deep navy, frosted glass" },
+  { id: "light",      label: "Light",      hint: "Airy off-white" },
+  { id: "hybrid",     label: "Hybrid",     hint: "Medium tone" },
+  { id: "system",     label: "System",     hint: "Follows your OS" },
+  { id: "neomorphic", label: "Neomorphic", hint: "Soft surfaces (tokens only)" },
+] as const;
+---
+
+<div class="prism" data-prism-root>
+  <button
+    type="button"
+    class="prism-trigger"
+    aria-label="Open theme control panel"
+    aria-expanded="false"
+    aria-controls="prism-panel-body"
+    data-prism-trigger>
+    <svg viewBox="0 0 24 24" class="prism-icon" aria-hidden="true">
+      {/* Triangular prism silhouette dispersing a beam */}
+      <path
+        d="M12 3 L21 19 L3 19 Z"
+        stroke="currentColor"
+        stroke-width="1.4"
+        fill="none"
+        stroke-linejoin="round" />
+      <path
+        d="M7 13 L17 13"
+        stroke="currentColor"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        opacity="0.55" />
+      <path
+        d="M9 16 L15 16"
+        stroke="currentColor"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        opacity="0.30" />
+    </svg>
+  </button>
+
+  <div
+    id="prism-panel-body"
+    class="prism-panel"
+    role="dialog"
+    aria-label="Theme picker"
+    aria-hidden="true"
+    data-prism-panel>
+    <div class="prism-panel-header">
+      <span class="prism-panel-title">Theme</span>
+      <span class="prism-panel-subtitle">Phase 1</span>
+    </div>
+
+    <div class="prism-options" role="radiogroup" aria-label="Theme mode">
+      {themes.map((t) => (
+        <button
+          type="button"
+          class="prism-option"
+          role="radio"
+          aria-checked="false"
+          data-prism-option={t.id}>
+          <span class={`prism-swatch prism-swatch--${t.id}`} aria-hidden="true" />
+          <span class="prism-option-text">
+            <span class="prism-option-label">{t.label}</span>
+            <span class="prism-option-hint">{t.hint}</span>
+          </span>
+          <svg
+            viewBox="0 0 16 16"
+            class="prism-option-check"
+            aria-hidden="true">
+            <path
+              d="M3 8 L7 12 L13 4"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+      ))}
+    </div>
+
+    <div class="prism-panel-footer">
+      <span class="prism-panel-footer-text">More controls in Phase 2</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Theme picker runtime. Lives client-side to handle user interaction
+  // after the pre-paint bootstrap in BaseLayout has applied the stored
+  // theme to <html>.
+  const STORAGE_KEY = "prism-theme";
+  const DEFAULT_THEME = "dark";
+  const VALID = new Set(["dark", "light", "hybrid", "system", "neomorphic"]);
+
+  function readTheme(): string {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored && VALID.has(stored)) return stored;
+    } catch {
+      /* localStorage unavailable, fall through */
+    }
+    return DEFAULT_THEME;
+  }
+
+  function applyTheme(theme: string): void {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem(STORAGE_KEY, theme);
+    } catch {
+      /* persistence best-effort */
+    }
+    syncSelectedState(theme);
+  }
+
+  function syncSelectedState(theme: string): void {
+    const opts = document.querySelectorAll<HTMLButtonElement>("[data-prism-option]");
+    opts.forEach((btn) => {
+      const selected = btn.dataset.prismOption === theme;
+      btn.setAttribute("aria-checked", selected ? "true" : "false");
+      btn.classList.toggle("prism-option--selected", selected);
+    });
+  }
+
+  function openPanel(): void {
+    const root = document.querySelector<HTMLElement>("[data-prism-root]");
+    const trigger = document.querySelector<HTMLButtonElement>("[data-prism-trigger]");
+    const panel = document.querySelector<HTMLElement>("[data-prism-panel]");
+    if (!root || !trigger || !panel) return;
+    root.classList.add("prism--open");
+    trigger.setAttribute("aria-expanded", "true");
+    panel.setAttribute("aria-hidden", "false");
+  }
+
+  function closePanel(): void {
+    const root = document.querySelector<HTMLElement>("[data-prism-root]");
+    const trigger = document.querySelector<HTMLButtonElement>("[data-prism-trigger]");
+    const panel = document.querySelector<HTMLElement>("[data-prism-panel]");
+    if (!root || !trigger || !panel) return;
+    root.classList.remove("prism--open");
+    trigger.setAttribute("aria-expanded", "false");
+    panel.setAttribute("aria-hidden", "true");
+  }
+
+  function togglePanel(): void {
+    const root = document.querySelector<HTMLElement>("[data-prism-root]");
+    if (!root) return;
+    if (root.classList.contains("prism--open")) closePanel();
+    else openPanel();
+  }
+
+  function init(): void {
+    syncSelectedState(readTheme());
+
+    const trigger = document.querySelector<HTMLButtonElement>("[data-prism-trigger]");
+    trigger?.addEventListener("click", togglePanel);
+
+    document.querySelectorAll<HTMLButtonElement>("[data-prism-option]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const theme = btn.dataset.prismOption;
+        if (theme && VALID.has(theme)) {
+          applyTheme(theme);
+          closePanel();
+        }
+      });
+    });
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePanel();
+    });
+
+    // Close on click outside
+    document.addEventListener("click", (e) => {
+      const root = document.querySelector<HTMLElement>("[data-prism-root]");
+      if (!root) return;
+      if (!root.classList.contains("prism--open")) return;
+      if (root.contains(e.target as Node)) return;
+      closePanel();
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+</script>
+
+<style>
+  .prism {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 200;
+  }
+
+  /*
+   * Trigger disc: small glass circle with the prism icon. Matches the
+   * GlassPanel surface treatment so it reads as part of the system.
+   */
+  .prism-trigger {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-fg-primary);
+    background: var(--glass-bg-hover);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border-strong);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      inset 0 -1px 1px var(--highlight-bottom-soft),
+      0 4px 16px var(--shadow-side),
+      0 8px 32px var(--shadow-side);
+    transition:
+      transform var(--duration-base) var(--easing-out),
+      background var(--duration-base) var(--easing-out),
+      box-shadow var(--duration-base) var(--easing-out);
+  }
+
+  .prism-trigger:hover {
+    transform: translateY(-2px);
+    background: var(--glass-bg-hover);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      inset 0 -1px 1px var(--highlight-bottom-soft),
+      0 6px 20px var(--shadow-side),
+      0 12px 40px var(--shadow-side),
+      0 0 30px var(--brand-glow);
+  }
+
+  .prism-trigger:active {
+    transform: translateY(0);
+  }
+
+  .prism-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--color-fg-primary);
+  }
+
+  /*
+   * Expanded panel: anchored above the trigger, opens upward so it
+   * pushes into the page rather than off-screen.
+   */
+  .prism-panel {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 0;
+    min-width: 280px;
+    padding: var(--space-md);
+    background: var(--glass-bg-hover);
+    backdrop-filter: blur(calc(var(--glass-blur) * 2)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 2)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 8px 24px var(--shadow-side),
+      0 24px 64px var(--shadow-side),
+      0 0 80px var(--brand-glow);
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.97);
+    transform-origin: bottom left;
+    transition:
+      opacity var(--duration-base) var(--easing-out),
+      transform var(--duration-base) var(--easing-out);
+  }
+
+  .prism--open .prism-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .prism-panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 var(--space-xs) var(--space-sm);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .prism-panel-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .prism-panel-subtitle {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+
+  .prism-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-sm) 0 var(--space-xs);
+  }
+
+  /*
+   * Option button: row layout with swatch, label, hint, and check icon.
+   * Selected state matches the royal-blue lit treatment used by primary
+   * GlassButton and the active nav pill.
+   */
+  .prism-option {
+    display: grid;
+    grid-template-columns: 18px 1fr 18px;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-sm);
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    color: var(--color-fg-secondary);
+    text-align: left;
+    transition:
+      background var(--duration-base) var(--easing-out),
+      color var(--duration-base) var(--easing-out);
+  }
+
+  .prism-option:hover {
+    background: var(--glass-bg-hover);
+    color: var(--color-fg-primary);
+  }
+
+  .prism-option--selected {
+    background: linear-gradient(
+      180deg,
+      var(--accent-royal-bright) 0%,
+      var(--accent-royal) 50%,
+      var(--accent-royal-deep) 100%
+    );
+    border-color: var(--accent-royal-bright);
+    color: oklch(1 0 0 / 0.98);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      0 2px 8px var(--shadow-side);
+  }
+
+  .prism-option--selected:hover {
+    color: oklch(1 0 0 / 0.98);
+  }
+
+  .prism-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .prism-option-label {
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .prism-option-hint {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--color-fg-muted);
+    line-height: 1.2;
+  }
+
+  .prism-option--selected .prism-option-hint {
+    color: oklch(1 0 0 / 0.75);
+  }
+
+  .prism-option-check {
+    width: 16px;
+    height: 16px;
+    color: oklch(1 0 0 / 0.95);
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--easing-out);
+  }
+
+  .prism-option--selected .prism-option-check {
+    opacity: 1;
+  }
+
+  /*
+   * Color swatches: a small dot expressing the dominant tone of each
+   * theme. Hand-tuned values, not derived from the theme tokens, so
+   * the swatch reads the same regardless of which theme is active.
+   */
+  .prism-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    border: 1px solid oklch(1 0 0 / 0.25);
+    box-shadow: inset 0 1px 1px oklch(1 0 0 / 0.40);
+  }
+
+  .prism-swatch--dark {
+    background: linear-gradient(135deg,
+      oklch(0.135 0.052 271) 0%,
+      oklch(0.190 0.067 265) 100%);
+  }
+
+  .prism-swatch--light {
+    background: linear-gradient(135deg,
+      oklch(0.985 0.005 250) 0%,
+      oklch(0.955 0.015 250) 100%);
+    border-color: oklch(0 0 0 / 0.15);
+  }
+
+  .prism-swatch--hybrid {
+    background: linear-gradient(135deg,
+      oklch(0.400 0.030 260) 0%,
+      oklch(0.450 0.028 250) 100%);
+  }
+
+  .prism-swatch--system {
+    background: linear-gradient(135deg,
+      oklch(0.985 0.005 250) 0%,
+      oklch(0.985 0.005 250) 50%,
+      oklch(0.135 0.052 271) 50%,
+      oklch(0.135 0.052 271) 100%);
+  }
+
+  .prism-swatch--neomorphic {
+    background: linear-gradient(135deg,
+      oklch(0.935 0.005 80) 0%,
+      oklch(0.905 0.005 80) 100%);
+    border-color: oklch(0 0 0 / 0.10);
+    box-shadow:
+      inset 1px 1px 1px oklch(1 0 0 / 0.60),
+      inset -1px -1px 1px oklch(0.30 0.005 80 / 0.15);
+  }
+
+  .prism-panel-footer {
+    padding: var(--space-sm) var(--space-xs) 0;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .prism-panel-footer-text {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--color-fg-muted);
+    font-style: italic;
+  }
+
+  /* Mobile: nudge inward a bit, keep accessible */
+  @media (max-width: 768px) {
+    .prism {
+      bottom: 16px;
+      left: 16px;
+    }
+    .prism-trigger {
+      width: 44px;
+      height: 44px;
+    }
+    .prism-panel {
+      min-width: 260px;
+    }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .prism-trigger,
+    .prism-panel,
+    .prism-option,
+    .prism-option-check {
+      transition: none;
+    }
+  }
+</style>

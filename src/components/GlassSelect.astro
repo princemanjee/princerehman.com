@@ -1,0 +1,263 @@
+---
+/**
+ * GlassSelect: dropdown select with native picker, styled to match
+ * the recessed glass input language.
+ *
+ * Uses a native <select> element so mobile gets the OS-native picker
+ * (excellent UX, accessible) while desktop gets a styled closed state.
+ * The native arrow is removed via appearance: none and replaced with
+ * a chevron SVG that matches the brand mark's chevron stroke style
+ * (round line caps, royal blue accent color on focus).
+ *
+ * Options are passed as an array of { value, label } objects. An
+ * optional placeholder renders as the first disabled option.
+ *
+ * Usage:
+ *   <GlassField label="Topic" htmlFor="subject" required>
+ *     <GlassSelect
+ *       name="subject"
+ *       id="subject"
+ *       placeholder="Choose a topic..."
+ *       options={[
+ *         { value: "consulting", label: "Consulting engagement" },
+ *         { value: "leadership", label: "IT leadership role" }
+ *       ]}
+ *       required
+ *     />
+ *   </GlassField>
+ */
+
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  name: string;
+  id?: string;
+  value?: string;
+  placeholder?: string;
+  options: Option[];
+  required?: boolean;
+  disabled?: boolean;
+  hasError?: boolean;
+  size?: "sm" | "md" | "lg";
+  ariaDescribedBy?: string;
+  class?: string;
+}
+
+const {
+  name,
+  id = name,
+  value,
+  placeholder,
+  options,
+  required = false,
+  disabled = false,
+  hasError = false,
+  size = "md",
+  ariaDescribedBy,
+  class: className = "",
+} = Astro.props;
+---
+
+<div class="glass-select-wrapper">
+  <select
+    name={name}
+    id={id}
+    required={required}
+    disabled={disabled}
+    aria-invalid={hasError || undefined}
+    aria-describedby={ariaDescribedBy}
+    class:list={[
+      "glass-select",
+      `glass-select--${size}`,
+      hasError && "glass-select--error",
+      !value && placeholder && "glass-select--placeholder-shown",
+      className,
+    ]}>
+    {placeholder && (
+      <option value="" disabled selected={!value}>
+        {placeholder}
+      </option>
+    )}
+    {options.map((opt) => (
+      <option value={opt.value} selected={value === opt.value}>
+        {opt.label}
+      </option>
+    ))}
+  </select>
+
+  {/* Custom chevron caret, matches the brand chevron stroke style */}
+  <svg
+    viewBox="0 0 12 8"
+    class="glass-select-caret"
+    aria-hidden="true">
+    <path
+      d="M1 1 L6 6 L11 1"
+      stroke="currentColor"
+      stroke-width="1.6"
+      fill="none"
+      stroke-linecap="round"
+      stroke-linejoin="round" />
+  </svg>
+</div>
+
+<style>
+  .glass-select-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  /*
+   * Same recessed glass treatment as GlassInput.
+   * Extra right padding (44px) leaves room for the custom chevron.
+   * Native appearance fully removed via -webkit-appearance and
+   * appearance: none so the styled wrapper takes full visual control.
+   */
+  .glass-select {
+    display: block;
+    width: 100%;
+    font-family: var(--font-body);
+    color: var(--color-fg-primary);
+    background: rgba(0, 0, 0, 0.20);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    transition:
+      border-color var(--duration-base) var(--easing-out),
+      background var(--duration-base) var(--easing-out),
+      box-shadow var(--duration-base) var(--easing-out);
+  }
+
+  /* Size variants */
+  .glass-select--sm {
+    padding: 10px 38px 10px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .glass-select--md {
+    padding: 14px 44px 14px 18px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+  .glass-select--lg {
+    padding: 18px 50px 18px 22px;
+    font-size: 17px;
+    border-radius: 16px;
+  }
+
+  /*
+   * Option styling.
+   * Most browsers do not allow much styling on <option> elements inside
+   * native selects, but we can set background and color so the dropdown
+   * does not flash white when opened. The actual rendering of the open
+   * dropdown is mostly controlled by the OS on mobile and by the browser
+   * on desktop.
+   */
+  .glass-select option {
+    background: #161e3a;
+    color: var(--color-fg-primary);
+    padding: 8px;
+  }
+
+  .glass-select option:disabled {
+    color: var(--color-fg-muted);
+  }
+
+  /*
+   * Placeholder-shown variant: when the disabled placeholder option is
+   * selected, dim the displayed text so it visually reads as a placeholder
+   * rather than a chosen value.
+   */
+  .glass-select--placeholder-shown {
+    color: var(--color-fg-muted);
+  }
+
+  /* Custom chevron caret */
+  .glass-select-caret {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 8px;
+    color: var(--color-fg-muted);
+    pointer-events: none;
+    transition: color var(--duration-base) var(--easing-out);
+  }
+
+  .glass-select--sm + .glass-select-caret,
+  .glass-select--sm ~ .glass-select-caret {
+    right: 14px;
+  }
+
+  .glass-select--lg + .glass-select-caret,
+  .glass-select--lg ~ .glass-select-caret {
+    right: 22px;
+  }
+
+  /*
+   * Focus state matches GlassInput.
+   * Caret color shifts to royal blue when the select is focused to
+   * signal the active state.
+   */
+  .glass-select:focus,
+  .glass-select:focus-visible {
+    outline: none;
+    border-color: rgba(91, 140, 255, 0.65);
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 3px rgba(91, 140, 255, 0.18),
+      0 0 24px rgba(91, 140, 255, 0.25);
+    color: var(--color-fg-primary);
+  }
+
+  .glass-select:focus + .glass-select-caret,
+  .glass-select:focus-visible + .glass-select-caret,
+  .glass-select:focus ~ .glass-select-caret,
+  .glass-select:focus-visible ~ .glass-select-caret {
+    color: rgba(91, 140, 255, 0.95);
+  }
+
+  /* Error state */
+  .glass-select--error {
+    border-color: rgba(255, 130, 110, 0.65);
+  }
+
+  .glass-select--error:focus,
+  .glass-select--error:focus-visible {
+    border-color: rgba(255, 130, 110, 0.85);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 3px rgba(255, 130, 110, 0.18),
+      0 0 24px rgba(255, 130, 110, 0.25);
+  }
+
+  /* Disabled state */
+  .glass-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-select,
+    .glass-select-caret {
+      transition: none;
+    }
+  }
+</style>

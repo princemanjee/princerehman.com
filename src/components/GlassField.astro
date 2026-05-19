@@ -1,0 +1,129 @@
+---
+/**
+ * GlassField: form field wrapper combining label, input slot, helper text,
+ * and error state into one consistent layout.
+ *
+ * Composes via slot so any input component (GlassInput, GlassTextarea,
+ * GlassSelect) can be placed inside. Handles the label-required-asterisk
+ * pattern, optional helper text, and inline error display.
+ *
+ * Usage:
+ *   <GlassField label="Email" htmlFor="email" required helperText="We never share your email">
+ *     <GlassInput type="email" name="email" id="email" required />
+ *   </GlassField>
+ *
+ *   <GlassField label="Email" htmlFor="email" error="Please enter a valid email">
+ *     <GlassInput type="email" name="email" id="email" hasError />
+ *   </GlassField>
+ *
+ * Accessibility:
+ *   The label is properly associated with the input via htmlFor → id.
+ *   Required state shows visually as an asterisk and should be marked
+ *   on the input itself via the required attribute.
+ *   Error messages use role="alert" so screen readers announce changes.
+ */
+
+interface Props {
+  label: string;
+  htmlFor: string;
+  required?: boolean;
+  error?: string;
+  helperText?: string;
+  class?: string;
+}
+
+const {
+  label,
+  htmlFor,
+  required = false,
+  error,
+  helperText,
+  class: className = "",
+} = Astro.props;
+
+const hasError = !!error;
+const showHelper = !!(error || helperText);
+const helperId = `${htmlFor}-helper`;
+---
+
+<div class:list={["glass-field", hasError && "glass-field--error", className]}>
+  <label for={htmlFor} class="glass-field-label">
+    {label}
+    {required && (
+      <span class="glass-field-required" aria-label="required" title="Required">
+        *
+      </span>
+    )}
+  </label>
+
+  <div class="glass-field-input">
+    <slot />
+  </div>
+
+  {showHelper && (
+    <div
+      id={helperId}
+      class="glass-field-helper"
+      role={hasError ? "alert" : undefined}>
+      {error || helperText}
+    </div>
+  )}
+</div>
+
+<style>
+  .glass-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /*
+   * Label uses Geist UI at small uppercase to match the section heading
+   * style used in FactsPanel and case study sections. Keeps form labels
+   * visually consistent with other structural labels across the site.
+   */
+  .glass-field-label {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /*
+   * Required asterisk: uses amber/warm color to match the commercial
+   * badge treatment from CaseStudy. Same warm accent, not the alarming
+   * red that would suggest an error.
+   */
+  .glass-field-required {
+    color: rgba(220, 170, 90, 0.95);
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /*
+   * Helper text or error message. Switches color via the error class
+   * on the parent so the same DOM element serves both purposes.
+   */
+  .glass-field-helper {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-fg-muted);
+  }
+
+  .glass-field--error .glass-field-helper {
+    color: rgba(255, 140, 130, 0.95);
+  }
+
+  .glass-field-input {
+    /* Wrapper div around the slotted input. Useful for positioning
+       carets or icons absolutely relative to the input bounds. */
+    position: relative;
+  }
+</style>

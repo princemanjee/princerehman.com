@@ -25,7 +25,16 @@ const href = `/work/${caseStudy.slug}`;
 
 <a href={href} class="case-study-card" aria-label={`Read the ${caseStudy.title} case study`}>
   <header class="case-study-card-header">
-    <h2 class="case-study-card-title">{caseStudy.title}</h2>
+    <div class="case-study-card-title-row">
+      <h2 class="case-study-card-title">{caseStudy.title}</h2>
+      <span
+        class:list={[
+          "case-study-card-availability",
+          `case-study-card-availability--${caseStudy.availability}`,
+        ]}>
+        {caseStudy.availability === "commercial-preserved" ? "Commercial" : "Open source"}
+      </span>
+    </div>
     <p class="case-study-card-tagline">{caseStudy.tagline}</p>
   </header>
 
@@ -105,11 +114,19 @@ const href = `/work/${caseStudy.slug}`;
       0 0 100px rgba(91, 140, 255, 0.25);
   }
 
-  /* Header: title in display serif, tagline below in body sans */
+  /* Header: title and availability badge on the same row, tagline below */
   .case-study-card-header {
     margin-bottom: var(--space-lg);
     padding-bottom: var(--space-md);
     border-bottom: 1px solid var(--glass-border);
+  }
+
+  .case-study-card-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-sm);
   }
 
   .case-study-card-title {
@@ -119,7 +136,34 @@ const href = `/work/${caseStudy.slug}`;
     line-height: 1;
     letter-spacing: var(--tracking-tight);
     color: var(--color-fg-primary);
-    margin: 0 0 var(--space-sm) 0;
+    margin: 0;
+  }
+
+  /*
+   * Availability badge: matches the larger version on the full case
+   * study page but at smaller scale appropriate for a card.
+   */
+  .case-study-card-availability {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .case-study-card-availability--open-source {
+    color: rgba(180, 220, 200, 0.95);
+    background: rgba(80, 180, 130, 0.12);
+    border: 1px solid rgba(80, 180, 130, 0.30);
+  }
+
+  .case-study-card-availability--commercial-preserved {
+    color: rgba(240, 210, 160, 0.95);
+    background: rgba(220, 170, 90, 0.12);
+    border: 1px solid rgba(220, 170, 90, 0.30);
   }
 
   .case-study-card-tagline {

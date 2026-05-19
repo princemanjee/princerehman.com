@@ -346,33 +346,12 @@ const workActive = isActiveSection("/work");
   }
 
   /*
-   * Mobile: at narrow widths the dropdown is replaced with the sub-items
-   * displayed inline as a wrapping flex row. Hover dropdowns do not work
-   * on touch, so this keeps the hierarchy navigable on phones.
+   * Mobile: hide the desktop pill nav entirely. The MobileNav component
+   * (a floating disc trigger + full-viewport menu overlay) takes over
+   * for screens below 768px.
    */
   @media (max-width: 768px) {
     .nav {
-      top: 12px;
-      padding: 0 12px;
-    }
-    .nav-bar {
-      padding: 5px;
-      gap: 2px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .nav-item {
-      padding: 8px 14px;
-      font-size: 13px;
-    }
-    /* Hide the dropdown menu entirely on mobile; sub-items render inline
-       in the bar instead via the mobile-flat-children block below. */
-    .nav-dropdown-menu {
-      display: none;
-    }
-    /* The Work item on mobile just navigates to /work (the overview).
-       The dropdown is replaced by linking to the overview directly. */
-    .nav-caret {
       display: none;
     }
   }

@@ -1,0 +1,259 @@
+---
+/**
+ * GlassInput: text-based form input with the recessed glass treatment.
+ *
+ * Inverse visual language from GlassButton: where buttons feel raised
+ * (light from above, drop shadow below), inputs feel recessed (dark
+ * inset shadow at top suggesting the surface is depressed).
+ *
+ * Supports the standard input types via the type prop. Use the
+ * autocomplete prop for browser autofill hints (name, email, tel,
+ * organization, etc.). The inputmode prop tells mobile keyboards
+ * which layout to show.
+ *
+ * Usage inside a GlassField:
+ *   <GlassField label="Email" htmlFor="email" required>
+ *     <GlassInput
+ *       type="email"
+ *       name="email"
+ *       id="email"
+ *       required
+ *       autocomplete="email"
+ *     />
+ *   </GlassField>
+ *
+ * For 16px font-size on mobile: iOS Safari auto-zooms when focusing
+ * inputs with font-size below 16px. The md size uses 16px to prevent
+ * this annoying zoom behavior. Only use sm size for inputs that are
+ * clearly not the primary form interaction (e.g., a small filter
+ * input on a dashboard).
+ */
+
+interface Props {
+  type?: "text" | "email" | "tel" | "url" | "number" | "search" | "password";
+  name: string;
+  id?: string;
+  value?: string | number;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  hasError?: boolean;
+  size?: "sm" | "md" | "lg";
+  autocomplete?: string;
+  inputmode?: "text" | "email" | "tel" | "url" | "numeric" | "decimal" | "search";
+  pattern?: string;
+  minlength?: number;
+  maxlength?: number;
+  min?: string | number;
+  max?: string | number;
+  step?: string | number;
+  ariaDescribedBy?: string;
+  class?: string;
+}
+
+const {
+  type = "text",
+  name,
+  id = name,
+  value,
+  placeholder,
+  required = false,
+  disabled = false,
+  readonly = false,
+  hasError = false,
+  size = "md",
+  autocomplete,
+  inputmode,
+  pattern,
+  minlength,
+  maxlength,
+  min,
+  max,
+  step,
+  ariaDescribedBy,
+  class: className = "",
+} = Astro.props;
+---
+
+<input
+  type={type}
+  name={name}
+  id={id}
+  value={value}
+  placeholder={placeholder}
+  required={required}
+  disabled={disabled}
+  readonly={readonly}
+  autocomplete={autocomplete}
+  inputmode={inputmode}
+  pattern={pattern}
+  minlength={minlength}
+  maxlength={maxlength}
+  min={min}
+  max={max}
+  step={step}
+  aria-invalid={hasError || undefined}
+  aria-describedby={ariaDescribedBy}
+  class:list={[
+    "glass-input",
+    `glass-input--${size}`,
+    hasError && "glass-input--error",
+    className,
+  ]}
+/>
+
+<style>
+  /*
+   * Recessed glass treatment.
+   * Background slightly darker than surrounding glass panels so the
+   * input feels carved INTO the surface, not floating on top of it.
+   * Inset top shadow creates the depressed appearance.
+   * Subtle bottom inset highlight suggests inner light bouncing up.
+   */
+  .glass-input {
+    display: block;
+    width: 100%;
+    font-family: var(--font-body);
+    color: var(--color-fg-primary);
+    background: rgba(0, 0, 0, 0.20);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+    transition:
+      border-color var(--duration-base) var(--easing-out),
+      background var(--duration-base) var(--easing-out),
+      box-shadow var(--duration-base) var(--easing-out);
+    /* Reset native appearance on iOS and Android */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Size variants */
+  .glass-input--sm {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  /*
+   * md (default): font-size 16px prevents iOS Safari auto-zoom on focus.
+   * Comfortable padding for typical form fields.
+   */
+  .glass-input--md {
+    padding: 14px 18px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+  .glass-input--lg {
+    padding: 18px 22px;
+    font-size: 17px;
+    border-radius: 16px;
+  }
+
+  .glass-input::placeholder {
+    color: var(--color-fg-muted);
+    opacity: 0.6;
+  }
+
+  /*
+   * Focus state: royal blue border + outer glow ring + inner glow.
+   * Three-layer treatment makes the active input unmistakable without
+   * being aggressive. Box-shadow stacking is additive with the existing
+   * recessed inset shadows.
+   */
+  .glass-input:focus,
+  .glass-input:focus-visible {
+    outline: none;
+    border-color: rgba(91, 140, 255, 0.65);
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 3px rgba(91, 140, 255, 0.18),
+      0 0 24px rgba(91, 140, 255, 0.25);
+  }
+
+  /*
+   * Error state: red border, more intense red glow on focus.
+   * Uses the same warm-tone palette as the commercial badge from
+   * CaseStudy but shifted toward red for clearer "this is a problem"
+   * signaling.
+   */
+  .glass-input--error {
+    border-color: rgba(255, 130, 110, 0.65);
+  }
+
+  .glass-input--error:focus,
+  .glass-input--error:focus-visible {
+    border-color: rgba(255, 130, 110, 0.85);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 3px rgba(255, 130, 110, 0.18),
+      0 0 24px rgba(255, 130, 110, 0.25);
+  }
+
+  /* Disabled state: dimmed and unclickable */
+  .glass-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .glass-input:read-only {
+    background: rgba(0, 0, 0, 0.10);
+    cursor: default;
+  }
+
+  /*
+   * Chrome autofill override.
+   * Chrome forces a yellow background on autofilled inputs which would
+   * break the design. The large inset box-shadow technique overrides
+   * the background, and -webkit-text-fill-color sets the text color.
+   * Transition delay keeps the override active long enough that the
+   * yellow flash doesn't appear briefly during autofill.
+   */
+  .glass-input:-webkit-autofill,
+  .glass-input:-webkit-autofill:hover,
+  .glass-input:-webkit-autofill:focus,
+  .glass-input:-webkit-autofill:active {
+    -webkit-box-shadow:
+      0 0 0 1000px rgba(20, 25, 50, 0.95) inset,
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+    -webkit-text-fill-color: var(--color-fg-primary) !important;
+    caret-color: var(--color-fg-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Remove number input spinner buttons (cleaner look) */
+  .glass-input[type="number"]::-webkit-inner-spin-button,
+  .glass-input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .glass-input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Remove search input cancel button */
+  .glass-input[type="search"]::-webkit-search-decoration,
+  .glass-input[type="search"]::-webkit-search-cancel-button,
+  .glass-input[type="search"]::-webkit-search-results-button,
+  .glass-input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-input {
+      transition: none;
+    }
+  }
+</style>

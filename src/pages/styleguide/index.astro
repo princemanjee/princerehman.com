@@ -1,0 +1,721 @@
+---
+/**
+ * Phase 1 docs surface for the Prism design system.
+ *
+ * Single-page styleguide rendering tokens, typography, layout primitives,
+ * glass components, theme modes, and brand guidelines. Built as HTML
+ * preview pages per the Notion spec ("Storybook or simple HTML preview
+ * pages") since Astro renders directly without extra tooling.
+ *
+ * Discoverable at /styleguide. Not yet linked from primary nav so it
+ * stays out of public-facing browse paths during Phase 1.
+ *
+ * Use the PrismPanel button (bottom-left, every page) to switch themes
+ * and observe how every section adapts.
+ */
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Container from "../../components/Container.astro";
+import Stack from "../../components/Stack.astro";
+import Grid from "../../components/Grid.astro";
+import GlassPanel from "../../components/GlassPanel.astro";
+import GlassButton from "../../components/GlassButton.astro";
+import GlassInput from "../../components/GlassInput.astro";
+import GlassField from "../../components/GlassField.astro";
+import GlassTextarea from "../../components/GlassTextarea.astro";
+
+const spacingScale = [
+  { name: "2xs", value: "0.25rem" },
+  { name: "xs",  value: "0.5rem" },
+  { name: "sm",  value: "0.75rem" },
+  { name: "md",  value: "1rem" },
+  { name: "lg",  value: "1.5rem" },
+  { name: "xl",  value: "2rem" },
+  { name: "2xl", value: "3rem" },
+  { name: "3xl", value: "4rem" },
+  { name: "4xl", value: "6rem" },
+];
+
+const radiusScale = [
+  { name: "sm",   value: "8px" },
+  { name: "md",   value: "16px" },
+  { name: "lg",   value: "24px" },
+  { name: "xl",   value: "36px" },
+  { name: "2xl",  value: "48px" },
+  { name: "3xl",  value: "56px" },
+  { name: "full", value: "9999px" },
+];
+
+const colorTokens = [
+  { name: "--bg-1",                 desc: "Background gradient stop 1" },
+  { name: "--bg-2",                 desc: "Background gradient stop 2" },
+  { name: "--bg-3",                 desc: "Background gradient stop 3" },
+  { name: "--bg-4",                 desc: "Background gradient stop 4" },
+  { name: "--accent-royal",         desc: "Primary brand accent" },
+  { name: "--accent-royal-bright",  desc: "Royal highlight / link" },
+  { name: "--accent-royal-deep",    desc: "Royal pressed / deep" },
+  { name: "--accent-emerald",       desc: "Alternate accent (high-stakes)" },
+  { name: "--accent-emerald-bright", desc: "Emerald highlight" },
+  { name: "--accent-emerald-deep",  desc: "Emerald pressed / deep" },
+  { name: "--color-fg-primary",     desc: "Primary body text" },
+  { name: "--color-fg-secondary",   desc: "Secondary body text" },
+  { name: "--color-fg-tertiary",    desc: "Tertiary / supporting" },
+  { name: "--color-fg-muted",       desc: "Muted / meta" },
+  { name: "--brand-color",          desc: "Brand wordmark fill" },
+  { name: "--brand-glow",           desc: "Brand wordmark glow" },
+];
+
+const themes = [
+  { id: "dark",       label: "Dark",       hint: "Default, deep navy frosted glass" },
+  { id: "light",      label: "Light",      hint: "Airy off-white frosted glass" },
+  { id: "hybrid",     label: "Hybrid",     hint: "Mid-tone, dusk palette" },
+  { id: "system",     label: "System",     hint: "Resolves to light or dark per OS" },
+  { id: "neomorphic", label: "Neomorphic", hint: "Solid surfaces, soft shadows (tokens only in Phase 1)" },
+];
+---
+
+<BaseLayout
+  title="Prism Styleguide — Phase 1"
+  description="Phase 1 documentation surface for the Prism design system: tokens, typography, layout primitives, glass components, theme modes, and brand guidelines.">
+
+  <Container size="xl">
+    <Stack gap="4xl">
+
+      {/* ─── Intro ──────────────────────────────────────────────────────── */}
+      <Stack gap="md" as="header">
+        <p class="eyebrow">Prism design system</p>
+        <h1 class="page-title">Phase 1 styleguide</h1>
+        <p class="lede">
+          The visual language of princerehman.com. Use the Prism button at
+          the bottom-left of any page to switch theme modes and watch every
+          section adapt. Phase 2 will extend that button into the full
+          four-axis control surface.
+        </p>
+      </Stack>
+
+      {/* ─── Themes ─────────────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Theme modes</h2>
+            <p class="section-lede">
+              Five modes selectable from the Prism panel. Each redefines the
+              full token set; components consume tokens so they adapt
+              automatically with one exception (see Neomorphic).
+            </p>
+          </Stack>
+
+          <Grid columns={2} gap="md">
+            {themes.map((t) => (
+              <GlassPanel size="sm">
+                <Stack gap="2xs">
+                  <span class="theme-card-label">{t.label}</span>
+                  <span class="theme-card-hint">{t.hint}</span>
+                </Stack>
+              </GlassPanel>
+            ))}
+          </Grid>
+        </Stack>
+      </section>
+
+      {/* ─── Color tokens ────────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Color tokens</h2>
+            <p class="section-lede">
+              All chromatic values are OKLCH so the Phase 2 palette generator
+              can operate on the L, C, h axes directly. Swatches resolve from
+              the active theme. Switch themes via the Prism panel to compare.
+            </p>
+          </Stack>
+
+          <Grid min="280px" gap="sm">
+            {colorTokens.map((t) => (
+              <div class="swatch-row">
+                <div class="swatch-chip" style={`background: var(${t.name});`} />
+                <div class="swatch-meta">
+                  <code class="swatch-token">{t.name}</code>
+                  <span class="swatch-desc">{t.desc}</span>
+                </div>
+              </div>
+            ))}
+          </Grid>
+        </Stack>
+      </section>
+
+      {/* ─── Typography ─────────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Typography</h2>
+            <p class="section-lede">
+              Cormorant Garamond for display, Inter for body, Geist for UI
+              chrome, JetBrains Mono for code. Body contrast tuned 2026-05-18.
+            </p>
+          </Stack>
+
+          <GlassPanel size="lg">
+            <Stack gap="lg">
+              <div>
+                <p class="type-meta">Display — Cormorant Garamond</p>
+                <p class="type-display">Prince Rehman</p>
+                <p class="type-display type-display--sub">P. R. Manjee</p>
+              </div>
+
+              <div>
+                <p class="type-meta">Body — Inter</p>
+                <p class="type-body">
+                  Workplace modernization through AI adoption and digital
+                  transformation. The body face has to read clearly at long
+                  paragraph lengths without competing for attention with the
+                  display headings.
+                </p>
+              </div>
+
+              <div>
+                <p class="type-meta">UI — Geist</p>
+                <p class="type-ui">Button labels, controls, and chrome use Geist.</p>
+              </div>
+
+              <div>
+                <p class="type-meta">Mono — JetBrains Mono</p>
+                <code class="type-mono">const palette = generate(mode, model, hue, contrast);</code>
+              </div>
+            </Stack>
+          </GlassPanel>
+        </Stack>
+      </section>
+
+      {/* ─── Spacing ─────────────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Spacing scale</h2>
+            <p class="section-lede">
+              The spacing scale is theme-agnostic. Use these tokens for all
+              gaps and paddings to keep rhythm consistent across surfaces.
+            </p>
+          </Stack>
+
+          <Stack gap="2xs">
+            {spacingScale.map((s) => (
+              <div class="scale-row">
+                <code class="scale-token">--space-{s.name}</code>
+                <span class="scale-value">{s.value}</span>
+                <div class="scale-bar" style={`width: var(--space-${s.name});`} />
+              </div>
+            ))}
+          </Stack>
+        </Stack>
+      </section>
+
+      {/* ─── Radius ─────────────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Radius scale</h2>
+            <p class="section-lede">
+              Corner radii from subtle (sm) through pill (full).
+            </p>
+          </Stack>
+
+          <Grid min="180px" gap="md">
+            {radiusScale.map((r) => (
+              <div class="radius-row">
+                <div class="radius-chip" style={`border-radius: var(--radius-${r.name});`} />
+                <code class="scale-token">--radius-{r.name}</code>
+                <span class="scale-value">{r.value}</span>
+              </div>
+            ))}
+          </Grid>
+        </Stack>
+      </section>
+
+      {/* ─── Layout primitives ───────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Layout primitives</h2>
+            <p class="section-lede">
+              Container, Stack, and Grid. Reach for these before hand-rolling
+              flex or grid in component styles.
+            </p>
+          </Stack>
+
+          <GlassPanel size="md">
+            <Stack gap="md">
+              <p class="example-label">Container — max-width content wrapper</p>
+              <p class="example-body">
+                Use <code>{`<Container size="lg">`}</code> for most pages.
+                Sizes: sm, md, lg, xl, 2xl.
+              </p>
+            </Stack>
+          </GlassPanel>
+
+          <GlassPanel size="md">
+            <Stack gap="md">
+              <p class="example-label">Stack — one-axis spacing</p>
+              <Stack direction="horizontal" gap="sm" wrap>
+                <span class="chip">item 1</span>
+                <span class="chip">item 2</span>
+                <span class="chip">item 3</span>
+                <span class="chip">item 4</span>
+              </Stack>
+            </Stack>
+          </GlassPanel>
+
+          <GlassPanel size="md">
+            <Stack gap="md">
+              <p class="example-label">Grid — fixed columns or auto-fit</p>
+              <Grid columns={3} gap="sm">
+                <div class="grid-cell">1</div>
+                <div class="grid-cell">2</div>
+                <div class="grid-cell">3</div>
+              </Grid>
+            </Stack>
+          </GlassPanel>
+        </Stack>
+      </section>
+
+      {/* ─── Glass components ────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Glass components</h2>
+            <p class="section-lede">
+              Core surface library. All consume theme tokens so the visual
+              treatment adapts on theme switch.
+            </p>
+          </Stack>
+
+          <Stack gap="md">
+            <p class="example-label">Buttons</p>
+            <Stack direction="horizontal" gap="md" wrap>
+              <GlassButton variant="primary">Primary action</GlassButton>
+              <GlassButton variant="secondary">Secondary</GlassButton>
+              <GlassButton variant="emerald">Emerald</GlassButton>
+            </Stack>
+
+            <Stack direction="horizontal" gap="md" wrap>
+              <GlassButton variant="primary" size="sm">Small</GlassButton>
+              <GlassButton variant="primary" size="md">Medium</GlassButton>
+              <GlassButton variant="primary" size="lg">Large</GlassButton>
+            </Stack>
+          </Stack>
+
+          <Stack gap="md">
+            <p class="example-label">Inputs</p>
+            <GlassPanel size="md">
+              <Stack gap="md">
+                <GlassField label="Email">
+                  <GlassInput type="email" placeholder="you@example.com" />
+                </GlassField>
+                <GlassField label="Message">
+                  <GlassTextarea rows={3} placeholder="Tell me about your project." />
+                </GlassField>
+              </Stack>
+            </GlassPanel>
+          </Stack>
+        </Stack>
+      </section>
+
+      {/* ─── Brand guidelines ────────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Brand guidelines</h2>
+            <p class="section-lede">
+              Rules for how protected elements render across all five theme
+              modes. These are load-bearing because the wordmark is the
+              clearest moment of recognition on every page.
+            </p>
+          </Stack>
+
+          <GlassPanel size="lg">
+            <Stack gap="lg">
+              <Stack gap="sm">
+                <h3 class="rule-title">1. Protected elements</h3>
+                <p class="rule-body">
+                  "Prince Rehman" and "P. R. Manjee" are protected display
+                  elements. They use the Cormorant Garamond display face at
+                  600 weight, fill <code>--brand-color</code>, and carry
+                  <code> --brand-glow</code> as ambient halo via the
+                  <code> prism-polished</code> SVG filter.
+                </p>
+              </Stack>
+
+              <Stack gap="sm">
+                <h3 class="rule-title">2. Cross-theme contrast</h3>
+                <p class="rule-body">
+                  The brand color and glow are redefined per theme so the
+                  wordmark never matches surrounding body text. On dark and
+                  hybrid the fill is a pale luminous blue-white. On light and
+                  neomorphic the fill darkens to deep royal so it reads as
+                  the strongest element on the page.
+                </p>
+              </Stack>
+
+              <Stack gap="sm">
+                <h3 class="rule-title">3. Never substitute the typeface</h3>
+                <p class="rule-body">
+                  The wordmark is always Cormorant Garamond. Body text near
+                  the wordmark may be Inter; UI chrome may be Geist. Other
+                  display headings on the page may use Cormorant Garamond
+                  too, but they may not visually outweigh the wordmark.
+                </p>
+              </Stack>
+
+              <Stack gap="sm">
+                <h3 class="rule-title">4. SVG filter precedence</h3>
+                <p class="rule-body">
+                  The <code>prism-polished</code> filter (defined globally
+                  in BaseLayout) is the canonical treatment for the wordmark.
+                  The stronger <code>prism-embossed-pronounced</code> filter
+                  is reserved for the chevron inside the brand orb. Never
+                  apply <code>prism-embossed-pronounced</code> to text.
+                </p>
+              </Stack>
+
+              <Stack gap="sm">
+                <h3 class="rule-title">5. Glow on theme switch</h3>
+                <p class="rule-body">
+                  The wordmark glow scales with theme luminance: brighter on
+                  dark, softer on light, suppressed on neomorphic. This is
+                  controlled by the <code>--brand-glow</code> token alpha
+                  per theme, not by component-level overrides.
+                </p>
+              </Stack>
+            </Stack>
+          </GlassPanel>
+        </Stack>
+      </section>
+
+      {/* ─── Phase 1 vs Phase 2 ──────────────────────────────────────────── */}
+      <section>
+        <Stack gap="lg">
+          <Stack gap="xs">
+            <h2 class="section-title">Phase 1 / Phase 2 scope</h2>
+            <p class="section-lede">
+              The Prism panel today exposes one axis (theme mode). Phase 2
+              extends the same surface to the full four-axis control.
+            </p>
+          </Stack>
+
+          <Grid columns={2} gap="md">
+            <GlassPanel size="md">
+              <Stack gap="sm">
+                <span class="phase-tag">Shipped — Phase 1</span>
+                <ul class="phase-list">
+                  <li>OKLCH token system, five theme modes</li>
+                  <li>Pre-paint bootstrap (no FOUC)</li>
+                  <li>Layout primitives (Container, Stack, Grid)</li>
+                  <li>Glass component library</li>
+                  <li>Brand guideline rules (this page)</li>
+                  <li>Theme mode picker (Prism panel)</li>
+                </ul>
+              </Stack>
+            </GlassPanel>
+
+            <GlassPanel size="md">
+              <Stack gap="sm">
+                <span class="phase-tag phase-tag--next">Next — Phase 2</span>
+                <ul class="phase-list">
+                  <li>Dynamic palette generator (mode, model, hue, contrast) → palette</li>
+                  <li>Live preview as slider moves</li>
+                  <li>Hue slider 0-360</li>
+                  <li>Color mixing model selector</li>
+                  <li>AA / AAA contrast toggle</li>
+                  <li>Quick-select brand swatches</li>
+                </ul>
+              </Stack>
+            </GlassPanel>
+          </Grid>
+        </Stack>
+      </section>
+
+    </Stack>
+  </Container>
+</BaseLayout>
+
+<style>
+  .eyebrow {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-4xl), 5vw + 1rem, var(--text-5xl));
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+  }
+
+  .lede {
+    max-width: 720px;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-2xl), 3vw + 0.5rem, var(--text-3xl));
+    font-weight: 600;
+    color: var(--color-fg-primary);
+  }
+
+  .section-lede {
+    max-width: 680px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-tertiary);
+  }
+
+  /* Theme cards */
+  .theme-card-label {
+    font-family: var(--font-ui);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-fg-primary);
+  }
+  .theme-card-hint {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--color-fg-tertiary);
+  }
+
+  /* Color swatches */
+  .swatch-row {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: var(--space-sm);
+    align-items: center;
+    padding: var(--space-xs);
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+  }
+  .swatch-chip {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: inset 0 1px 1px var(--highlight-top-soft);
+  }
+  .swatch-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .swatch-token {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-fg-primary);
+    word-break: break-all;
+  }
+  .swatch-desc {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--color-fg-tertiary);
+  }
+
+  /* Typography preview */
+  .type-meta {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin-bottom: var(--space-2xs);
+  }
+  .type-display {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-3xl), 4vw + 1rem, var(--text-5xl));
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    color: var(--brand-color);
+    text-shadow: 0 0 24px var(--brand-glow);
+    line-height: 1;
+  }
+  .type-display--sub {
+    font-size: clamp(var(--text-xl), 2vw + 1rem, var(--text-3xl));
+    font-weight: 500;
+  }
+  .type-body {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    max-width: 60ch;
+  }
+  .type-ui {
+    font-family: var(--font-ui);
+    font-size: var(--text-base);
+    color: var(--color-fg-primary);
+  }
+  .type-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-fg-secondary);
+    background: var(--glass-bg);
+    padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--radius-sm);
+    display: inline-block;
+  }
+
+  /* Scale rows */
+  .scale-row {
+    display: grid;
+    grid-template-columns: 140px 80px 1fr;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  .scale-token {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-fg-secondary);
+  }
+  .scale-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-fg-muted);
+  }
+  .scale-bar {
+    height: 12px;
+    background: var(--accent-royal);
+    border-radius: var(--radius-sm);
+    max-width: 100%;
+  }
+
+  /* Radius previews */
+  .radius-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+  .radius-chip {
+    width: 80px;
+    height: 80px;
+    background: var(--accent-royal);
+    border: 1px solid var(--glass-border-strong);
+  }
+
+  /* Chips and grid cells in primitive examples */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2xs) var(--space-md);
+    border-radius: var(--radius-full);
+    background: var(--glass-bg-hover);
+    border: 1px solid var(--glass-border);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    color: var(--color-fg-secondary);
+  }
+  .grid-cell {
+    padding: var(--space-md);
+    background: var(--glass-bg-hover);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    color: var(--color-fg-primary);
+    text-align: center;
+  }
+  .example-label {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .example-body {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--color-fg-tertiary);
+  }
+  .example-body code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--color-fg-primary);
+    background: var(--glass-bg);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Brand rules */
+  .rule-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-fg-primary);
+  }
+  .rule-body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+  }
+  .rule-body code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--color-fg-primary);
+    background: var(--glass-bg);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Phase tags */
+  .phase-tag {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    padding: var(--space-2xs) var(--space-sm);
+    border-radius: var(--radius-full);
+    background: linear-gradient(
+      180deg,
+      var(--accent-emerald-bright) 0%,
+      var(--accent-emerald) 50%,
+      var(--accent-emerald-deep) 100%
+    );
+    color: oklch(1 0 0 / 0.98);
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+  .phase-tag--next {
+    background: linear-gradient(
+      180deg,
+      var(--accent-royal-bright) 0%,
+      var(--accent-royal) 50%,
+      var(--accent-royal-deep) 100%
+    );
+  }
+  .phase-list {
+    margin: 0;
+    padding-left: var(--space-lg);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+  }
+  .phase-list li {
+    margin-bottom: var(--space-2xs);
+  }
+</style>

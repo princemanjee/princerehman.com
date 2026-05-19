@@ -1,0 +1,82 @@
+---
+/**
+ * Stack: one-axis layout primitive with consistent spacing between
+ * children. Defaults to vertical, can switch to horizontal.
+ *
+ * Phase 1 layout primitive. Use anywhere you'd otherwise reach for
+ * `display: flex; flex-direction: column; gap: ...` so the spacing
+ * scale stays consistent.
+ *
+ * Spacing keys map to the token scale: 2xs, xs, sm, md, lg, xl, 2xl,
+ * 3xl, 4xl. Align/justify pass through to flex equivalents.
+ */
+
+type SpaceKey = "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+
+interface Props {
+  direction?: "vertical" | "horizontal";
+  gap?: SpaceKey;
+  align?: "start" | "center" | "end" | "stretch" | "baseline";
+  justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
+  wrap?: boolean;
+  as?: "div" | "section" | "article" | "ul" | "ol" | "nav" | "header" | "footer";
+  class?: string;
+}
+
+const {
+  direction = "vertical",
+  gap = "md",
+  align,
+  justify,
+  wrap = false,
+  as: Tag = "div",
+  class: className = "",
+} = Astro.props;
+---
+
+<Tag
+  class:list={[
+    "stack",
+    `stack--${direction}`,
+    `stack--gap-${gap}`,
+    align && `stack--align-${align}`,
+    justify && `stack--justify-${justify}`,
+    wrap && "stack--wrap",
+    className,
+  ]}>
+  <slot />
+</Tag>
+
+<style>
+  .stack {
+    display: flex;
+  }
+
+  .stack--vertical   { flex-direction: column; }
+  .stack--horizontal { flex-direction: row; }
+
+  .stack--wrap { flex-wrap: wrap; }
+
+  .stack--gap-2xs { gap: var(--space-2xs); }
+  .stack--gap-xs  { gap: var(--space-xs); }
+  .stack--gap-sm  { gap: var(--space-sm); }
+  .stack--gap-md  { gap: var(--space-md); }
+  .stack--gap-lg  { gap: var(--space-lg); }
+  .stack--gap-xl  { gap: var(--space-xl); }
+  .stack--gap-2xl { gap: var(--space-2xl); }
+  .stack--gap-3xl { gap: var(--space-3xl); }
+  .stack--gap-4xl { gap: var(--space-4xl); }
+
+  .stack--align-start    { align-items: flex-start; }
+  .stack--align-center   { align-items: center; }
+  .stack--align-end      { align-items: flex-end; }
+  .stack--align-stretch  { align-items: stretch; }
+  .stack--align-baseline { align-items: baseline; }
+
+  .stack--justify-start   { justify-content: flex-start; }
+  .stack--justify-center  { justify-content: center; }
+  .stack--justify-end     { justify-content: flex-end; }
+  .stack--justify-between { justify-content: space-between; }
+  .stack--justify-around  { justify-content: space-around; }
+  .stack--justify-evenly  { justify-content: space-evenly; }
+</style>

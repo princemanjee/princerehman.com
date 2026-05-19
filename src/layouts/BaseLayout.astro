@@ -1,6 +1,9 @@
 ---
 import "../styles/global.css";
 import Nav from "../components/Nav.astro";
+import MobileNav from "../components/MobileNav.astro";
+import Footer from "../components/Footer.astro";
+import PrismPanel from "../components/PrismPanel.astro";
 
 interface Props {
   title: string;
@@ -54,6 +57,26 @@ const canonicalUrl = Astro.url.href;
     <meta name="theme-color" content="#0a0e27" />
 
     <link rel="canonical" href={canonicalUrl} />
+
+    {/*
+      Prism theme bootstrap: runs synchronously before any paint to apply
+      the user's stored theme (or default to dark) on the <html> element.
+      Lives inline in <head> with is:inline so Astro does not defer it.
+      Keep this script minimal and side-effect-free beyond setting the
+      data-theme attribute, since it blocks the first paint.
+    */}
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem("prism-theme");
+          var valid = ["dark", "light", "hybrid", "system", "neomorphic"];
+          var theme = stored && valid.indexOf(stored) !== -1 ? stored : "dark";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
 
     {/*
       Google Fonts:
@@ -170,9 +193,14 @@ const canonicalUrl = Astro.url.href;
     </svg>
 
     <Nav />
+    <MobileNav />
 
     <main>
       <slot />
     </main>
+
+    <Footer />
+
+    <PrismPanel />
   </body>
 </html>

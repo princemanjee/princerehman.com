@@ -1,0 +1,395 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import GlassPanel from "../components/GlassPanel.astro";
+import GlassButton from "../components/GlassButton.astro";
+import GlassField from "../components/GlassField.astro";
+import GlassInput from "../components/GlassInput.astro";
+import GlassTextarea from "../components/GlassTextarea.astro";
+import GlassSelect from "../components/GlassSelect.astro";
+
+/*
+ * Contact form demo page.
+ *
+ * Status: NOT YET WIRED TO A BACKEND. The form's action attribute below
+ * points to a Formspree placeholder URL. To make the form functional:
+ *
+ *   1. Sign up for a free Formspree account at https://formspree.io
+ *   2. Create a new form, copy the form ID (e.g., "xyzabcde")
+ *   3. Replace YOUR_FORMSPREE_ID below with the actual form ID
+ *   4. Add Contact to the nav in src/components/Nav.astro (and
+ *      MobileNav.astro for mobile) so the page is discoverable
+ *   5. Optionally update the "Start a conversation" buttons throughout
+ *      the site to point to /contact instead of mailto:
+ *
+ * Alternative backend services if you do not want Formspree:
+ *   - Web3Forms (https://web3forms.com) - free, no signup needed
+ *   - FormSubmit (https://formsubmit.co) - free, no signup
+ *   - Netlify Forms - if you migrate hosting to Netlify
+ *   - Custom backend on a small cloud function (Cloudflare Workers, etc.)
+ *
+ * In any case, replace the form action URL and the hidden _subject field
+ * format as the chosen service expects.
+ */
+
+const subjectOptions = [
+  { value: "consulting", label: "Consulting engagement" },
+  { value: "leadership", label: "IT leadership role" },
+  { value: "fieldforce", label: "FieldForce Tool Tracker licensing" },
+  { value: "speaking", label: "Speaking or advisory" },
+  { value: "other", label: "Something else" },
+];
+---
+
+<BaseLayout
+  title="Contact — P. R. Manjee"
+  description="Get in touch about consulting engagements, IT leadership roles, FieldForce licensing inquiries, or related work. P. R. Manjee, Senior Technology Consultant based in Chicago.">
+  <article class="contact">
+    <PageHeader
+      pageTitle="Contact"
+      meta="For consulting engagements, leadership roles, FieldForce licensing, or anything else."
+    />
+
+    <p class="contact-lede">
+      The fastest way to reach me is by sending a brief message about what you
+      are working on and what kind of help you are looking for. I respond
+      personally to every message within two business days. Currently taking on
+      a small number of engagements per quarter to ensure each one gets the
+      attention it deserves.
+    </p>
+
+    <div class="contact-grid">
+      {/* Left column: the form. */}
+      <GlassPanel size="xl" class="contact-form-panel">
+        <form
+          class="contact-form"
+          action="https://formspree.io/f/YOUR_FORMSPREE_ID"
+          method="POST">
+          {/*
+            Hidden field for Formspree: sets the email subject line so
+            messages arrive with a recognizable header instead of the
+            default "New submission from princerehman.com".
+          */}
+          <input
+            type="hidden"
+            name="_subject"
+            value="New inquiry from princerehman.com"
+          />
+
+          {/* Two-column row for name and email (stacks on mobile) */}
+          <div class="contact-form-row">
+            <GlassField label="Name" htmlFor="name" required>
+              <GlassInput
+                type="text"
+                name="name"
+                id="name"
+                required
+                autocomplete="name"
+                placeholder="Your full name"
+              />
+            </GlassField>
+
+            <GlassField label="Email" htmlFor="email" required>
+              <GlassInput
+                type="email"
+                name="email"
+                id="email"
+                required
+                autocomplete="email"
+                inputmode="email"
+                placeholder="you@example.com"
+              />
+            </GlassField>
+          </div>
+
+          <GlassField
+            label="Company or Organization"
+            htmlFor="company"
+            helperText="Optional. Helps me understand the context.">
+            <GlassInput
+              type="text"
+              name="company"
+              id="company"
+              autocomplete="organization"
+              placeholder="Your organization"
+            />
+          </GlassField>
+
+          <GlassField label="Topic" htmlFor="subject" required>
+            <GlassSelect
+              name="subject"
+              id="subject"
+              placeholder="Choose a topic..."
+              options={subjectOptions}
+              required
+            />
+          </GlassField>
+
+          <GlassField
+            label="Message"
+            htmlFor="message"
+            required
+            helperText="A brief description of what you are working on and where you think I might help.">
+            <GlassTextarea
+              name="message"
+              id="message"
+              rows={6}
+              required
+              placeholder="Tell me about your project, role, or inquiry..."
+              maxlength={4000}
+            />
+          </GlassField>
+
+          <div class="contact-form-actions">
+            <GlassButton type="submit" variant="primary" size="md">
+              Send message
+            </GlassButton>
+            <p class="contact-form-note">
+              I will respond personally within two business days.
+            </p>
+          </div>
+        </form>
+      </GlassPanel>
+
+      {/* Right column: alternative contact paths */}
+      <aside class="contact-alternatives">
+        <GlassPanel size="md" class="contact-alt-panel">
+          <h2 class="contact-alt-heading">Other ways to reach me</h2>
+
+          <div class="contact-alt-section">
+            <h3 class="contact-alt-label">Direct email</h3>
+            <a
+              href="mailto:princemanjee@gmail.com"
+              class="contact-alt-link contact-alt-link--email">
+              princemanjee@gmail.com
+            </a>
+            <p class="contact-alt-meta">
+              If you prefer email over the form, send a brief message describing
+              what you are looking for and I will respond.
+            </p>
+          </div>
+
+          <div class="contact-alt-section">
+            <h3 class="contact-alt-label">Professional networks</h3>
+            <a
+              href="https://www.linkedin.com/in/princemanjee/"
+              rel="noopener"
+              class="contact-alt-link">
+              LinkedIn
+            </a>
+            <a
+              href="https://github.com/princemanjee"
+              rel="noopener"
+              class="contact-alt-link">
+              GitHub
+            </a>
+            <a
+              href="https://cv.princerehman.com"
+              rel="noopener"
+              class="contact-alt-link">
+              CV
+            </a>
+          </div>
+
+          <div class="contact-alt-section">
+            <h3 class="contact-alt-label">Location</h3>
+            <p class="contact-alt-text">
+              Based in Chicago, Illinois. Remote-first with travel as
+              engagements require. Coverage across North America.
+            </p>
+          </div>
+        </GlassPanel>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .contact {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-xl);
+  }
+
+  .contact-lede {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    max-width: 64ch;
+    margin: 0 0 var(--space-3xl) 0;
+  }
+
+  /*
+   * Two-column layout: form on the left (1.6fr), alternative contact
+   * paths on the right (1fr). Single column on mobile so the form
+   * gets full width for comfortable typing.
+   */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: var(--space-2xl);
+    margin-bottom: var(--space-4xl);
+    align-items: start;
+  }
+
+  :global(.contact-form-panel) {
+    padding: var(--space-3xl);
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  /*
+   * Form row: two fields side by side. Useful for name + email pairing
+   * since both are short and typing them on separate rows feels wasteful.
+   */
+  .contact-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+  }
+
+  /* Actions row: submit button + small "response time" note */
+  .contact-form-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    margin-top: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .contact-form-note {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--color-fg-muted);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* Alternative contact paths sidebar */
+  .contact-alternatives {
+    position: sticky;
+    top: calc(var(--space-2xl) + 80px);
+  }
+
+  :global(.contact-alt-panel) {
+    padding: var(--space-xl);
+  }
+
+  .contact-alt-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-xl);
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-lg) 0;
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .contact-alt-section {
+    margin-bottom: var(--space-lg);
+  }
+
+  .contact-alt-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .contact-alt-label {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    margin: 0 0 var(--space-sm) 0;
+  }
+
+  .contact-alt-link {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--color-fg-secondary);
+    text-decoration: none;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--duration-base) var(--easing-out),
+      border-color var(--duration-base) var(--easing-out);
+  }
+
+  .contact-alt-link:hover {
+    color: var(--color-fg-primary);
+  }
+
+  .contact-alt-link--email {
+    color: var(--accent-royal-bright);
+    font-weight: 500;
+  }
+
+  .contact-alt-link--email:hover {
+    color: var(--accent-royal-bright);
+    border-bottom-color: var(--accent-royal-bright);
+  }
+
+  .contact-alt-meta {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-fg-muted);
+    margin: var(--space-sm) 0 0 0;
+  }
+
+  .contact-alt-text {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-secondary);
+    margin: 0;
+  }
+
+  /* Tablet: tighter columns */
+  @media (max-width: 1024px) {
+    .contact-grid {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-xl);
+    }
+    :global(.contact-form-panel) {
+      padding: var(--space-2xl);
+    }
+  }
+
+  /* Mobile: stack columns, single-column form row */
+  @media (max-width: 768px) {
+    .contact {
+      padding: 0 var(--space-lg);
+    }
+    .contact-lede {
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-2xl);
+    }
+    .contact-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+    .contact-form-row {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+    .contact-alternatives {
+      position: static;
+    }
+    :global(.contact-form-panel) {
+      padding: var(--space-xl);
+    }
+    :global(.contact-alt-panel) {
+      padding: var(--space-lg);
+    }
+  }
+</style>

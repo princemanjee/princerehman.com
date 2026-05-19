@@ -20,3 +20,8 @@ yarn-debug.log*
 yarn-error.log*
 
 .cache/
+
+# Project context file for Claude / Claude Code sessions.
+# Contains personal context and is intentionally local-only.
+# Do NOT commit this file.
+CLAUDE.md

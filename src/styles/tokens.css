@@ -1,61 +1,35 @@
 /*
- * Prism design system tokens — Phase 1 locked.
+ * Prism design system tokens — Phase 1.
  *
- * Background:   dark navy gradient with atmospheric radial tints
- * Panel:        thick glass with crisp curved bevel highlights
- * Brand name:   polished glass via SVG filter (clear, royal blue glow)
- * Primary CTA:  royal blue lit
- * Secondary:    polished glass with lit hover transition
- * Alternate:    emerald lit for high-stakes actions
+ * Color space: OKLCH (perceptually uniform, mathematically tractable for
+ * contrast checks, and the substrate for the Phase 2 dynamic palette
+ * generator). Every chromatic value is expressed as oklch(L C h / alpha)
+ * so future palette algorithms can operate on the L, C, h axes directly.
  *
- * Skeuomorphic intent: elements feel physically real where possible.
- * Buttons depress on click. Panels read as solid glass slabs.
- * Hover and active states convey weight via translateY + shadow shifts.
+ * Theme system: five modes selectable via data-theme on <html>.
+ *   data-theme="dark"        — default, deep-navy frosted glass
+ *   data-theme="light"       — airy off-white frosted glass
+ *   data-theme="hybrid"      — mid-tone between light and dark
+ *   data-theme="system"      — resolves to light or dark via prefers-color-scheme
+ *   data-theme="neomorphic"  — solid surfaces, soft dual shadows, no blur
  *
- * Phase 2 will extend this with light, dark, and additional hue variants
- * generated dynamically by the Prism control panel.
+ * Defaults to dark when no data-theme attribute is present so server-
+ * rendered HTML stays visually consistent with the original launch design.
+ *
+ * Neomorphic Phase 1 scope: token-level only. Components still render
+ * their glass treatment; the visual-language refactor (solid surfaces +
+ * dual-shadow elevation) ships in Phase 3 per the Notion spec.
+ *
+ * sRGB hex shown alongside each OKLCH triple in comments is the original
+ * launch palette, retained as a visual reference for regression checks.
  */
 
 :root {
-  /* Background gradient stops */
-  --bg-1: #0a0e27;
-  --bg-2: #161e3a;
-  --bg-3: #0f1e3d;
-  --bg-4: #14102e;
+  /* ===========================================================
+   * Theme-agnostic structural tokens
+   * Spacing, radius, type metrics, motion. Identical across modes.
+   * =========================================================== */
 
-  /* Accent colors */
-  --accent-royal:        #3b6dff;
-  --accent-royal-bright: #5d8bff;
-  --accent-royal-deep:   #1d4ae0;
-
-  --accent-emerald:        #5DBF8A;
-  --accent-emerald-bright: #80e8a5;
-  --accent-emerald-deep:   #329664;
-
-  /* Glass surface tokens */
-  --glass-bg:           rgba(255, 255, 255, 0.04);
-  --glass-bg-hover:     rgba(255, 255, 255, 0.08);
-  --glass-border:       rgba(255, 255, 255, 0.10);
-  --glass-border-strong:rgba(255, 255, 255, 0.20);
-
-  /* Bevel highlight tokens (the crisp curved arcs) */
-  --highlight-top:         rgba(255, 255, 255, 0.95);
-  --highlight-top-soft:    rgba(255, 255, 255, 0.25);
-  --highlight-bottom:      rgba(255, 255, 255, 0.55);
-  --highlight-bottom-soft: rgba(255, 255, 255, 0.12);
-  --shadow-side:           rgba(0, 0, 0, 0.10);
-
-  /* Text color tokens */
-  --color-fg-primary:   rgba(255, 255, 255, 0.95);
-  --color-fg-secondary: rgba(255, 255, 255, 0.82);
-  --color-fg-tertiary:  rgba(200, 215, 240, 0.65);
-  --color-fg-muted:     rgba(200, 215, 240, 0.45);
-
-  /* Brand name color (polished glass treatment) */
-  --brand-color: rgba(220, 232, 250, 0.85);
-  --brand-glow:  rgba(200, 220, 255, 0.55);
-
-  /* Spacing scale */
   --space-2xs: 0.25rem;
   --space-xs:  0.5rem;
   --space-sm:  0.75rem;
@@ -66,7 +40,6 @@
   --space-3xl: 4rem;
   --space-4xl: 6rem;
 
-  /* Radius scale */
   --radius-sm:   8px;
   --radius-md:   16px;
   --radius-lg:   24px;
@@ -75,15 +48,307 @@
   --radius-3xl:  56px;
   --radius-full: 9999px;
 
-  /* Glass blur amount */
-  --glass-blur:     8px;
-  --glass-saturate: 140%;
-
-  /* Animation tokens */
   --duration-fast:   0.15s;
   --duration-base:   0.3s;
   --duration-slow:   0.4s;
   --easing-out:      cubic-bezier(0.16, 1, 0.3, 1);
   --easing-bounce:   cubic-bezier(0.34, 1.56, 0.64, 1);
   --easing-physical: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===============================================================
+ * DARK theme (default)
+ * Applied when no data-theme is set, when data-theme="dark", or when
+ * data-theme="system" resolves to dark via prefers-color-scheme.
+ * =============================================================== */
+
+:root,
+:root[data-theme="dark"] {
+  --bg-1: oklch(0.135 0.052 271);  /* #0a0e27 */
+  --bg-2: oklch(0.210 0.052 263);  /* #161e3a */
+  --bg-3: oklch(0.190 0.067 265);  /* #0f1e3d */
+  --bg-4: oklch(0.165 0.066 285);  /* #14102e */
+
+  /* Ambient body overlays (atmospheric tints layered on the gradient) */
+  --bg-overlay-1: oklch(0.700 0.180 263 / 0.12);  /* royal top-left */
+  --bg-overlay-2: oklch(0.550 0.160 305 / 0.10);  /* purple bottom-right */
+
+  --accent-royal:        oklch(0.605 0.222 263);  /* #3b6dff */
+  --accent-royal-bright: oklch(0.690 0.175 263);  /* #5d8bff */
+  --accent-royal-deep:   oklch(0.485 0.231 263);  /* #1d4ae0 */
+
+  --accent-emerald:        oklch(0.730 0.130 152);  /* #5DBF8A */
+  --accent-emerald-bright: oklch(0.855 0.135 153);  /* #80e8a5 */
+  --accent-emerald-deep:   oklch(0.570 0.118 153);  /* #329664 */
+
+  --glass-bg:            oklch(1 0 0 / 0.04);
+  --glass-bg-hover:      oklch(1 0 0 / 0.08);
+  --glass-border:        oklch(1 0 0 / 0.10);
+  --glass-border-strong: oklch(1 0 0 / 0.20);
+  --glass-blur:          8px;
+  --glass-saturate:      140%;
+
+  --highlight-top:         oklch(1 0 0 / 0.95);
+  --highlight-top-soft:    oklch(1 0 0 / 0.25);
+  --highlight-bottom:      oklch(1 0 0 / 0.55);
+  --highlight-bottom-soft: oklch(1 0 0 / 0.12);
+  --shadow-side:           oklch(0 0 0 / 0.10);
+
+  /* Text scale (contrast-tuned 2026-05-18 to address weak body text) */
+  --color-fg-primary:   oklch(1 0 0 / 0.96);
+  --color-fg-secondary: oklch(1 0 0 / 0.86);
+  --color-fg-tertiary:  oklch(0.910 0.020 247 / 0.78);
+  --color-fg-muted:     oklch(0.880 0.020 247 / 0.62);
+
+  --brand-color: oklch(0.945 0.020 245 / 0.92);
+  --brand-glow:  oklch(0.870 0.060 250 / 0.55);
+
+  --neo-surface:      var(--glass-bg);
+  --neo-shadow-light: transparent;
+  --neo-shadow-dark:  transparent;
+}
+
+/* ===============================================================
+ * LIGHT theme
+ * Airy off-white surfaces, deep navy text, royal blue accent stays
+ * but darkens slightly for legibility on a light background.
+ * =============================================================== */
+
+:root[data-theme="light"] {
+  --bg-1: oklch(0.985 0.005 250);
+  --bg-2: oklch(0.955 0.015 250);
+  --bg-3: oklch(0.970 0.010 220);
+  --bg-4: oklch(0.960 0.012 280);
+
+  --bg-overlay-1: oklch(0.650 0.180 263 / 0.10);
+  --bg-overlay-2: oklch(0.680 0.140 305 / 0.07);
+
+  --accent-royal:        oklch(0.500 0.215 263);
+  --accent-royal-bright: oklch(0.580 0.225 263);
+  --accent-royal-deep:   oklch(0.420 0.230 263);
+
+  --accent-emerald:        oklch(0.620 0.135 153);
+  --accent-emerald-bright: oklch(0.700 0.140 153);
+  --accent-emerald-deep:   oklch(0.490 0.125 154);
+
+  --glass-bg:            oklch(1 0 0 / 0.55);
+  --glass-bg-hover:      oklch(1 0 0 / 0.75);
+  --glass-border:        oklch(0.20 0.020 270 / 0.12);
+  --glass-border-strong: oklch(0.20 0.020 270 / 0.22);
+  --glass-blur:          12px;
+  --glass-saturate:      160%;
+
+  --highlight-top:         oklch(1 0 0 / 0.95);
+  --highlight-top-soft:    oklch(1 0 0 / 0.55);
+  --highlight-bottom:      oklch(0.95 0 0 / 0.30);
+  --highlight-bottom-soft: oklch(0.95 0 0 / 0.10);
+  --shadow-side:           oklch(0.20 0.020 270 / 0.08);
+
+  --color-fg-primary:   oklch(0.220 0.022 270);
+  --color-fg-secondary: oklch(0.355 0.022 270);
+  --color-fg-tertiary:  oklch(0.475 0.020 250);
+  --color-fg-muted:     oklch(0.610 0.018 250);
+
+  --brand-color: oklch(0.320 0.180 263 / 0.95);
+  --brand-glow:  oklch(0.520 0.210 263 / 0.30);
+
+  --neo-surface:      var(--glass-bg);
+  --neo-shadow-light: transparent;
+  --neo-shadow-dark:  transparent;
+}
+
+/* ===============================================================
+ * HYBRID theme
+ * Medium tone between light and dark. Dusk palette: warm grey-blue
+ * surfaces, light text, royal accent holds.
+ * =============================================================== */
+
+:root[data-theme="hybrid"] {
+  --bg-1: oklch(0.400 0.030 260);
+  --bg-2: oklch(0.450 0.028 250);
+  --bg-3: oklch(0.420 0.040 270);
+  --bg-4: oklch(0.435 0.035 280);
+
+  --bg-overlay-1: oklch(0.700 0.180 263 / 0.10);
+  --bg-overlay-2: oklch(0.570 0.150 305 / 0.08);
+
+  --accent-royal:        oklch(0.625 0.220 263);
+  --accent-royal-bright: oklch(0.710 0.180 263);
+  --accent-royal-deep:   oklch(0.505 0.230 263);
+
+  --accent-emerald:        oklch(0.730 0.130 152);
+  --accent-emerald-bright: oklch(0.840 0.135 153);
+  --accent-emerald-deep:   oklch(0.570 0.118 153);
+
+  --glass-bg:            oklch(1 0 0 / 0.08);
+  --glass-bg-hover:      oklch(1 0 0 / 0.14);
+  --glass-border:        oklch(1 0 0 / 0.18);
+  --glass-border-strong: oklch(1 0 0 / 0.30);
+  --glass-blur:          10px;
+  --glass-saturate:      150%;
+
+  --highlight-top:         oklch(1 0 0 / 0.90);
+  --highlight-top-soft:    oklch(1 0 0 / 0.35);
+  --highlight-bottom:      oklch(1 0 0 / 0.50);
+  --highlight-bottom-soft: oklch(1 0 0 / 0.14);
+  --shadow-side:           oklch(0 0 0 / 0.12);
+
+  --color-fg-primary:   oklch(0.975 0.005 250);
+  --color-fg-secondary: oklch(0.890 0.010 250);
+  --color-fg-tertiary:  oklch(0.790 0.020 247);
+  --color-fg-muted:     oklch(0.685 0.025 247);
+
+  --brand-color: oklch(0.950 0.020 245 / 0.95);
+  --brand-glow:  oklch(0.760 0.130 252 / 0.45);
+
+  --neo-surface:      var(--glass-bg);
+  --neo-shadow-light: transparent;
+  --neo-shadow-dark:  transparent;
+}
+
+/* ===============================================================
+ * NEOMORPHIC theme (Phase 1: tokens only, Phase 3: component variants)
+ * Warm off-white solid surfaces, dual soft shadows, no blur. Easy-
+ * reading mode for long-form content.
+ *
+ * Components currently render their glass treatment regardless of
+ * theme; switching to neomorphic at Phase 1 changes the palette only.
+ * Component visual-language refactor stays Phase 3 per Notion spec.
+ * =============================================================== */
+
+:root[data-theme="neomorphic"] {
+  --bg-1: oklch(0.935 0.005 80);
+  --bg-2: oklch(0.915 0.005 80);
+  --bg-3: oklch(0.925 0.005 80);
+  --bg-4: oklch(0.905 0.005 80);
+
+  --bg-overlay-1: transparent;
+  --bg-overlay-2: transparent;
+
+  --accent-royal:        oklch(0.550 0.180 263);
+  --accent-royal-bright: oklch(0.640 0.180 263);
+  --accent-royal-deep:   oklch(0.460 0.195 263);
+
+  --accent-emerald:        oklch(0.625 0.110 153);
+  --accent-emerald-bright: oklch(0.715 0.125 153);
+  --accent-emerald-deep:   oklch(0.490 0.105 154);
+
+  --glass-bg:            oklch(0.935 0.005 80 / 1);
+  --glass-bg-hover:      oklch(0.945 0.005 80 / 1);
+  --glass-border:        oklch(0.700 0.005 80 / 0.20);
+  --glass-border-strong: oklch(0.700 0.005 80 / 0.35);
+  --glass-blur:          0px;
+  --glass-saturate:      100%;
+
+  --highlight-top:         oklch(1 0 0 / 0.70);
+  --highlight-top-soft:    oklch(1 0 0 / 0.40);
+  --highlight-bottom:      oklch(0.20 0.005 80 / 0.10);
+  --highlight-bottom-soft: oklch(0.20 0.005 80 / 0.05);
+  --shadow-side:           oklch(0.20 0.005 80 / 0.18);
+
+  --color-fg-primary:   oklch(0.255 0.005 80);
+  --color-fg-secondary: oklch(0.400 0.005 80);
+  --color-fg-tertiary:  oklch(0.545 0.005 80);
+  --color-fg-muted:     oklch(0.660 0.005 80);
+
+  --brand-color: oklch(0.300 0.110 263 / 0.95);
+  --brand-glow:  oklch(0.620 0.140 263 / 0.25);
+
+  --neo-surface:      oklch(0.935 0.005 80);
+  --neo-shadow-light: oklch(1 0 0 / 0.85);
+  --neo-shadow-dark:  oklch(0.30 0.005 80 / 0.15);
+}
+
+/* ===============================================================
+ * SYSTEM theme — resolves to LIGHT or DARK via prefers-color-scheme
+ * =============================================================== */
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    --bg-1: oklch(0.985 0.005 250);
+    --bg-2: oklch(0.955 0.015 250);
+    --bg-3: oklch(0.970 0.010 220);
+    --bg-4: oklch(0.960 0.012 280);
+
+    --bg-overlay-1: oklch(0.650 0.180 263 / 0.10);
+    --bg-overlay-2: oklch(0.680 0.140 305 / 0.07);
+
+    --accent-royal:        oklch(0.500 0.215 263);
+    --accent-royal-bright: oklch(0.580 0.225 263);
+    --accent-royal-deep:   oklch(0.420 0.230 263);
+
+    --accent-emerald:        oklch(0.620 0.135 153);
+    --accent-emerald-bright: oklch(0.700 0.140 153);
+    --accent-emerald-deep:   oklch(0.490 0.125 154);
+
+    --glass-bg:            oklch(1 0 0 / 0.55);
+    --glass-bg-hover:      oklch(1 0 0 / 0.75);
+    --glass-border:        oklch(0.20 0.020 270 / 0.12);
+    --glass-border-strong: oklch(0.20 0.020 270 / 0.22);
+    --glass-blur:          12px;
+    --glass-saturate:      160%;
+
+    --highlight-top:         oklch(1 0 0 / 0.95);
+    --highlight-top-soft:    oklch(1 0 0 / 0.55);
+    --highlight-bottom:      oklch(0.95 0 0 / 0.30);
+    --highlight-bottom-soft: oklch(0.95 0 0 / 0.10);
+    --shadow-side:           oklch(0.20 0.020 270 / 0.08);
+
+    --color-fg-primary:   oklch(0.220 0.022 270);
+    --color-fg-secondary: oklch(0.355 0.022 270);
+    --color-fg-tertiary:  oklch(0.475 0.020 250);
+    --color-fg-muted:     oklch(0.610 0.018 250);
+
+    --brand-color: oklch(0.320 0.180 263 / 0.95);
+    --brand-glow:  oklch(0.520 0.210 263 / 0.30);
+
+    --neo-surface:      var(--glass-bg);
+    --neo-shadow-light: transparent;
+    --neo-shadow-dark:  transparent;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --bg-1: oklch(0.135 0.052 271);
+    --bg-2: oklch(0.210 0.052 263);
+    --bg-3: oklch(0.190 0.067 265);
+    --bg-4: oklch(0.165 0.066 285);
+
+    --bg-overlay-1: oklch(0.700 0.180 263 / 0.12);
+    --bg-overlay-2: oklch(0.550 0.160 305 / 0.10);
+
+    --accent-royal:        oklch(0.605 0.222 263);
+    --accent-royal-bright: oklch(0.690 0.175 263);
+    --accent-royal-deep:   oklch(0.485 0.231 263);
+
+    --accent-emerald:        oklch(0.730 0.130 152);
+    --accent-emerald-bright: oklch(0.855 0.135 153);
+    --accent-emerald-deep:   oklch(0.570 0.118 153);
+
+    --glass-bg:            oklch(1 0 0 / 0.04);
+    --glass-bg-hover:      oklch(1 0 0 / 0.08);
+    --glass-border:        oklch(1 0 0 / 0.10);
+    --glass-border-strong: oklch(1 0 0 / 0.20);
+    --glass-blur:          8px;
+    --glass-saturate:      140%;
+
+    --highlight-top:         oklch(1 0 0 / 0.95);
+    --highlight-top-soft:    oklch(1 0 0 / 0.25);
+    --highlight-bottom:      oklch(1 0 0 / 0.55);
+    --highlight-bottom-soft: oklch(1 0 0 / 0.12);
+    --shadow-side:           oklch(0 0 0 / 0.10);
+
+    --color-fg-primary:   oklch(1 0 0 / 0.96);
+    --color-fg-secondary: oklch(1 0 0 / 0.86);
+    --color-fg-tertiary:  oklch(0.910 0.020 247 / 0.78);
+    --color-fg-muted:     oklch(0.880 0.020 247 / 0.62);
+
+    --brand-color: oklch(0.945 0.020 245 / 0.92);
+    --brand-glow:  oklch(0.870 0.060 250 / 0.55);
+
+    --neo-surface:      var(--glass-bg);
+    --neo-shadow-light: transparent;
+    --neo-shadow-dark:  transparent;
+  }
 }

@@ -1,30 +1,29 @@
 ---
 /**
- * CaseStudy: a single case study panel for the Selected Work page.
+ * CaseStudy: a single case study panel for the Selected Work pages.
  *
  * Each case study is structured around the consulting decision-making
  * arc that prospective clients evaluate: what problem this addresses,
- * how I approached it, and where it stands now. Tech stack appears as
- * a scannable tag row beneath the body. A repo link sits in a footer
- * action position so the panel reads as a unit that ends in a clear
- * "go deeper" affordance.
+ * how it was approached, and where it stands now. Tech stack appears
+ * as a scannable tag row beneath the body. A status-appropriate CTA
+ * sits in the footer.
  *
- * Props:
- *   title       — project name (rendered as h2 in display serif)
- *   tagline     — one-line description below the title
- *   problem     — paragraph or paragraphs (markdown not parsed; supply as a
- *                 single string with double newlines for paragraph breaks)
- *   approach    — paragraph or paragraphs
- *   status      — paragraph (current state, honest about what works)
- *   techStack   — array of strings rendered as small inline tags
- *   repoUrl     — link to the GitHub repository
- *   repoLabel   — text for the repo link button (default: "View on GitHub")
- *   accentColor — optional CSS color override for the title (defaults to
- *                 royal blue accent from tokens)
+ * Availability variants:
+ *   "open-source"          → "View on GitHub" button linking to repoUrl
+ *   "commercial-preserved" → "Inquire about licensing" mailto with
+ *                            pre-filled subject line, plus a small
+ *                            availability badge in the header
  */
 
 import GlassPanel from "./GlassPanel.astro";
 import GlassButton from "./GlassButton.astro";
+import type {
+  CaseStudyAvailability,
+  TechDecision,
+  RoleInfo,
+  ScreenshotInfo,
+  DownloadInfo,
+} from "../data/caseStudies";
 
 interface Props {
   title: string;
@@ -33,9 +32,23 @@ interface Props {
   approach: string;
   status: string;
   techStack: string[];
-  repoUrl: string;
-  repoLabel?: string;
+  repoUrl?: string;
+  availability?: CaseStudyAvailability;
   accentColor?: string;
+
+  /*
+   * Extended optional sections per the Notion case study spec.
+   * Each is rendered conditionally so case studies that do not
+   * populate these fields fall back to the basic three-section
+   * format (problem/approach/status).
+   */
+  features?: string[];
+  techDecisions?: TechDecision[];
+  role?: RoleInfo;
+  architectureDiagramUrl?: string;
+  architectureDiagramAlt?: string;
+  screenshots?: ScreenshotInfo[];
+  downloads?: DownloadInfo[];
 }
 
 const {
@@ -46,22 +59,57 @@ const {
   status,
   techStack,
   repoUrl,
-  repoLabel = "View on GitHub",
+  availability = "open-source",
   accentColor,
+  features,
+  techDecisions,
+  role,
+  architectureDiagramUrl,
+  architectureDiagramAlt,
+  screenshots,
+  downloads,
 } = Astro.props;
 
-// Split paragraphs on double newlines so the caller can pass multi-paragraph
+// Split paragraphs on double newlines so callers can pass multi-paragraph
 // strings naturally without requiring a parser.
 const problemParas = problem.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
 const approachParas = approach.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
 const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+
+// CTA configuration varies by availability. Open-source case studies link
+// to GitHub; commercial-preserved case studies route to a pre-filled mailto.
+const ctaHref =
+  availability === "commercial-preserved"
+    ? `mailto:princemanjee@gmail.com?subject=${encodeURIComponent(
+        `${title} — Licensing inquiry`
+      )}`
+    : repoUrl ?? "#";
+
+const ctaLabel =
+  availability === "commercial-preserved"
+    ? "Inquire about licensing"
+    : "View on GitHub";
+
+const availabilityLabel =
+  availability === "commercial-preserved"
+    ? "Commercial · Code preserved"
+    : "Open source";
 ---
 
 <GlassPanel size="xl" class="case-study">
   <header class="case-study-header">
-    <h2 class="case-study-title" style={accentColor ? `color: ${accentColor};` : undefined}>
-      {title}
-    </h2>
+    <div class="case-study-title-row">
+      <h2 class="case-study-title" style={accentColor ? `color: ${accentColor};` : undefined}>
+        {title}
+      </h2>
+      <span
+        class:list={[
+          "case-study-availability",
+          `case-study-availability--${availability}`,
+        ]}>
+        {availabilityLabel}
+      </span>
+    </div>
     <p class="case-study-tagline">{tagline}</p>
   </header>
 
@@ -71,10 +119,80 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
       {problemParas.map((p) => <p class="case-study-para">{p}</p>)}
     </section>
 
+    {features && features.length > 0 && (
+      <section class="case-study-section">
+        <h3 class="case-study-section-heading">What it does</h3>
+        <ul class="case-study-feature-list">
+          {features.map((feat) => (
+            <li class="case-study-feature-item">{feat}</li>
+          ))}
+        </ul>
+      </section>
+    )}
+
     <section class="case-study-section">
       <h3 class="case-study-section-heading">The approach</h3>
       {approachParas.map((p) => <p class="case-study-para">{p}</p>)}
     </section>
+
+    {architectureDiagramUrl && (
+      <section class="case-study-section">
+        <h3 class="case-study-section-heading">Architecture</h3>
+        <figure class="case-study-diagram">
+          <img
+            src={architectureDiagramUrl}
+            alt={architectureDiagramAlt ?? `${title} architecture diagram`}
+            loading="lazy"
+            decoding="async"
+          />
+        </figure>
+      </section>
+    )}
+
+    {techDecisions && techDecisions.length > 0 && (
+      <section class="case-study-section">
+        <h3 class="case-study-section-heading">Tech decisions and rationale</h3>
+        <ul class="case-study-decisions-list">
+          {techDecisions.map((decision) => (
+            <li class="case-study-decision">
+              <h4 class="case-study-decision-choice">{decision.choice}</h4>
+              <p class="case-study-decision-rationale">{decision.rationale}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {screenshots && screenshots.length > 0 && (
+      <section class="case-study-section">
+        <h3 class="case-study-section-heading">Screenshots</h3>
+        <div class="case-study-screenshots">
+          {screenshots.map((shot) => (
+            <figure class="case-study-screenshot">
+              <img
+                src={shot.src}
+                alt={shot.alt}
+                loading="lazy"
+                decoding="async"
+              />
+              {shot.caption && (
+                <figcaption class="case-study-screenshot-caption">
+                  {shot.caption}
+                </figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {role && (
+      <section class="case-study-section">
+        <h3 class="case-study-section-heading">My role</h3>
+        <p class="case-study-para">{role.description}</p>
+        <p class="case-study-role-timeframe">{role.timeframe}</p>
+      </section>
+    )}
 
     <section class="case-study-section">
       <h3 class="case-study-section-heading">Status</h3>
@@ -91,9 +209,39 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     </ul>
   </div>
 
+  {downloads && downloads.length > 0 && (
+    <div class="case-study-downloads">
+      <div class="case-study-downloads-label">Available downloads</div>
+      <ul class="case-study-downloads-list">
+        {downloads.map((download) => (
+          <li class="case-study-download">
+            <a
+              class="case-study-download-link"
+              href={download.url}
+              download={download.filename}
+              rel="noopener">
+              <span class="case-study-download-icon" aria-hidden="true">↓</span>
+              <span class="case-study-download-main">
+                <span class="case-study-download-label">{download.label}</span>
+                {download.description && (
+                  <span class="case-study-download-description">
+                    {download.description}
+                  </span>
+                )}
+              </span>
+              {download.fileSize && (
+                <span class="case-study-download-size">{download.fileSize}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
   <footer class="case-study-footer">
-    <GlassButton href={repoUrl} variant="secondary" size="md">
-      {repoLabel}
+    <GlassButton href={ctaHref} variant="secondary" size="md">
+      {ctaLabel}
     </GlassButton>
   </footer>
 </GlassPanel>
@@ -105,13 +253,22 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
   }
 
   /*
-   * Header: project name in display serif, tagline in body sans below.
-   * The visual weight should feel like a chapter heading, not a card title.
+   * Header: project name in display serif, availability badge to the right,
+   * tagline in body sans below. The badge gives an immediate signal whether
+   * the visitor can clone the repo or whether this is a commercial product.
    */
   .case-study-header {
     margin-bottom: var(--space-2xl);
     padding-bottom: var(--space-lg);
     border-bottom: 1px solid var(--glass-border);
+  }
+
+  .case-study-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-sm);
   }
 
   .case-study-title {
@@ -121,7 +278,36 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     line-height: 1;
     letter-spacing: var(--tracking-tight);
     color: var(--color-fg-primary);
-    margin: 0 0 var(--space-sm) 0;
+    margin: 0;
+  }
+
+  /*
+   * Availability badge: small pill indicating the case study's status.
+   * Open-source variant uses a neutral glass treatment. Commercial
+   * variant uses a warmer amber accent to differentiate without being
+   * loud (these are not warnings, just status indicators).
+   */
+  .case-study-availability {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .case-study-availability--open-source {
+    color: rgba(180, 220, 200, 0.95);
+    background: rgba(80, 180, 130, 0.12);
+    border: 1px solid rgba(80, 180, 130, 0.30);
+  }
+
+  .case-study-availability--commercial-preserved {
+    color: rgba(240, 210, 160, 0.95);
+    background: rgba(220, 170, 90, 0.12);
+    border: 1px solid rgba(220, 170, 90, 0.30);
   }
 
   .case-study-tagline {
@@ -136,9 +322,9 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
 
   /*
    * Body sections: three structural blocks (problem, approach, status).
-   * Each has a small uppercase Geist label and body Inter paragraphs.
-   * The label-paragraph rhythm makes the structure scannable at a glance
-   * for someone deciding whether the project is relevant to their needs.
+   * Each has a small uppercase label and body paragraphs. The label
+   * rhythm makes the structure scannable for someone deciding whether
+   * the project is relevant to their needs.
    */
   .case-study-body {
     display: flex;
@@ -174,11 +360,7 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     margin-bottom: 0;
   }
 
-  /*
-   * Tech stack: a scannable row of small inline tags. Not full shields-style
-   * badges (those belong on the GitHub README), just clean text chips that
-   * give a quick read on the tech surface area.
-   */
+  /* Tech stack: scannable row of clean text chips. */
   .case-study-tech {
     margin-bottom: var(--space-2xl);
     padding-top: var(--space-lg);
@@ -216,15 +398,251 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     white-space: nowrap;
   }
 
-  /*
-   * Footer: action area for the repo link. Single secondary button so
-   * the panel ends on a clear "go deeper" affordance without competing
-   * with the page-level engagement CTAs at the bottom of the page.
-   */
+  /* Footer: action area for the case-study-appropriate CTA */
   .case-study-footer {
     display: flex;
     gap: var(--space-md);
     flex-wrap: wrap;
+  }
+
+  /*
+   * ==============================================================
+   * EXTENDED CASE STUDY SECTIONS
+   *
+   * Styles for the conditional sections rendered when a case study
+   * populates the extended fields (features, architectureDiagram,
+   * techDecisions, screenshots, role, downloads). Each section is
+   * designed to fit the design system glass aesthetic without
+   * introducing new visual primitives.
+   * ==============================================================
+   */
+
+  /* Features list: scannable bullets with a small royal-blue glyph */
+  .case-study-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .case-study-feature-item {
+    position: relative;
+    padding-left: 28px;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    max-width: 72ch;
+  }
+
+  .case-study-feature-item::before {
+    content: "›";
+    position: absolute;
+    left: 8px;
+    top: 0;
+    color: var(--accent-royal-bright);
+    font-weight: 600;
+    font-size: 1.2em;
+    line-height: 1.4;
+  }
+
+  /* Architecture diagram figure: full-width with subtle glass border */
+  .case-study-diagram {
+    margin: 0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--glass-border-strong);
+    background: rgba(0, 0, 0, 0.20);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      0 8px 24px rgba(0, 0, 0, 0.30);
+  }
+
+  .case-study-diagram img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Tech decisions: each entry is a labeled rationale block */
+  .case-study-decisions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .case-study-decision {
+    padding: var(--space-lg);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      inset 0 -1px 1px var(--highlight-bottom);
+  }
+
+  .case-study-decision-choice {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+    margin: 0 0 var(--space-sm) 0;
+    line-height: 1.2;
+  }
+
+  .case-study-decision-rationale {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0;
+    max-width: 72ch;
+  }
+
+  /*
+   * Screenshot gallery: responsive 3-column grid on wide screens,
+   * 2 columns on tablet, 1 column on mobile. Each item is a figure
+   * with optional caption underneath.
+   */
+  .case-study-screenshots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .case-study-screenshot {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .case-study-screenshot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.20);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      0 4px 12px rgba(0, 0, 0, 0.25),
+      0 12px 32px rgba(0, 0, 0, 0.20);
+  }
+
+  .case-study-screenshot-caption {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-tertiary);
+    margin: 0;
+  }
+
+  /* Role section: timeframe caption styled as small muted text */
+  .case-study-role-timeframe {
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    letter-spacing: var(--tracking-tight);
+    margin: var(--space-sm) 0 0 0;
+  }
+
+  /*
+   * Downloads section: vertical list of file link rows, each row
+   * showing icon + label + optional description + optional size.
+   * Hover state lifts the row slightly and brightens the border.
+   */
+  .case-study-downloads {
+    margin-bottom: var(--space-2xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .case-study-downloads-label {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    margin-bottom: var(--space-md);
+  }
+
+  .case-study-downloads-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .case-study-download-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform var(--duration-base) var(--easing-out),
+      background var(--duration-base) var(--easing-out),
+      border-color var(--duration-base) var(--easing-out);
+  }
+
+  .case-study-download-link:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--glass-border-strong);
+  }
+
+  .case-study-download-icon {
+    font-size: var(--text-xl);
+    color: var(--accent-royal-bright);
+    font-weight: 600;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .case-study-download-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 auto;
+  }
+
+  .case-study-download-label {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--color-fg-primary);
+  }
+
+  .case-study-download-description {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-tertiary);
+  }
+
+  .case-study-download-size {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    flex-shrink: 0;
   }
 
   /* Tablet adjustments */
@@ -237,7 +655,7 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     }
   }
 
-  /* Mobile: tighter spacing, smaller display sizes */
+  /* Mobile */
   @media (max-width: 768px) {
     :global(.case-study) {
       padding: var(--space-xl);
@@ -254,6 +672,32 @@ const statusParas = status.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     }
     .case-study-body {
       gap: var(--space-lg);
+    }
+    .case-study-feature-item {
+      font-size: var(--text-base);
+    }
+    .case-study-decision {
+      padding: var(--space-md);
+    }
+    .case-study-decision-choice {
+      font-size: var(--text-md);
+    }
+    .case-study-decision-rationale {
+      font-size: var(--text-base);
+    }
+    .case-study-screenshots {
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+    .case-study-download-link {
+      padding: var(--space-md);
+    }
+  }
+
+  /* Tablet adjustments for screenshot grid: drop to two columns */
+  @media (max-width: 1024px) and (min-width: 769px) {
+    .case-study-screenshots {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 </style>

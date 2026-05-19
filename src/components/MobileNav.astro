@@ -1,0 +1,813 @@
+---
+/**
+ * MobileNav: floating disc trigger plus glass panel navigation that
+ * expands from the disc location.
+ *
+ * Visible only on screens below 768px. On desktop, the pill Nav component
+ * at the top center handles navigation. On mobile, this component takes
+ * over with a floating circular action button at the bottom-right and an
+ * animated glass panel menu when tapped.
+ *
+ * Visual language:
+ *   - Disc trigger uses the "hovering disc" treatment from the brand
+ *     mark exploration: minimal thin-frame styling with a strong
+ *     royal-blue ambient glow. Differentiates from the polished orb
+ *     used by BrandMark while staying coherent with the design system.
+ *   - Glass panel matches GlassPanel.astro visual treatment: backdrop
+ *     blur, inset bevel highlights, outer shadow stack, royal-blue
+ *     atmospheric glow. Bottom-right anchored so it visually grows
+ *     from the disc location.
+ *
+ * Animation choreography (open):
+ *   0-300ms:  Backdrop dim + blur fades in
+ *   0-600ms:  Glass panel scales from 0 to 1 with transform-origin
+ *             at bottom right (the disc location) using ease-out-expo
+ *             for a smooth, premium deceleration
+ *   200-700ms: Content stagger fade-in (header → nav → external links)
+ *
+ * Animation choreography (close):
+ *   0-250ms:  Glass panel scales back to 0 with ease-in
+ *   0-250ms:  Backdrop fades out
+ *   Faster close is intentional UX: users want immediate dismissal.
+ *
+ * Accessibility:
+ *   - aria-expanded on the trigger reflects open state
+ *   - aria-controls points to the panel
+ *   - aria-modal on the panel signals it traps focus when open
+ *   - escape key closes the menu
+ *   - tapping a nav link closes the menu before navigating
+ *   - tapping the backdrop (outside the glass panel) closes the menu
+ *   - body scroll is locked when the menu is open
+ *   - reduced-motion preference disables transitions
+ */
+
+import BrandMark from "./BrandMark.astro";
+import { caseStudiesByOrder } from "../data/caseStudies";
+
+const currentPath = Astro.url.pathname;
+
+function normalize(path: string): string {
+  if (path !== "/" && path.endsWith("/")) return path.slice(0, -1);
+  return path;
+}
+
+const current = normalize(currentPath);
+
+const isActive = (path: string): boolean => normalize(path) === current;
+const isActiveSection = (prefix: string): boolean =>
+  current === prefix || current.startsWith(prefix + "/");
+
+const workActive = isActiveSection("/work");
+---
+
+<div class="mobile-nav" data-mobile-nav>
+  {/* Floating disc trigger - bottom-right corner */}
+  <button
+    type="button"
+    class="mobile-nav-trigger"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="mobile-nav-panel"
+    data-mobile-nav-trigger>
+    <span class="mobile-nav-icon" aria-hidden="true">
+      <span class="mobile-nav-icon-line mobile-nav-icon-line--top"></span>
+      <span class="mobile-nav-icon-line mobile-nav-icon-line--middle"></span>
+      <span class="mobile-nav-icon-line mobile-nav-icon-line--bottom"></span>
+    </span>
+  </button>
+
+  {/*
+    Backdrop: full viewport, dims and blurs page content behind the
+    panel. Tapping anywhere on the backdrop (outside the glass panel)
+    closes the menu.
+  */}
+  <div
+    class="mobile-nav-panel"
+    id="mobile-nav-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mobile-nav-brand-name"
+    aria-hidden="true"
+    data-mobile-nav-panel>
+    {/* Glass panel content container: less than full viewport, anchored
+        to bottom-right, scales from disc origin */}
+    <div class="mobile-nav-panel-content" data-mobile-nav-content>
+      <div class="mobile-nav-panel-inner">
+        <header class="mobile-nav-header">
+          <a href="/" class="mobile-nav-brand-link" data-mobile-nav-link>
+            <BrandMark size="md" ariaLabel="P. R. Manjee" />
+            <div class="mobile-nav-brand-text">
+              <div id="mobile-nav-brand-name" class="mobile-nav-brand-name">
+                P. R. Manjee
+              </div>
+              <div class="mobile-nav-brand-meta">Senior Technology Consultant</div>
+            </div>
+          </a>
+        </header>
+
+        <nav class="mobile-nav-list" aria-label="Primary navigation">
+          <a
+            href="/"
+            class:list={["mobile-nav-item", isActive("/") && "mobile-nav-item--active"]}
+            aria-current={isActive("/") ? "page" : undefined}
+            data-mobile-nav-link>
+            Home
+          </a>
+
+          <a
+            href="/about"
+            class:list={["mobile-nav-item", isActive("/about") && "mobile-nav-item--active"]}
+            aria-current={isActive("/about") ? "page" : undefined}
+            data-mobile-nav-link>
+            About
+          </a>
+
+          <a
+            href="/work"
+            class:list={["mobile-nav-item", workActive && "mobile-nav-item--active"]}
+            aria-current={isActive("/work") ? "page" : undefined}
+            data-mobile-nav-link>
+            Work
+          </a>
+
+          <div class="mobile-nav-sub-list" role="list" aria-label="Work sub-pages">
+            <a
+              href="/work"
+              class:list={[
+                "mobile-nav-sub-item",
+                isActive("/work") && "mobile-nav-sub-item--active",
+              ]}
+              aria-current={isActive("/work") ? "page" : undefined}
+              data-mobile-nav-link>
+              All Work
+            </a>
+            {caseStudiesByOrder.map((cs) => {
+              const path = `/work/${cs.slug}`;
+              const active = isActive(path);
+              return (
+                <a
+                  href={path}
+                  class:list={[
+                    "mobile-nav-sub-item",
+                    active && "mobile-nav-sub-item--active",
+                  ]}
+                  aria-current={active ? "page" : undefined}
+                  data-mobile-nav-link>
+                  {cs.title}
+                </a>
+              );
+            })}
+          </div>
+        </nav>
+
+        <div class="mobile-nav-external">
+          <h3 class="mobile-nav-external-heading">Connect</h3>
+          <a
+            href="https://www.linkedin.com/in/princemanjee/"
+            rel="noopener"
+            class="mobile-nav-external-link"
+            data-mobile-nav-link>
+            LinkedIn
+          </a>
+          <a
+            href="https://github.com/princemanjee"
+            rel="noopener"
+            class="mobile-nav-external-link"
+            data-mobile-nav-link>
+            GitHub
+          </a>
+          <a
+            href="https://cv.princerehman.com"
+            rel="noopener"
+            class="mobile-nav-external-link"
+            data-mobile-nav-link>
+            CV
+          </a>
+          <a
+            href="mailto:princemanjee@gmail.com"
+            class="mobile-nav-external-link mobile-nav-external-link--email"
+            data-mobile-nav-link>
+            princemanjee@gmail.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /*
+   * Hide the mobile nav entirely on desktop. The pill Nav component
+   * (top center) handles navigation at 768px and up.
+   */
+  @media (min-width: 769px) {
+    .mobile-nav {
+      display: none;
+    }
+  }
+
+  /*
+   * Floating disc trigger.
+   * Uses the hovering disc visual language from the brand mark
+   * exploration: thin minimal frame with a strong royal-blue ambient
+   * glow extending beyond the disc itself. Fixed bottom-right for
+   * thumb-friendly tap access on mobile.
+   *
+   * Z-index 1000 keeps it above the panel content (998) so the user
+   * can see the trigger transform between hamburger and X states while
+   * the menu is open.
+   */
+  .mobile-nav-trigger {
+    position: fixed;
+    bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    right: max(24px, env(safe-area-inset-right, 24px));
+    width: 64px;
+    height: 64px;
+    z-index: 1000;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.80),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.30),
+      0 6px 16px rgba(0, 0, 0, 0.45),
+      0 16px 40px rgba(0, 0, 0, 0.35),
+      0 0 60px rgba(91, 140, 255, 0.40),
+      0 0 140px rgba(91, 140, 255, 0.18);
+    transition:
+      transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1),
+      background 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-nav-trigger:hover,
+  .mobile-nav-trigger:focus-visible {
+    background: rgba(255, 255, 255, 0.09);
+    transform: scale(1.05);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.40),
+      0 8px 22px rgba(0, 0, 0, 0.55),
+      0 20px 52px rgba(0, 0, 0, 0.45),
+      0 0 80px rgba(91, 140, 255, 0.55),
+      0 0 180px rgba(91, 140, 255, 0.28);
+    outline: none;
+  }
+
+  .mobile-nav-trigger:active {
+    transform: scale(0.96);
+  }
+
+  /*
+   * Hamburger icon: three horizontal lines that animate to X when the
+   * menu is open. Stroke style matches the chevron mark's round line
+   * caps for visual consistency with the brand mark.
+   */
+  .mobile-nav-icon {
+    position: relative;
+    width: 24px;
+    height: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .mobile-nav-icon-line {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: rgba(220, 232, 250, 0.95);
+    border-radius: 2px;
+    transform-origin: center;
+    transition:
+      transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-nav-trigger[aria-expanded="true"] .mobile-nav-icon-line--top {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .mobile-nav-trigger[aria-expanded="true"] .mobile-nav-icon-line--middle {
+    opacity: 0;
+  }
+
+  .mobile-nav-trigger[aria-expanded="true"] .mobile-nav-icon-line--bottom {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  /*
+   * Backdrop: full-viewport overlay that dims and blurs the page content
+   * behind the glass panel. Click-outside-to-close handler attaches here
+   * (when the user taps the backdrop directly, not the panel content).
+   *
+   * Default state: hidden via opacity + pointer-events.
+   * Open state: opacity 1, pointer-events auto, transitions in over
+   * 300ms with a smooth ease-out.
+   *
+   * Closing uses a faster 250ms transition for snappy dismissal.
+   */
+  .mobile-nav-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(10, 14, 39, 0.55);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms cubic-bezier(0.4, 0, 0.7, 0);
+  }
+
+  .mobile-nav-panel[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /*
+   * Glass panel content container.
+   * Positioned at the same bottom-right offset as the disc trigger so
+   * the disc sits visually inside the panel's bottom-right corner when
+   * open. Transform-origin at bottom right means the panel grows from
+   * the disc location during the open animation.
+   *
+   * Sizing uses min() to cap dimensions on tablets while ensuring the
+   * panel never touches viewport edges on phones (always 24px+ margin).
+   * Uses 100dvh (dynamic viewport height) so iOS Safari's address bar
+   * showing/hiding does not cause height jumps.
+   */
+  .mobile-nav-panel-content {
+    position: absolute;
+    bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    right: max(24px, env(safe-area-inset-right, 24px));
+    width: min(380px, calc(100vw - 48px - max(0px, env(safe-area-inset-left, 0px)) - max(0px, env(safe-area-inset-right, 0px))));
+    height: min(720px, calc(100dvh - 48px - max(0px, env(safe-area-inset-top, 0px)) - max(0px, env(safe-area-inset-bottom, 0px))));
+    z-index: 998;
+
+    border-radius: 28px;
+    background: rgba(20, 25, 50, 0.78);
+    backdrop-filter: blur(28px) saturate(170%);
+    -webkit-backdrop-filter: blur(28px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+
+    /* Glass treatment matching GlassPanel.astro:
+       inset bevel highlights at top/bottom + softer extended highlights,
+       inner side shadows for depth, outer drop shadows for elevation,
+       royal-blue atmospheric glow for brand coherence. */
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 12px 28px rgba(0, 0, 0, 0.45),
+      0 32px 80px rgba(0, 0, 0, 0.55),
+      0 0 100px rgba(91, 140, 255, 0.18);
+
+    /* Default state (closed): scaled to 0 at bottom-right origin */
+    transform: scale(0);
+    transform-origin: bottom right;
+    opacity: 0;
+
+    /* Closing transition: 250ms ease-in for snappy dismissal */
+    transition:
+      transform 250ms cubic-bezier(0.4, 0, 0.7, 0),
+      opacity 200ms cubic-bezier(0.4, 0, 0.7, 0);
+  }
+
+  /*
+   * Open state for the glass panel:
+   * 600ms scale from 0 to 1 with ease-out-expo for a smooth premium
+   * deceleration. The panel expands from the disc location toward
+   * top-left. Opacity ramp is faster (300ms) so the panel is visible
+   * during most of the scale animation rather than fading in late.
+   */
+  .mobile-nav-panel[data-open="true"] .mobile-nav-panel-content {
+    transform: scale(1);
+    opacity: 1;
+    transition:
+      transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /*
+   * Inner scrollable content area inside the glass panel.
+   * Reserved bottom padding (88px) ensures the last item is not
+   * hidden behind the disc which sits at bottom-right.
+   * Custom subtle scrollbar for the content overflow case.
+   */
+  .mobile-nav-panel-inner {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 32px 24px 88px 24px;
+    display: flex;
+    flex-direction: column;
+
+    /* Subtle scrollbar styling for content overflow */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+
+  .mobile-nav-panel-inner::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .mobile-nav-panel-inner::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .mobile-nav-panel-inner::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+  }
+
+  /*
+   * Content stagger animation.
+   * Each major section (header, nav list, external links) starts
+   * invisible and slightly translated down. When the panel opens,
+   * staggered transition-delays bring them in sequentially during
+   * the 200-700ms window of the open animation, so the user sees
+   * the panel expand and then the content reveal in a layered way.
+   */
+  .mobile-nav-header,
+  .mobile-nav-list,
+  .mobile-nav-external {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 400ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-nav-panel[data-open="true"] .mobile-nav-header {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 200ms;
+  }
+
+  .mobile-nav-panel[data-open="true"] .mobile-nav-list {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 280ms;
+  }
+
+  .mobile-nav-panel[data-open="true"] .mobile-nav-external {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 360ms;
+  }
+
+  /* Brand block at top of panel: small orb + identity */
+  .mobile-nav-header {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .mobile-nav-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .mobile-nav-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-nav-brand-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .mobile-nav-brand-meta {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--color-fg-tertiary);
+    line-height: 1.3;
+  }
+
+  /*
+   * Primary nav list: display serif at moderate size sized for the
+   * 380px panel width. Reduced from full-viewport 28px to 24px to
+   * fit comfortably with the panel constraint.
+   */
+  .mobile-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 32px;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--color-fg-secondary);
+    text-decoration: none;
+    letter-spacing: var(--tracking-tight);
+    border: 1px solid transparent;
+    transition:
+      background var(--duration-base) var(--easing-out),
+      color var(--duration-base) var(--easing-out);
+  }
+
+  .mobile-nav-item:hover,
+  .mobile-nav-item:focus-visible {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-fg-primary);
+    outline: none;
+  }
+
+  .mobile-nav-item--active {
+    background: linear-gradient(
+      180deg,
+      rgba(91, 140, 255, 0.95) 0%,
+      rgba(59, 109, 255, 1) 50%,
+      rgba(29, 74, 224, 1) 100%
+    );
+    border: 1px solid rgba(140, 180, 255, 0.55);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.85),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.15),
+      0 2px 8px rgba(29, 74, 224, 0.40),
+      0 0 24px rgba(91, 140, 255, 0.35);
+  }
+
+  .mobile-nav-item--active:hover {
+    color: white;
+  }
+
+  .mobile-nav-sub-list {
+    margin: 4px 0 8px 20px;
+    padding-left: 16px;
+    border-left: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobile-nav-sub-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.2;
+    color: var(--color-fg-tertiary);
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition:
+      background var(--duration-base) var(--easing-out),
+      color var(--duration-base) var(--easing-out);
+  }
+
+  .mobile-nav-sub-item:hover,
+  .mobile-nav-sub-item:focus-visible {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-fg-secondary);
+    outline: none;
+  }
+
+  .mobile-nav-sub-item--active {
+    background: linear-gradient(
+      180deg,
+      rgba(91, 140, 255, 0.95) 0%,
+      rgba(59, 109, 255, 1) 50%,
+      rgba(29, 74, 224, 1) 100%
+    );
+    border: 1px solid rgba(140, 180, 255, 0.55);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.50),
+      0 2px 8px rgba(29, 74, 224, 0.40);
+  }
+
+  /*
+   * External links section: sits at bottom of panel content via
+   * margin-top: auto so it occupies the natural bottom space rather
+   * than being pushed off the visible area.
+   */
+  .mobile-nav-external {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobile-nav-external-heading {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    margin: 0 0 10px 0;
+    padding-left: 16px;
+  }
+
+  .mobile-nav-external-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-fg-secondary);
+    text-decoration: none;
+    transition:
+      background var(--duration-base) var(--easing-out),
+      color var(--duration-base) var(--easing-out);
+  }
+
+  .mobile-nav-external-link:hover,
+  .mobile-nav-external-link:focus-visible {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-fg-primary);
+    outline: none;
+  }
+
+  .mobile-nav-external-link--email {
+    color: var(--accent-royal-bright);
+  }
+
+  .mobile-nav-external-link--email:hover,
+  .mobile-nav-external-link--email:focus-visible {
+    color: var(--accent-royal-bright);
+    background: rgba(91, 140, 255, 0.08);
+  }
+
+  /*
+   * Lock body scroll when menu is open. Applied via JS on the body
+   * element. CSS rule lives here for proximity to related styles.
+   */
+  :global(body.mobile-nav-open) {
+    overflow: hidden;
+  }
+
+  /*
+   * Reduced motion: disable all transitions on the panel and content
+   * so users with vestibular sensitivity get instant state changes
+   * rather than animated ones.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-nav-trigger,
+    .mobile-nav-icon-line,
+    .mobile-nav-panel,
+    .mobile-nav-panel-content,
+    .mobile-nav-header,
+    .mobile-nav-list,
+    .mobile-nav-external,
+    .mobile-nav-item,
+    .mobile-nav-sub-item,
+    .mobile-nav-external-link {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * MobileNav toggle behavior.
+   *
+   * Manages open/close state of the floating disc trigger and the
+   * glass panel. Includes focus management, escape-key dismissal,
+   * link-tap dismissal, backdrop-tap dismissal, and body scroll lock.
+   *
+   * Wrapped in IIFE so multiple component instances on a single page
+   * (should that ever happen) do not collide on variable names.
+   */
+  (() => {
+    const trigger = document.querySelector<HTMLButtonElement>(
+      "[data-mobile-nav-trigger]"
+    );
+    const panel = document.querySelector<HTMLElement>("[data-mobile-nav-panel]");
+    const content = document.querySelector<HTMLElement>("[data-mobile-nav-content]");
+    const links = document.querySelectorAll<HTMLAnchorElement>(
+      "[data-mobile-nav-link]"
+    );
+
+    if (!trigger || !panel || !content) return;
+
+    let isOpen = false;
+
+    function openMenu() {
+      if (!trigger || !panel) return;
+      isOpen = true;
+      trigger.setAttribute("aria-expanded", "true");
+      trigger.setAttribute("aria-label", "Close navigation menu");
+      panel.setAttribute("aria-hidden", "false");
+      // Force a frame to ensure the transition runs from the closed state
+      requestAnimationFrame(() => {
+        panel.setAttribute("data-open", "true");
+      });
+      document.body.classList.add("mobile-nav-open");
+    }
+
+    function closeMenu() {
+      if (!trigger || !panel) return;
+      isOpen = false;
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-label", "Open navigation menu");
+      panel.setAttribute("aria-hidden", "true");
+      panel.setAttribute("data-open", "false");
+      document.body.classList.remove("mobile-nav-open");
+    }
+
+    function toggleMenu() {
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+
+    trigger.addEventListener("click", toggleMenu);
+
+    /*
+     * Backdrop click-to-close: only close if the click target is the
+     * backdrop itself (the .mobile-nav-panel element), not a descendant
+     * inside the glass panel. e.target === panel means the click landed
+     * on the dimmed area outside the glass panel.
+     */
+    panel.addEventListener("click", (e: MouseEvent) => {
+      if (e.target === panel) {
+        closeMenu();
+      }
+    });
+
+    /*
+     * Stop propagation on the panel content so clicks inside it do not
+     * bubble up to the backdrop click handler (which would close the
+     * menu when the user is trying to tap a nav link).
+     */
+    content.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+    });
+
+    // Escape key closes the menu and returns focus to the trigger
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        closeMenu();
+        trigger.focus();
+      }
+    });
+
+    /*
+     * Tapping any nav link closes the menu. The closeMenu call runs
+     * synchronously before browser navigation begins, so the closing
+     * animation has a brief moment to start before the page changes.
+     */
+    links.forEach((link) => {
+      link.addEventListener("click", () => {
+        closeMenu();
+      });
+    });
+
+    /*
+     * If the viewport is resized to desktop while the menu is open,
+     * close it to avoid a stuck-open state when CSS hides the
+     * component. Debounced to avoid thrashing during resize events.
+     */
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    window.addEventListener("resize", () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (isOpen && window.innerWidth >= 769) {
+          closeMenu();
+        }
+      }, 100);
+    });
+  })();
+</script>

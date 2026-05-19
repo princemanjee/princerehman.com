@@ -2,45 +2,65 @@
 /**
  * GlassPanel: a thick-glass container with crisp curved bevel highlights.
  *
- * The technique:
- *   - Very transparent base background
- *   - Inset box-shadow with tight spread (1-2px) creates curved bright
- *     highlight lines that trace the rounded edges (because inset shadows
- *     respect border-radius)
- *   - Brighter highlight at top, dimmer at bottom (light from above)
- *   - Subtle dark insets on left/right suggest the thickness of the glass
- *   - Strong layered outer drop shadow grounds it as a 3D object
+ * Standard variant (framed=false, default): unchanged transparent glass.
  *
- * Sizes control the border-radius. Use `lg` (default) or `xl` for hero panels;
- * `md` for cards; `sm` for inline elements.
+ * Framed variant (framed=true): the glass panel keeps its original
+ * transparent glass texture, plus a diagonal shine streak. A THIN
+ * metallic silver frame wraps the perimeter, with polished chrome
+ * screws on the glass surface at the corners.
+ *
+ * THIS ITERATION: reverted frame thickness to match the "almost there"
+ * version (around 11-13px total). The previous attempt mistakenly
+ * doubled the thickness when the user only asked for the existing
+ * thin frame to be MORE VISIBLE, not thicker. This version uses
+ * brighter, more contrasted silver tones to read clearly against
+ * the dark navy background while staying THIN.
+ *
+ * Screw sizes and positions match the user's manual CSS edits:
+ *   xl: 25px screws at top:30px / left:40px (and symmetric for others)
+ *   lg, md, sm: proportionally scaled
  */
 
 interface Props {
   size?: "sm" | "md" | "lg" | "xl";
+  framed?: boolean;
   class?: string;
 }
 
-const { size = "lg", class: className = "" } = Astro.props;
+const {
+  size = "lg",
+  framed = false,
+  class: className = "",
+} = Astro.props;
 ---
 
-<div class:list={[`glass-panel glass-panel--${size}`, className]}>
-  <slot />
-</div>
+{framed ? (
+  <div class={`glass-panel-framed glass-panel-framed--${size}`}>
+    <div class:list={[
+      `glass-panel glass-panel--${size} glass-panel--framed-inner glass-panel--framed-inner--${size}`,
+      className,
+    ]}>
+      <slot />
+    </div>
+    <div class="glass-panel-screw glass-panel-screw--tl" aria-hidden="true"></div>
+    <div class="glass-panel-screw glass-panel-screw--tr" aria-hidden="true"></div>
+    <div class="glass-panel-screw glass-panel-screw--bl" aria-hidden="true"></div>
+    <div class="glass-panel-screw glass-panel-screw--br" aria-hidden="true"></div>
+  </div>
+) : (
+  <div class:list={[`glass-panel glass-panel--${size}`, className]}>
+    <slot />
+  </div>
+)}
 
 <style>
+  /* ORIGINAL GLASS PANEL STYLES - unchanged */
   .glass-panel {
     position: relative;
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     border: 1px solid var(--glass-border);
-
-    /* The signature thick-glass bevel:
-       - Top inset shadow at 1-2px = bright curved arc on rounded top edge
-       - Bottom inset shadow at 1-2px = dimmer curved arc on rounded bottom edge
-       - Side insets = visible thickness at left/right edges
-       - Outer drop shadows = grounded 3D object hovering above surface
-    */
     box-shadow:
       inset 0 2px 1px var(--highlight-top),
       inset 0 4px 8px var(--highlight-top-soft),
@@ -57,4 +77,247 @@ const { size = "lg", class: className = "" } = Astro.props;
   .glass-panel--md { border-radius: var(--radius-lg); }
   .glass-panel--lg { border-radius: var(--radius-2xl); }
   .glass-panel--xl { border-radius: var(--radius-3xl); }
+
+  /*
+   * Wrapper margin: matches the "almost there" thin-frame version,
+   * sized just enough for the thin box-shadow ring plus visible drop
+   * shadow to not collide with neighboring page content.
+   */
+  .glass-panel-framed {
+    position: relative;
+    display: block;
+  }
+
+  .glass-panel-framed--sm { margin: 8px; }
+  .glass-panel-framed--md { margin: 10px; }
+  .glass-panel-framed--lg { margin: 12px; }
+  .glass-panel-framed--xl { margin: 14px; }
+
+  /*
+   * ==============================================================
+   * GLASS SHINE — EDGE-ONLY HIGHLIGHTS via ::before pseudo-element.
+   *
+   * Previous diagonal streak crossed the entire panel and showed
+   * through the content. This version places shine ONLY at the
+   * edges/corners using radial gradients that fade out long before
+   * reaching the middle of the panel, so content stays clean.
+   *
+   * Layers:
+   *   1. Top-left corner glint (brightest, simulates light source)
+   *   2. Top edge soft horizontal highlight (rim light)
+   *   3. Bottom-right corner subtle counter-glint
+   *
+   * Each radial gradient is sized as a small ellipse anchored to
+   * the corresponding corner, with stops that go transparent by
+   * 30-40% of the panel dimensions.
+   * ==============================================================
+   */
+  .glass-panel--framed-inner {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .glass-panel--framed-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      /* Top-left corner glint — primary light catch */
+      radial-gradient(
+        ellipse 32% 24% at 0% 0%,
+        rgba(255, 255, 255, 0.22) 0%,
+        rgba(255, 255, 255, 0.10) 28%,
+        rgba(255, 255, 255, 0.03) 55%,
+        transparent 78%
+      ),
+      /* Bottom-right counter-glint — subtle */
+      radial-gradient(
+        ellipse 26% 20% at 100% 100%,
+        rgba(255, 255, 255, 0.10) 0%,
+        rgba(255, 255, 255, 0.04) 30%,
+        rgba(255, 255, 255, 0.01) 55%,
+        transparent 78%
+      ),
+      /* Top edge rim light — fades down within 14% of height */
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.07) 0%,
+        rgba(255, 255, 255, 0.02) 8%,
+        transparent 14%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glass-panel--framed-inner > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /*
+   * ==============================================================
+   * METALLIC FRAME — THIN, BRIGHT, HIGH CONTRAST.
+   *
+   * Reverted to thin frame thickness from the "almost there" version
+   * (around 11-13px total). The brightness is what gives it presence,
+   * not the thickness. Bright stops use #f5f7fa (near white) and
+   * #c8ccd2 (light silver) so the frame reads clearly against the
+   * dark navy page background.
+   * ==============================================================
+   */
+
+  /* SM: ~5px total frame thickness */
+  .glass-panel--framed-inner--sm {
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 0 0 1px rgba(255, 255, 255, 0.85),
+      0 0 0 2px #d8dce2,
+      0 0 0 4px #909498,
+      0 0 0 5px rgba(0, 0, 0, 0.60),
+      0 0 0 6px rgba(255, 255, 255, 0.20),
+      0 8px 20px rgba(0, 0, 0, 0.45),
+      0 20px 48px rgba(0, 0, 0, 0.50);
+  }
+
+  /* MD: ~7px total frame thickness */
+  .glass-panel--framed-inner--md {
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 0 0 1px rgba(255, 255, 255, 0.85),
+      0 0 0 3px #d8dce2,
+      0 0 0 5px #909498,
+      0 0 0 6px rgba(0, 0, 0, 0.60),
+      0 0 0 7px rgba(255, 255, 255, 0.20),
+      0 12px 28px rgba(0, 0, 0, 0.45),
+      0 28px 64px rgba(0, 0, 0, 0.50);
+  }
+
+  /* LG: ~8px total frame thickness */
+  .glass-panel--framed-inner--lg {
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 0 0 1px rgba(255, 255, 255, 0.85),
+      0 0 0 3px #d8dce2,
+      0 0 0 6px #909498,
+      0 0 0 7px rgba(0, 0, 0, 0.60),
+      0 0 0 8px rgba(255, 255, 255, 0.20),
+      0 14px 32px rgba(0, 0, 0, 0.50),
+      0 36px 80px rgba(0, 0, 0, 0.55);
+  }
+
+  /* XL: ~9px total frame thickness */
+  .glass-panel--framed-inner--xl {
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 8px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 8px var(--highlight-bottom-soft),
+      inset 3px 0 8px var(--shadow-side),
+      inset -3px 0 8px var(--shadow-side),
+      0 0 0 1px rgba(255, 255, 255, 0.85),
+      0 0 0 4px #d8dce2,
+      0 0 0 7px #909498,
+      0 0 0 8px rgba(0, 0, 0, 0.60),
+      0 0 0 9px rgba(255, 255, 255, 0.20),
+      0 16px 36px rgba(0, 0, 0, 0.50),
+      0 42px 96px rgba(0, 0, 0, 0.55);
+  }
+
+  /*
+   * ==============================================================
+   * CHROME SCREWS — polished with pinpoint specular highlight.
+   *
+   * Two-layer radial gradient:
+   *   Top layer: tiny intense white "hotspot" simulating reflection
+   *     of a sharp light source — the key visual cue for chrome
+   *   Bottom layer: main chrome gradient with 7 stops from white
+   *     through silver tones to near-black, with aggressive falloff
+   *     for high-contrast reflective appearance
+   *
+   * Inset bevels create the 3D dome. Thin inner chrome rim gives
+   * the edge a polished bezel look. Three-layer drop shadow stack
+   * lifts the screw off the glass surface.
+   * ==============================================================
+   */
+  .glass-panel-screw {
+    position: absolute;
+    z-index: 3;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 30% 25%,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.60) 8%,
+        rgba(255, 255, 255, 0.20) 18%,
+        transparent 28%
+      ),
+      radial-gradient(
+        circle at 32% 30%,
+        #ffffff 0%,
+        #f5f7fa 6%,
+        #d8dce2 18%,
+        #a8acb2 35%,
+        #6e7278 60%,
+        #3c3f44 85%,
+        #1c1e22 100%
+      );
+    box-shadow:
+      inset 2px 2px 2px rgba(255, 255, 255, 0.95),
+      inset -2px -2px 2px rgba(0, 0, 0, 0.65),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 1px 2px rgba(0, 0, 0, 0.70),
+      0 3px 6px rgba(0, 0, 0, 0.50),
+      0 6px 12px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+  }
+
+  /*
+   * Sizes and positions per user's manual CSS edits:
+   *   xl: 25px × 25px screws at top:30px / left:40px (and symmetric)
+   *   Other sizes scaled proportionally.
+   */
+  .glass-panel-framed--sm .glass-panel-screw { width: 14px; height: 14px; }
+  .glass-panel-framed--md .glass-panel-screw { width: 18px; height: 18px; }
+  .glass-panel-framed--lg .glass-panel-screw { width: 22px; height: 22px; }
+  .glass-panel-framed--xl .glass-panel-screw { width: 25px; height: 25px; }
+
+  /* SM positions */
+  .glass-panel-framed--sm .glass-panel-screw--tl { top: 18px; left: 22px; }
+  .glass-panel-framed--sm .glass-panel-screw--tr { top: 18px; right: 22px; }
+  .glass-panel-framed--sm .glass-panel-screw--bl { bottom: 18px; left: 22px; }
+  .glass-panel-framed--sm .glass-panel-screw--br { bottom: 18px; right: 22px; }
+
+  /* MD positions */
+  .glass-panel-framed--md .glass-panel-screw--tl { top: 22px; left: 28px; }
+  .glass-panel-framed--md .glass-panel-screw--tr { top: 22px; right: 28px; }
+  .glass-panel-framed--md .glass-panel-screw--bl { bottom: 22px; left: 28px; }
+  .glass-panel-framed--md .glass-panel-screw--br { bottom: 22px; right: 28px; }
+
+  /* LG positions */
+  .glass-panel-framed--lg .glass-panel-screw--tl { top: 26px; left: 34px; }
+  .glass-panel-framed--lg .glass-panel-screw--tr { top: 26px; right: 34px; }
+  .glass-panel-framed--lg .glass-panel-screw--bl { bottom: 26px; left: 34px; }
+  .glass-panel-framed--lg .glass-panel-screw--br { bottom: 26px; right: 34px; }
+
+  /* XL positions: user's exact values (top:30px, left:40px and symmetric) */
+  .glass-panel-framed--xl .glass-panel-screw--tl { top: 30px; left: 40px; }
+  .glass-panel-framed--xl .glass-panel-screw--tr { top: 30px; right: 40px; }
+  .glass-panel-framed--xl .glass-panel-screw--bl { bottom: 30px; left: 40px; }
+  .glass-panel-framed--xl .glass-panel-screw--br { bottom: 30px; right: 40px; }
 </style>

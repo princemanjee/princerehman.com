@@ -1,0 +1,189 @@
+---
+/**
+ * GlassTextarea: multi-line text input with the recessed glass treatment.
+ *
+ * Same visual language as GlassInput (depressed surface, royal blue
+ * focus, red error state, autofill override), but taller and with a
+ * resize affordance. Default resize: vertical, which lets users
+ * expand the box if they need to write more without affecting page
+ * layout horizontally.
+ *
+ * Usage:
+ *   <GlassField label="Message" htmlFor="message" required>
+ *     <GlassTextarea
+ *       name="message"
+ *       id="message"
+ *       rows={6}
+ *       required
+ *       placeholder="Tell me about your project..."
+ *     />
+ *   </GlassField>
+ */
+
+interface Props {
+  name: string;
+  id?: string;
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  hasError?: boolean;
+  rows?: number;
+  cols?: number;
+  resize?: "none" | "vertical" | "horizontal" | "both";
+  minlength?: number;
+  maxlength?: number;
+  autocomplete?: string;
+  ariaDescribedBy?: string;
+  class?: string;
+}
+
+const {
+  name,
+  id = name,
+  value = "",
+  placeholder,
+  required = false,
+  disabled = false,
+  readonly = false,
+  hasError = false,
+  rows = 5,
+  cols,
+  resize = "vertical",
+  minlength,
+  maxlength,
+  autocomplete,
+  ariaDescribedBy,
+  class: className = "",
+} = Astro.props;
+---
+
+<textarea
+  name={name}
+  id={id}
+  placeholder={placeholder}
+  required={required}
+  disabled={disabled}
+  readonly={readonly}
+  rows={rows}
+  cols={cols}
+  minlength={minlength}
+  maxlength={maxlength}
+  autocomplete={autocomplete}
+  aria-invalid={hasError || undefined}
+  aria-describedby={ariaDescribedBy}
+  class:list={[
+    "glass-textarea",
+    hasError && "glass-textarea--error",
+    `glass-textarea--resize-${resize}`,
+    className,
+  ]}>{value}</textarea>
+
+<style>
+  .glass-textarea {
+    display: block;
+    width: 100%;
+    padding: 14px 18px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-fg-primary);
+    background: rgba(0, 0, 0, 0.20);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+    transition:
+      border-color var(--duration-base) var(--easing-out),
+      background var(--duration-base) var(--easing-out),
+      box-shadow var(--duration-base) var(--easing-out);
+    -webkit-appearance: none;
+    appearance: none;
+    /* Prevent textarea from breaking out of container */
+    box-sizing: border-box;
+    min-height: 120px;
+  }
+
+  /* Resize variants */
+  .glass-textarea--resize-none {
+    resize: none;
+  }
+  .glass-textarea--resize-vertical {
+    resize: vertical;
+  }
+  .glass-textarea--resize-horizontal {
+    resize: horizontal;
+  }
+  .glass-textarea--resize-both {
+    resize: both;
+  }
+
+  .glass-textarea::placeholder {
+    color: var(--color-fg-muted);
+    opacity: 0.6;
+  }
+
+  /* Focus state matches GlassInput */
+  .glass-textarea:focus,
+  .glass-textarea:focus-visible {
+    outline: none;
+    border-color: rgba(91, 140, 255, 0.65);
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 3px rgba(91, 140, 255, 0.18),
+      0 0 24px rgba(91, 140, 255, 0.25);
+  }
+
+  /* Error state matches GlassInput */
+  .glass-textarea--error {
+    border-color: rgba(255, 130, 110, 0.65);
+  }
+
+  .glass-textarea--error:focus,
+  .glass-textarea--error:focus-visible {
+    border-color: rgba(255, 130, 110, 0.85);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 3px rgba(255, 130, 110, 0.18),
+      0 0 24px rgba(255, 130, 110, 0.25);
+  }
+
+  /* Disabled and readonly states */
+  .glass-textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .glass-textarea:read-only {
+    background: rgba(0, 0, 0, 0.10);
+    cursor: default;
+  }
+
+  /* Autofill override (matches GlassInput) */
+  .glass-textarea:-webkit-autofill,
+  .glass-textarea:-webkit-autofill:hover,
+  .glass-textarea:-webkit-autofill:focus,
+  .glass-textarea:-webkit-autofill:active {
+    -webkit-box-shadow:
+      0 0 0 1000px rgba(20, 25, 50, 0.95) inset,
+      inset 0 1px 2px rgba(0, 0, 0, 0.30),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+    -webkit-text-fill-color: var(--color-fg-primary) !important;
+    caret-color: var(--color-fg-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-textarea {
+      transition: none;
+    }
+  }
+</style>

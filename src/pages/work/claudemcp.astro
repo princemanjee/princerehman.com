@@ -30,6 +30,7 @@ const otherStudies = caseStudiesByOrder.filter((cs) => cs.slug !== study.slug);
       status={study.status}
       techStack={study.techStack}
       repoUrl={study.repoUrl}
+      availability={study.availability}
     />
 
     {otherStudies.length > 0 && (
