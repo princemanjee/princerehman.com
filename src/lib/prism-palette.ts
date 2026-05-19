@@ -73,6 +73,18 @@ export interface GeneratedPalette {
   "--bg-4": string;
   "--bg-overlay-1": string;
   "--bg-overlay-2": string;
+  "--glass-bg": string;
+  "--glass-bg-hover": string;
+  "--glass-border": string;
+  "--glass-border-strong": string;
+  "--highlight-top": string;
+  "--highlight-top-soft": string;
+  "--highlight-bottom": string;
+  "--highlight-bottom-soft": string;
+  "--shadow-side": string;
+  "--neo-surface": string;
+  "--neo-shadow-light": string;
+  "--neo-shadow-dark": string;
   "--accent-royal": string;
   "--accent-royal-bright": string;
   "--accent-royal-deep": string;
@@ -82,6 +94,85 @@ export interface GeneratedPalette {
   "--brand-color": string;
   "--brand-glow": string;
 }
+
+/**
+ * Per-mode surface templates (glass surfaces, bevel highlights, neomorphic
+ * elevation), sampled from tokens.css. Hues are rotated by the same
+ * (baseHue - REFERENCE_HUE) delta as the backgrounds so the whole surface
+ * family follows the slider. On dark/light/hybrid most of these are
+ * white/black alpha (chroma ~0) so rotation is imperceptible; on
+ * neomorphic they carry real warm chroma and rotate visibly with the hue.
+ *
+ * Always emitted for every mode so switching modes cleanly overwrites any
+ * inline overrides left from a previous mode.
+ */
+interface SurfaceToken { l: number; c: number; h: number; a: number; }
+type SurfaceKey =
+  | "--glass-bg" | "--glass-bg-hover" | "--glass-border" | "--glass-border-strong"
+  | "--highlight-top" | "--highlight-top-soft" | "--highlight-bottom"
+  | "--highlight-bottom-soft" | "--shadow-side"
+  | "--neo-surface" | "--neo-shadow-light" | "--neo-shadow-dark";
+
+const TRANSPARENT: SurfaceToken = { l: 0, c: 0, h: 0, a: 0 };
+
+const MODE_SURFACES: Record<ResolvedMode["kind"], Record<SurfaceKey, SurfaceToken>> = {
+  dark: {
+    "--glass-bg": { l: 1, c: 0, h: 0, a: 0.04 },
+    "--glass-bg-hover": { l: 1, c: 0, h: 0, a: 0.08 },
+    "--glass-border": { l: 1, c: 0, h: 0, a: 0.10 },
+    "--glass-border-strong": { l: 1, c: 0, h: 0, a: 0.20 },
+    "--highlight-top": { l: 1, c: 0, h: 0, a: 0.95 },
+    "--highlight-top-soft": { l: 1, c: 0, h: 0, a: 0.25 },
+    "--highlight-bottom": { l: 1, c: 0, h: 0, a: 0.55 },
+    "--highlight-bottom-soft": { l: 1, c: 0, h: 0, a: 0.12 },
+    "--shadow-side": { l: 0, c: 0, h: 0, a: 0.10 },
+    "--neo-surface": { l: 1, c: 0, h: 0, a: 0.04 },
+    "--neo-shadow-light": TRANSPARENT,
+    "--neo-shadow-dark": TRANSPARENT,
+  },
+  light: {
+    "--glass-bg": { l: 1, c: 0, h: 0, a: 0.55 },
+    "--glass-bg-hover": { l: 1, c: 0, h: 0, a: 0.75 },
+    "--glass-border": { l: 0.20, c: 0.02, h: 270, a: 0.12 },
+    "--glass-border-strong": { l: 0.20, c: 0.02, h: 270, a: 0.22 },
+    "--highlight-top": { l: 1, c: 0, h: 0, a: 0.95 },
+    "--highlight-top-soft": { l: 1, c: 0, h: 0, a: 0.55 },
+    "--highlight-bottom": { l: 0.95, c: 0, h: 0, a: 0.30 },
+    "--highlight-bottom-soft": { l: 0.95, c: 0, h: 0, a: 0.10 },
+    "--shadow-side": { l: 0.20, c: 0.02, h: 270, a: 0.08 },
+    "--neo-surface": { l: 1, c: 0, h: 0, a: 0.55 },
+    "--neo-shadow-light": TRANSPARENT,
+    "--neo-shadow-dark": TRANSPARENT,
+  },
+  hybrid: {
+    "--glass-bg": { l: 1, c: 0, h: 0, a: 0.08 },
+    "--glass-bg-hover": { l: 1, c: 0, h: 0, a: 0.14 },
+    "--glass-border": { l: 1, c: 0, h: 0, a: 0.18 },
+    "--glass-border-strong": { l: 1, c: 0, h: 0, a: 0.30 },
+    "--highlight-top": { l: 1, c: 0, h: 0, a: 0.90 },
+    "--highlight-top-soft": { l: 1, c: 0, h: 0, a: 0.35 },
+    "--highlight-bottom": { l: 1, c: 0, h: 0, a: 0.50 },
+    "--highlight-bottom-soft": { l: 1, c: 0, h: 0, a: 0.14 },
+    "--shadow-side": { l: 0, c: 0, h: 0, a: 0.12 },
+    "--neo-surface": { l: 1, c: 0, h: 0, a: 0.08 },
+    "--neo-shadow-light": TRANSPARENT,
+    "--neo-shadow-dark": TRANSPARENT,
+  },
+  neomorphic: {
+    "--glass-bg": { l: 0.92, c: 0.020, h: 70, a: 1 },
+    "--glass-bg-hover": { l: 0.94, c: 0.018, h: 70, a: 1 },
+    "--glass-border": { l: 0.55, c: 0.060, h: 75, a: 0.22 },
+    "--glass-border-strong": { l: 0.40, c: 0.050, h: 72, a: 0.30 },
+    "--highlight-top": { l: 0.94, c: 0.080, h: 90, a: 0.85 },
+    "--highlight-top-soft": { l: 0.94, c: 0.080, h: 90, a: 0.50 },
+    "--highlight-bottom": { l: 0.40, c: 0.050, h: 72, a: 0.15 },
+    "--highlight-bottom-soft": { l: 0.40, c: 0.050, h: 72, a: 0.08 },
+    "--shadow-side": { l: 0.40, c: 0.050, h: 72, a: 0.22 },
+    "--neo-surface": { l: 0.83, c: 0.070, h: 82, a: 1 },
+    "--neo-shadow-light": { l: 0.94, c: 0.080, h: 90, a: 0.90 },
+    "--neo-shadow-dark": { l: 0.40, c: 0.050, h: 72, a: 0.25 },
+  },
+};
 
 /**
  * Per-mode background templates, sampled from the locked Phase 1 values in
@@ -489,6 +580,22 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     return formatOklch(o.l, o.c, oHue, o.a);
   });
 
+  // Surfaces (glass + highlights + neomorphic elevation): rotate each
+  // token's hue by the same delta so the whole surface family follows the
+  // slider. Neutral (chroma 0) tokens are unaffected; neomorphic's warm
+  // surfaces rotate visibly so its panels track the hue instead of staying
+  // locked to sand.
+  const surfaceTemplate = MODE_SURFACES[resolved.kind];
+  const surfaces = {} as Record<SurfaceKey, string>;
+  for (const key of Object.keys(surfaceTemplate) as SurfaceKey[]) {
+    const t = surfaceTemplate[key];
+    if (t.a <= 0) {
+      surfaces[key] = "transparent";
+    } else {
+      surfaces[key] = formatOklch(t.l, t.c, wrapHue(t.h + rotation), t.a);
+    }
+  }
+
   // Initial L values for primary accent triad.
   const Lbase = resolved.L.base;
   const Lbright = resolved.L.bright;
@@ -535,6 +642,18 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     "--bg-4": bg[3],
     "--bg-overlay-1": overlays[0],
     "--bg-overlay-2": overlays[1],
+    "--glass-bg": surfaces["--glass-bg"],
+    "--glass-bg-hover": surfaces["--glass-bg-hover"],
+    "--glass-border": surfaces["--glass-border"],
+    "--glass-border-strong": surfaces["--glass-border-strong"],
+    "--highlight-top": surfaces["--highlight-top"],
+    "--highlight-top-soft": surfaces["--highlight-top-soft"],
+    "--highlight-bottom": surfaces["--highlight-bottom"],
+    "--highlight-bottom-soft": surfaces["--highlight-bottom-soft"],
+    "--shadow-side": surfaces["--shadow-side"],
+    "--neo-surface": surfaces["--neo-surface"],
+    "--neo-shadow-light": surfaces["--neo-shadow-light"],
+    "--neo-shadow-dark": surfaces["--neo-shadow-dark"],
     "--accent-royal": formatOklch(LbasePrim, C, accentHue),
     "--accent-royal-bright": formatOklch(LbrightPrim, C, accentHue),
     "--accent-royal-deep": formatOklch(LdeepPrim, C, accentHue),
