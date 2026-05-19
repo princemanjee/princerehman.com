@@ -154,6 +154,69 @@ const canonicalUrl = Astro.url.href;
         </filter>
 
         {/*
+          prism-polished-small: variant tuned for small wordmark renderings
+          (BrandName xs at footer / mobile-nav scale).
+
+          Aggressive subtlety relative to prism-polished:
+          - lighting-color is a pale steel-blue (#d8e4f4) instead of pure
+            white, so the specular highlight integrates with the royal-blue
+            brand color rather than washing it out. At large size the white
+            speculars cover only the top edges; at small size pure white
+            would cover most of each glyph and turn the wordmark pale.
+          - surfaceScale 2 and specularConstant 0.6 give a much gentler
+            bevel that suggests gloss without flashing.
+          - specularExponent 50 tightens the highlight area.
+          - Light centered above (x=0 y=-40 z=320) so any highlight that
+            does show lands mid-glyph, not on the upper-left edge.
+        */}
+        <filter id="prism-polished-small" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur" />
+          <feSpecularLighting
+            in="blur"
+            surfaceScale="2.5"
+            specularConstant="0.85"
+            specularExponent="48"
+            lighting-color="#d8e4f4"
+            result="specular"
+          >
+            <fePointLight x="0" y="-40" z="320" />
+          </feSpecularLighting>
+          <feComposite in="specular" in2="SourceAlpha" operator="in" result="masked" />
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="masked" />
+          </feMerge>
+        </filter>
+
+        {/*
+          prism-polished-small-bright: the dark-surface variant of the
+          small filter. Pure white lighting and stronger specular so the
+          polished bevel reads clearly on dark backgrounds (mobile nav
+          panel, dark/hybrid theme footers). The light-surface variant
+          above uses tinted lighting to avoid washing the deeper royal
+          brand color on sand/off-white surfaces; this variant assumes
+          the brand color is the pale luminous form used on dark themes.
+        */}
+        <filter id="prism-polished-small-bright" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="blur" />
+          <feSpecularLighting
+            in="blur"
+            surfaceScale="3.5"
+            specularConstant="1.4"
+            specularExponent="32"
+            lighting-color="#ffffff"
+            result="specular"
+          >
+            <fePointLight x="-40" y="-80" z="300" />
+          </feSpecularLighting>
+          <feComposite in="specular" in2="SourceAlpha" operator="in" result="masked" />
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="masked" />
+          </feMerge>
+        </filter>
+
+        {/*
           prism-embossed-pronounced: stronger 3D raised-relief effect for
           the brand mark chevron inside the orb. Doubled surface scale
           versus prism-polished, plus a secondary cool fill light for

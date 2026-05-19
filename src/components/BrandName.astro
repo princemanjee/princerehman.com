@@ -19,7 +19,7 @@
 
 interface Props {
   variant?: "full" | "short" | "initials";
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   inline?: boolean;
   as?: "span" | "h1" | "h2" | "div";
 }
@@ -62,13 +62,28 @@ const text = {
        plus drop-shadows for the ambient ground and the royal blue halo. */
     filter:
       url(#prism-polished)
-      drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45))
-      drop-shadow(0 24px 48px rgba(0, 0, 0, 0.25))
+      drop-shadow(0 12px 24px oklch(0 0 0 / 0.45))
+      drop-shadow(0 24px 48px oklch(0 0 0 / 0.25))
       drop-shadow(0 0 60px var(--brand-glow))
-      drop-shadow(0 0 140px rgba(180, 210, 255, 0.30));
+      drop-shadow(0 0 140px var(--brand-glow));
   }
 
   .brand-name--inline { display: inline-block; }
+
+  /* xs: footer + mobile-nav header. Uses a per-context filter exposed
+     via --brand-filter-xs so dark surfaces get the bright variant and
+     light surfaces get the tinted-subtle variant. Theme defaults are
+     set in tokens.css; the MobileNav panel forces bright via its own
+     scoped variable override since its background is hardcoded dark
+     regardless of active theme. */
+  .brand-name--xs {
+    font-size: 25px;
+    filter:
+      var(--brand-filter-xs, url(#prism-polished-small))
+      drop-shadow(0 3px 6px oklch(0 0 0 / 0.50))
+      drop-shadow(0 6px 12px oklch(0 0 0 / 0.20))
+      drop-shadow(0 0 14px var(--brand-glow));
+  }
 
   .brand-name--sm { font-size: 32px; }
   .brand-name--md { font-size: 56px; }
@@ -80,9 +95,9 @@ const text = {
     letter-spacing: var(--tracking-tighter) !important;
     filter:
       url(#prism-polished)
-      drop-shadow(0 16px 32px rgba(0, 0, 0, 0.50))
-      drop-shadow(0 32px 64px rgba(0, 0, 0, 0.30))
+      drop-shadow(0 16px 32px oklch(0 0 0 / 0.50))
+      drop-shadow(0 32px 64px oklch(0 0 0 / 0.30))
       drop-shadow(0 0 70px var(--brand-glow))
-      drop-shadow(0 0 180px rgba(180, 210, 255, 0.30));
+      drop-shadow(0 0 180px var(--brand-glow));
   }
 </style>

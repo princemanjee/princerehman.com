@@ -120,14 +120,14 @@ const {
     width: 100%;
     font-family: var(--font-body);
     color: var(--color-fg-primary);
-    background: rgba(0, 0, 0, 0.20);
+    background: oklch(0 0 0 / 0.20);
     border: 1px solid var(--glass-border);
     border-radius: 14px;
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
     box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft);
     cursor: pointer;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -166,7 +166,7 @@ const {
    * on desktop.
    */
   .glass-select option {
-    background: #161e3a;
+    background: var(--bg-2);
     color: var(--color-fg-primary);
     padding: 8px;
   }
@@ -215,13 +215,13 @@ const {
   .glass-select:focus,
   .glass-select:focus-visible {
     outline: none;
-    border-color: rgba(91, 140, 255, 0.65);
-    background: rgba(0, 0, 0, 0.25);
+    border-color: var(--accent-royal-bright);
+    background: oklch(0 0 0 / 0.25);
     box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-      0 0 0 3px rgba(91, 140, 255, 0.18),
-      0 0 24px rgba(91, 140, 255, 0.25);
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft),
+      0 0 0 3px var(--accent-royal-bright),
+      0 0 24px var(--accent-royal-bright);
     color: var(--color-fg-primary);
   }
 
@@ -229,7 +229,28 @@ const {
   .glass-select:focus-visible + .glass-select-caret,
   .glass-select:focus ~ .glass-select-caret,
   .glass-select:focus-visible ~ .glass-select-caret {
-    color: rgba(91, 140, 255, 0.95);
+    color: var(--accent-royal-bright);
+  }
+
+  /* Light-surfaced themes: lighten the recess overlay. See GlassInput. */
+  :root[data-theme="light"] .glass-select,
+  :root[data-theme="neomorphic"] .glass-select {
+    background: oklch(0 0 0 / 0.05);
+  }
+  :root[data-theme="light"] .glass-select:focus,
+  :root[data-theme="light"] .glass-select:focus-visible,
+  :root[data-theme="neomorphic"] .glass-select:focus,
+  :root[data-theme="neomorphic"] .glass-select:focus-visible {
+    background: oklch(0 0 0 / 0.08);
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] .glass-select {
+      background: oklch(0 0 0 / 0.05);
+    }
+    :root[data-theme="system"] .glass-select:focus,
+    :root[data-theme="system"] .glass-select:focus-visible {
+      background: oklch(0 0 0 / 0.08);
+    }
   }
 
   /* Error state */
@@ -241,8 +262,8 @@ const {
   .glass-select--error:focus-visible {
     border-color: rgba(255, 130, 110, 0.85);
     box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft),
       0 0 0 3px rgba(255, 130, 110, 0.18),
       0 0 24px rgba(255, 130, 110, 0.25);
   }

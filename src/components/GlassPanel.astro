@@ -24,12 +24,14 @@
 interface Props {
   size?: "sm" | "md" | "lg" | "xl";
   framed?: boolean;
+  padded?: boolean;
   class?: string;
 }
 
 const {
   size = "lg",
   framed = false,
+  padded = true,
   class: className = "",
 } = Astro.props;
 ---
@@ -38,6 +40,7 @@ const {
   <div class={`glass-panel-framed glass-panel-framed--${size}`}>
     <div class:list={[
       `glass-panel glass-panel--${size} glass-panel--framed-inner glass-panel--framed-inner--${size}`,
+      padded && "glass-panel--padded",
       className,
     ]}>
       <slot />
@@ -48,7 +51,11 @@ const {
     <div class="glass-panel-screw glass-panel-screw--br" aria-hidden="true"></div>
   </div>
 ) : (
-  <div class:list={[`glass-panel glass-panel--${size}`, className]}>
+  <div class:list={[
+    `glass-panel glass-panel--${size}`,
+    padded && "glass-panel--padded",
+    className,
+  ]}>
     <slot />
   </div>
 )}
@@ -68,15 +75,29 @@ const {
       inset 0 -4px 8px var(--highlight-bottom-soft),
       inset 3px 0 8px var(--shadow-side),
       inset -3px 0 8px var(--shadow-side),
-      0 8px 24px rgba(0, 0, 0, 0.35),
-      0 24px 64px rgba(0, 0, 0, 0.45),
-      0 48px 120px rgba(0, 0, 0, 0.25);
+      0 8px 24px oklch(0 0 0 / 0.35),
+      0 24px 64px oklch(0 0 0 / 0.45),
+      0 48px 120px oklch(0 0 0 / 0.25);
   }
 
   .glass-panel--sm { border-radius: var(--radius-md); }
   .glass-panel--md { border-radius: var(--radius-lg); }
   .glass-panel--lg { border-radius: var(--radius-2xl); }
   .glass-panel--xl { border-radius: var(--radius-3xl); }
+
+  /*
+   * Default internal padding, scaled by panel size. Applies only when the
+   * `padded` prop is true (which is the default). Callers that manage
+   * their own padding via a custom class should set `padded={false}` to
+   * opt out, preventing this baseline from overriding their own values.
+   * Specificity here (.glass-panel--padded.glass-panel--<size>) is two
+   * classes, equal to the size selector alone after Astro scoping; the
+   * compound class on the same element wins via source order.
+   */
+  .glass-panel--padded.glass-panel--sm { padding: var(--space-md); }
+  .glass-panel--padded.glass-panel--md { padding: var(--space-lg); }
+  .glass-panel--padded.glass-panel--lg { padding: var(--space-xl); }
+  .glass-panel--padded.glass-panel--xl { padding: var(--space-2xl); }
 
   /*
    * Wrapper margin: matches the "almost there" thin-frame version,
@@ -126,24 +147,24 @@ const {
       /* Top-left corner glint — primary light catch */
       radial-gradient(
         ellipse 32% 24% at 0% 0%,
-        rgba(255, 255, 255, 0.22) 0%,
-        rgba(255, 255, 255, 0.10) 28%,
-        rgba(255, 255, 255, 0.03) 55%,
+        oklch(1 0 0 / 0.22) 0%,
+        oklch(1 0 0 / 0.10) 28%,
+        oklch(1 0 0 / 0.03) 55%,
         transparent 78%
       ),
       /* Bottom-right counter-glint — subtle */
       radial-gradient(
         ellipse 26% 20% at 100% 100%,
-        rgba(255, 255, 255, 0.10) 0%,
-        rgba(255, 255, 255, 0.04) 30%,
-        rgba(255, 255, 255, 0.01) 55%,
+        oklch(1 0 0 / 0.10) 0%,
+        oklch(1 0 0 / 0.04) 30%,
+        oklch(1 0 0 / 0.01) 55%,
         transparent 78%
       ),
       /* Top edge rim light — fades down within 14% of height */
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.07) 0%,
-        rgba(255, 255, 255, 0.02) 8%,
+        oklch(1 0 0 / 0.07) 0%,
+        oklch(1 0 0 / 0.02) 8%,
         transparent 14%
       );
     pointer-events: none;
@@ -181,8 +202,8 @@ const {
       0 0 0 4px #909498,
       0 0 0 5px rgba(0, 0, 0, 0.60),
       0 0 0 6px rgba(255, 255, 255, 0.20),
-      0 8px 20px rgba(0, 0, 0, 0.45),
-      0 20px 48px rgba(0, 0, 0, 0.50);
+      0 8px 20px oklch(0 0 0 / 0.45),
+      0 20px 48px oklch(0 0 0 / 0.50);
   }
 
   /* MD: ~7px total frame thickness */
@@ -199,8 +220,8 @@ const {
       0 0 0 5px #909498,
       0 0 0 6px rgba(0, 0, 0, 0.60),
       0 0 0 7px rgba(255, 255, 255, 0.20),
-      0 12px 28px rgba(0, 0, 0, 0.45),
-      0 28px 64px rgba(0, 0, 0, 0.50);
+      0 12px 28px oklch(0 0 0 / 0.45),
+      0 28px 64px oklch(0 0 0 / 0.50);
   }
 
   /* LG: ~8px total frame thickness */
@@ -217,8 +238,8 @@ const {
       0 0 0 6px #909498,
       0 0 0 7px rgba(0, 0, 0, 0.60),
       0 0 0 8px rgba(255, 255, 255, 0.20),
-      0 14px 32px rgba(0, 0, 0, 0.50),
-      0 36px 80px rgba(0, 0, 0, 0.55);
+      0 14px 32px oklch(0 0 0 / 0.50),
+      0 36px 80px oklch(0 0 0 / 0.55);
   }
 
   /* XL: ~9px total frame thickness */
@@ -235,8 +256,8 @@ const {
       0 0 0 7px #909498,
       0 0 0 8px rgba(0, 0, 0, 0.60),
       0 0 0 9px rgba(255, 255, 255, 0.20),
-      0 16px 36px rgba(0, 0, 0, 0.50),
-      0 42px 96px rgba(0, 0, 0, 0.55);
+      0 16px 36px oklch(0 0 0 / 0.50),
+      0 42px 96px oklch(0 0 0 / 0.55);
   }
 
   /*

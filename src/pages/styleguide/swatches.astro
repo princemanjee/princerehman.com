@@ -1,0 +1,648 @@
+---
+/**
+ * Phase 2 starter-swatch exploration surface.
+ *
+ * Two swatch types:
+ *   - mono: single OKLCH base hue rendered with two analogous neighbors
+ *     (±30°) to preview the generator output under Analogous mixing.
+ *   - palette: fixed multi-color preset (Halloween, Christmas, Pride,
+ *     Patriotic, Spring Pastels). Phase 2 will apply these as presets
+ *     that bypass the mixing-model generator.
+ *
+ * Curation: each card has a small checkbox top-right. The sticky toolbar
+ * shows the count and offers "Remove marked" / "Reset". No persistence;
+ * reload restores all cards.
+ *
+ * Visit /styleguide/swatches.
+ */
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Container from "../../components/Container.astro";
+import Stack from "../../components/Stack.astro";
+
+interface MonoSwatch {
+  id: string;
+  name: string;
+  vibe: string[];
+  type: "mono";
+  oklch: { l: number; c: number; h: number };
+  extras?: { name: string; value: string }[];
+  note?: string;
+}
+
+interface PaletteSwatch {
+  id: string;
+  name: string;
+  vibe: string[];
+  type: "palette";
+  groups: { label?: string; colors: { name: string; value: string }[] }[];
+  note?: string;
+}
+
+type Swatch = MonoSwatch | PaletteSwatch;
+
+const swatches: Swatch[] = [
+  { id: "royal-default", name: "Royal Default", type: "mono",
+    oklch: { l: 0.50, c: 0.18, h: 263 },
+    vibe: ["professional", "brand"], note: "Current launch default" },
+  { id: "royal-gold", name: "Royal & Gold", type: "palette",
+    groups: [{ colors: [
+      { name: "Royal Blue", value: "oklch(0.50 0.18 263)" },
+      { name: "White",      value: "oklch(0.98 0.002 240)" },
+      { name: "Gold",       value: "oklch(0.75 0.16 85)" },
+      { name: "Navy",       value: "oklch(0.25 0.12 250)" },
+      { name: "Emerald",    value: "oklch(0.55 0.13 153)" },
+      { name: "Ruby",       value: "oklch(0.42 0.20 15)" },
+    ]}],
+    vibe: ["professional", "brand", "regal"] },
+  { id: "navy-blue", name: "Navy Blue", type: "mono",
+    oklch: { l: 0.25, c: 0.12, h: 250 }, vibe: ["professional", "deep"] },
+  { id: "charcoal-noir", name: "Charcoal Noir", type: "palette",
+    groups: [{ colors: [
+      { name: "Jet",      value: "oklch(0.12 0.005 270)" },
+      { name: "Charcoal", value: "oklch(0.28 0.020 270)" },
+      { name: "Smoke",    value: "oklch(0.45 0.015 270)" },
+      { name: "Ash",      value: "oklch(0.62 0.010 270)" },
+      { name: "Crimson",  value: "oklch(0.45 0.180 25)" },
+    ]}],
+    vibe: ["noir", "professional", "moody"] },
+  { id: "plum-noir", name: "Plum Noir", type: "mono",
+    oklch: { l: 0.38, c: 0.16, h: 320 }, vibe: ["neon noir", "moody"] },
+  { id: "cyber-cyan", name: "Cyber Cyan", type: "mono",
+    oklch: { l: 0.72, c: 0.20, h: 195 }, vibe: ["cyberpunk", "neon noir"] },
+  { id: "cyber-magenta", name: "Cyber Magenta", type: "mono",
+    oklch: { l: 0.62, c: 0.30, h: 350 }, vibe: ["cyberpunk", "flashy"] },
+  { id: "acid-lime", name: "Acid Lime", type: "mono",
+    oklch: { l: 0.82, c: 0.22, h: 130 }, vibe: ["edgy", "flashy"] },
+  { id: "hot-coral", name: "Hot Coral", type: "mono",
+    oklch: { l: 0.68, c: 0.22, h: 25 }, vibe: ["flashy", "warm"] },
+
+  { id: "pride", name: "Pride", type: "palette",
+    groups: [
+      { label: "Rainbow", colors: [
+        { name: "Red",    value: "oklch(0.62 0.22 25)" },
+        { name: "Orange", value: "oklch(0.72 0.18 55)" },
+        { name: "Yellow", value: "oklch(0.85 0.18 95)" },
+        { name: "Green",  value: "oklch(0.65 0.18 142)" },
+        { name: "Blue",   value: "oklch(0.55 0.18 247)" },
+        { name: "Purple", value: "oklch(0.50 0.20 305)" },
+      ]},
+      { label: "Trans flag", colors: [
+        { name: "Light Blue", value: "oklch(0.78 0.06 230)" },
+        { name: "Light Pink", value: "oklch(0.83 0.06 0)" },
+        { name: "White",      value: "oklch(0.98 0.002 240)" },
+      ]},
+      { label: "Base", colors: [
+        { name: "Black", value: "oklch(0.15 0.010 270)" },
+      ]},
+    ],
+    vibe: ["rainbow", "LGBTQ+", "trans"],
+    note: "Preset, bypasses mixing model" },
+
+  { id: "halloween", name: "Halloween", type: "palette",
+    groups: [{ colors: [
+      { name: "Black",       value: "oklch(0.15 0.010 270)" },
+      { name: "Brown",       value: "oklch(0.35 0.070 55)" },
+      { name: "Pumpkin",     value: "oklch(0.60 0.13 52)" },
+      { name: "Dark Purple", value: "oklch(0.30 0.18 295)" },
+      { name: "White",       value: "oklch(0.98 0.002 240)" },
+      { name: "Burgundy",    value: "oklch(0.35 0.12 15)" },
+    ]}],
+    vibe: ["seasonal", "halloween"] },
+
+  { id: "christmas", name: "Christmas", type: "palette",
+    groups: [{ colors: [
+      { name: "Holly", value: "oklch(0.42 0.16 145)" },
+      { name: "Red",   value: "oklch(0.55 0.22 25)" },
+      { name: "White", value: "oklch(0.98 0.002 240)" },
+      { name: "Gold",  value: "oklch(0.75 0.16 85)" },
+    ]}],
+    vibe: ["seasonal", "christmas"] },
+
+  { id: "patriotic", name: "Patriotic", type: "palette",
+    groups: [{ colors: [
+      { name: "Red",   value: "oklch(0.50 0.22 25)" },
+      { name: "White", value: "oklch(0.98 0.002 240)" },
+      { name: "Blue",  value: "oklch(0.30 0.18 250)" },
+      { name: "Navy",  value: "oklch(0.22 0.10 250)" },
+    ]}],
+    vibe: ["patriotic", "july 4th"] },
+
+  { id: "sage-pastel", name: "Sage Pastel", type: "mono",
+    oklch: { l: 0.78, c: 0.06, h: 150 }, vibe: ["spring", "subtle"] },
+
+  { id: "lavender-spring", name: "Lavender Spring", type: "palette",
+    groups: [{ colors: [
+      { name: "Pale Lavender", value: "oklch(0.88 0.06 295)" },
+      { name: "Lavender",      value: "oklch(0.82 0.08 295)" },
+      { name: "Pink Pastel",   value: "oklch(0.86 0.07 5)" },
+      { name: "Green Pastel",  value: "oklch(0.85 0.08 145)" },
+      { name: "Yellow Pastel", value: "oklch(0.92 0.08 95)" },
+      { name: "Black",         value: "oklch(0.15 0.010 270)" },
+    ]}],
+    vibe: ["spring", "pastel", "lavender", "floral"] },
+
+  { id: "desert-adobe", name: "Desert Adobe", type: "mono",
+    oklch: { l: 0.62, c: 0.08, h: 55 }, vibe: ["earth", "warm"] },
+
+  { id: "forest-moss", name: "Forest Moss", type: "mono",
+    oklch: { l: 0.50, c: 0.07, h: 142 }, vibe: ["earth", "green"] },
+
+  { id: "purple-magenta", name: "Purple & Magenta", type: "mono",
+    oklch: { l: 0.45, c: 0.22, h: 320 },
+    vibe: ["moody", "vampy", "analogous"] },
+
+  { id: "emerald-gold", name: "Emerald & Gold", type: "mono",
+    oklch: { l: 0.60, c: 0.16, h: 117 },
+    vibe: ["regal", "academic", "oz"] },
+];
+
+function formatMono(s: MonoSwatch): string {
+  return `oklch(${s.oklch.l.toFixed(2)} ${s.oklch.c.toFixed(2)} ${s.oklch.h})`;
+}
+// Analogous preview: base hue plus its two neighbors (±30°). Matches the
+// Notion-spec default mixing model. Lightness and chroma held constant.
+function neighbor(s: MonoSwatch, deltaH: number): string {
+  const h = (s.oklch.h + deltaH + 360) % 360;
+  return `oklch(${s.oklch.l.toFixed(2)} ${s.oklch.c.toFixed(2)} ${h.toFixed(0)})`;
+}
+function paletteSummary(s: PaletteSwatch): string {
+  const total = s.groups.reduce((n, g) => n + g.colors.length, 0);
+  return `${total} colors · preset`;
+}
+---
+
+<BaseLayout
+  title="Prism Swatch Exploration — Phase 2 candidates"
+  description="Curate the Phase 2 starter swatch set.">
+
+  <Container size="xl">
+    <Stack gap="2xl">
+
+      <Stack gap="sm" as="header">
+        <p class="eyebrow">Prism · Phase 2 · exploration</p>
+        <h1 class="page-title">Starter swatch candidates</h1>
+        <p class="lede">
+          Mono swatches show a base hue plus its two analogous neighbors
+          (±30°). Palette swatches are fixed multi-color presets. Tick the
+          ones you don't want and hit Remove marked.
+        </p>
+      </Stack>
+
+      <div class="toolbar" role="region" aria-label="Curation controls">
+        <div class="toolbar-status">
+          <span class="toolbar-count" data-curate-count>0</span>
+          <span class="toolbar-count-label">marked</span>
+        </div>
+        <div class="toolbar-actions">
+          <button type="button" class="toolbar-btn toolbar-btn--primary" data-curate-remove>Remove marked</button>
+          <button type="button" class="toolbar-btn" data-curate-reset>Reset</button>
+        </div>
+      </div>
+
+      <div class="grid" data-swatch-grid>
+        {swatches.map((s) => (
+          <article class="card" data-swatch-card={s.id}>
+            <label class="card-check" title="Mark this swatch for removal">
+              <input type="checkbox" data-swatch-eliminate={s.id} />
+              <span class="card-check-box" aria-hidden="true">
+                <svg viewBox="0 0 16 16" class="card-check-mark"><path d="M3.5 8 L7 11.5 L12.5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </span>
+            </label>
+
+            {s.type === "mono" ? (
+              <Fragment>
+                <div class="chips chips--mono">
+                  <span class="chip chip--sat" style={`background: ${neighbor(s, -30)};`} aria-hidden="true" />
+                  <span class="chip chip--main" style={`background: ${formatMono(s)};`} aria-hidden="true" />
+                  <span class="chip chip--sat" style={`background: ${neighbor(s, 30)};`} aria-hidden="true" />
+                </div>
+                {s.extras && s.extras.length > 0 && (
+                  <div class="palette-row">
+                    <span class="palette-row-label">Plus</span>
+                    <div class="palette-row-chips">
+                      {s.extras.map((c) => (
+                        <span class="palette-chip" style={`background: ${c.value};`} title={c.name} aria-label={c.name} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Fragment>
+            ) : (
+              <div class="palette">
+                {s.groups.map((g) => (
+                  <div class="palette-row">
+                    {g.label && <span class="palette-row-label">{g.label}</span>}
+                    <div class="palette-row-chips">
+                      {g.colors.map((c) => (
+                        <span class="palette-chip" style={`background: ${c.value};`} title={c.name} aria-label={c.name} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div class="card-meta">
+              <h2 class="card-name">{s.name}</h2>
+              <code class="card-code">
+                {s.type === "mono" ? formatMono(s) : paletteSummary(s)}
+              </code>
+            </div>
+
+            <div class="card-tags">
+              {s.vibe.map((v) => <span class="tag">{v}</span>)}
+            </div>
+
+            {s.note && <p class="card-note">{s.note}</p>}
+          </article>
+        ))}
+      </div>
+
+      <div class="callout">
+        <h2 class="callout-title">"oz" alternate accent</h2>
+        <p class="callout-body">
+          Emerald is no longer hardcoded. It becomes the opt-in <code>.oz</code>
+          class for CTAs that need to break out from the active accent. If the
+          active base hue lands in the green band (~100-180°), <code>.oz</code>
+          switches to ruby red.
+        </p>
+      </div>
+
+      <div class="callout">
+        <h2 class="callout-title">Next steps</h2>
+        <ol class="callout-list">
+          <li>Lock the neomorphic sand palette (use the Prism panel on any page to switch and eyeball).</li>
+          <li>Curate this grid down with checkboxes + Remove marked.</li>
+          <li>Confirm survivors so the locked starter set can be wired into the Prism panel.</li>
+          <li>Decide on the scheduled-default config (Notion has the open questions).</li>
+          <li>Back up Phase 1 as a template branch, then branch Phase 2.</li>
+        </ol>
+      </div>
+
+    </Stack>
+  </Container>
+</BaseLayout>
+
+<script>
+  function init(): void {
+    const grid = document.querySelector<HTMLElement>("[data-swatch-grid]");
+    const removeBtn = document.querySelector<HTMLButtonElement>("[data-curate-remove]");
+    const resetBtn = document.querySelector<HTMLButtonElement>("[data-curate-reset]");
+    const counter = document.querySelector<HTMLElement>("[data-curate-count]");
+    if (!grid || !removeBtn || !resetBtn || !counter) return;
+
+    function updateCount(): void {
+      if (!grid || !counter) return;
+      counter.textContent = String(
+        grid.querySelectorAll<HTMLInputElement>("[data-swatch-eliminate]:checked").length,
+      );
+    }
+
+    grid.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement | null;
+      if (target?.matches("[data-swatch-eliminate]")) {
+        target.closest<HTMLElement>("[data-swatch-card]")?.classList.toggle("card--marked", target.checked);
+        updateCount();
+      }
+    });
+
+    removeBtn.addEventListener("click", () => {
+      if (!grid) return;
+      grid.querySelectorAll<HTMLInputElement>("[data-swatch-eliminate]:checked").forEach((cb) => {
+        const card = cb.closest<HTMLElement>("[data-swatch-card]");
+        if (card) card.style.display = "none";
+        cb.checked = false;
+      });
+      updateCount();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      if (!grid) return;
+      grid.querySelectorAll<HTMLElement>("[data-swatch-card]").forEach((card) => {
+        card.style.display = "";
+        card.classList.remove("card--marked");
+      });
+      grid.querySelectorAll<HTMLInputElement>("[data-swatch-eliminate]").forEach((cb) => { cb.checked = false; });
+      updateCount();
+    });
+
+    updateCount();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+</script>
+
+<style>
+  .eyebrow {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-3xl), 4vw + 1rem, var(--text-4xl));
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-fg-primary);
+  }
+  .lede {
+    max-width: 640px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+  }
+
+  /* ─── Toolbar ──────────────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: 10px 16px;
+    background: var(--glass-bg-hover);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-full);
+    position: sticky;
+    top: 80px;
+    z-index: 10;
+  }
+  .toolbar-status {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--font-ui);
+  }
+  .toolbar-count {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-fg-primary);
+    min-width: 1ch;
+    text-align: right;
+  }
+  .toolbar-count-label {
+    font-size: var(--text-xs);
+    color: var(--color-fg-tertiary);
+    letter-spacing: var(--tracking-wide);
+  }
+  .toolbar-actions { display: flex; gap: 8px; }
+  .toolbar-btn {
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    color: var(--color-fg-primary);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    transition: background var(--duration-fast) var(--easing-out);
+  }
+  .toolbar-btn:hover { background: var(--glass-bg-hover); }
+  .toolbar-btn--primary {
+    color: oklch(1 0 0 / 0.98);
+    background: linear-gradient(180deg,
+      var(--accent-royal-bright) 0%,
+      var(--accent-royal) 50%,
+      var(--accent-royal-deep) 100%);
+    border-color: var(--accent-royal-bright);
+  }
+  .toolbar-btn--primary:hover {
+    box-shadow: 0 0 16px var(--brand-glow);
+  }
+
+  /* ─── Grid ─────────────────────────────────────────────────────── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-md);
+  }
+
+  /* ─── Card ─────────────────────────────────────────────────────── */
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 16px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 1px 1px var(--highlight-top-soft);
+    transition: opacity var(--duration-base) var(--easing-out), border-color var(--duration-base) var(--easing-out);
+  }
+  .card--marked {
+    opacity: 0.45;
+    border-color: oklch(0.65 0.20 25 / 0.5);
+  }
+
+  /* ─── Checkbox (top-right, small) ──────────────────────────────── */
+  .card-check {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .card-check input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
+  }
+  .card-check-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: oklch(1 0 0 / 0.08);
+    border: 1.5px solid var(--glass-border-strong);
+    color: oklch(1 0 0 / 0.98);
+    transition: background var(--duration-fast) var(--easing-out), border-color var(--duration-fast) var(--easing-out);
+  }
+  .card-check input:checked + .card-check-box {
+    background: oklch(0.62 0.22 25);
+    border-color: oklch(0.62 0.22 25);
+  }
+  .card-check-mark {
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--easing-out);
+  }
+  .card-check input:checked + .card-check-box .card-check-mark {
+    opacity: 1;
+  }
+
+  /* ─── Mono triplet ─────────────────────────────────────────────── */
+  .chips--mono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 6px 0 2px;
+  }
+  .chip {
+    border-radius: 50%;
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: inset 0 1px 1px var(--highlight-top-soft);
+    flex-shrink: 0;
+  }
+  .chip--main { width: 56px; height: 56px; }
+  .chip--sat  { width: 32px; height: 32px; opacity: 0.85; }
+
+  /* ─── Palette rows ─────────────────────────────────────────────── */
+  .palette {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 0 2px;
+  }
+  .palette-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .palette-row-label {
+    flex-shrink: 0;
+    width: 58px;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .palette-row-chips {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .palette-chip {
+    flex: 1 1 0;
+    min-width: 18px;
+    height: 32px;
+    border-radius: 4px;
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: inset 0 1px 1px var(--highlight-top-soft);
+  }
+  /* Single-group palettes (Halloween/Christmas/etc) have no label,
+     so chips run full-width. */
+  .palette-row:not(:has(.palette-row-label)) .palette-row-chips {
+    width: 100%;
+  }
+
+  /* ─── Card meta ────────────────────────────────────────────────── */
+  .card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 28px; /* keeps text out from under the checkbox */
+  }
+  .card-name {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-fg-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0;
+    line-height: 1.2;
+  }
+  .card-code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-tertiary);
+    word-break: break-all;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg-hover);
+    border: 1px solid var(--glass-border);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-fg-secondary);
+    text-transform: lowercase;
+  }
+
+  .card-note {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--color-fg-tertiary);
+    font-style: italic;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  /* ─── Callouts ─────────────────────────────────────────────────── */
+  .callout {
+    padding: 18px 22px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+  }
+  .callout-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-fg-primary);
+    margin: 0 0 8px;
+  }
+  .callout-body {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+    margin: 0;
+    max-width: 70ch;
+  }
+  .callout-body code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--glass-bg-hover);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--color-fg-primary);
+  }
+  .callout-list {
+    margin: 0;
+    padding-left: var(--space-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-secondary);
+  }
+  .callout-list li { margin-bottom: 4px; }
+
+  @media (max-width: 600px) {
+    .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+    .toolbar-actions { width: 100%; }
+    .toolbar-btn { flex: 1; }
+  }
+</style>

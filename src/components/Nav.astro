@@ -132,7 +132,7 @@ const workActive = isActiveSection("/work");
     align-items: center;
     gap: 4px;
     padding: 6px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-bg);
     backdrop-filter: blur(16px) saturate(160%);
     -webkit-backdrop-filter: blur(16px) saturate(160%);
     border: 1px solid var(--glass-border);
@@ -141,9 +141,9 @@ const workActive = isActiveSection("/work");
       inset 0 2px 1px var(--highlight-top),
       inset 0 -2px 1px var(--highlight-bottom),
       inset 0 4px 8px var(--highlight-top-soft),
-      0 4px 16px rgba(0, 0, 0, 0.30),
-      0 16px 40px rgba(0, 0, 0, 0.35),
-      0 0 80px rgba(91, 140, 255, 0.10);
+      0 4px 16px oklch(0 0 0 / 0.30),
+      0 16px 40px oklch(0 0 0 / 0.35),
+      0 0 80px var(--brand-glow);
   }
 
   /*
@@ -173,7 +173,7 @@ const workActive = isActiveSection("/work");
   }
 
   .nav-item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--glass-bg-hover);
     color: var(--color-fg-primary);
   }
 
@@ -185,18 +185,18 @@ const workActive = isActiveSection("/work");
   .nav-item--active {
     background: linear-gradient(
       180deg,
-      rgba(91, 140, 255, 0.95) 0%,
-      rgba(59, 109, 255, 1) 50%,
-      rgba(29, 74, 224, 1) 100%
+      var(--accent-royal-bright) 0%,
+      var(--accent-royal) 50%,
+      var(--accent-royal-deep) 100%
     );
-    border: 1px solid rgba(140, 180, 255, 0.55);
+    border: 1px solid var(--accent-royal-bright);
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    text-shadow: 0 1px 2px oklch(0 0 0 / 0.40);
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.85),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.15),
-      0 2px 8px rgba(29, 74, 224, 0.40),
-      0 0 30px rgba(91, 140, 255, 0.40);
+      inset 0 1px 1px var(--highlight-top),
+      inset 0 -1px 1px oklch(0 0 0 / 0.15),
+      0 2px 8px var(--accent-royal-deep),
+      0 0 30px var(--accent-royal-bright);
   }
 
   .nav-item--active:hover {
@@ -243,7 +243,7 @@ const workActive = isActiveSection("/work");
     flex-direction: column;
     gap: 2px;
     padding: 8px;
-    background: rgba(20, 25, 50, 0.85);
+    background: var(--glass-bg-hover);
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     border: 1px solid var(--glass-border);
@@ -251,9 +251,9 @@ const workActive = isActiveSection("/work");
     box-shadow:
       inset 0 2px 1px var(--highlight-top),
       inset 0 -2px 1px var(--highlight-bottom),
-      0 8px 24px rgba(0, 0, 0, 0.50),
-      0 24px 64px rgba(0, 0, 0, 0.55),
-      0 0 100px rgba(91, 140, 255, 0.20);
+      0 8px 24px oklch(0 0 0 / 0.50),
+      0 24px 64px oklch(0 0 0 / 0.55),
+      0 0 100px var(--brand-glow);
 
     /* Hidden by default via opacity + pointer-events; revealed on hover */
     opacity: 0;
@@ -303,23 +303,23 @@ const workActive = isActiveSection("/work");
   }
 
   .nav-sub-item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--glass-bg-hover);
     color: var(--color-fg-primary);
   }
 
   .nav-sub-item--active {
     background: linear-gradient(
       180deg,
-      rgba(91, 140, 255, 0.95) 0%,
-      rgba(59, 109, 255, 1) 50%,
-      rgba(29, 74, 224, 1) 100%
+      var(--accent-royal-bright) 0%,
+      var(--accent-royal) 50%,
+      var(--accent-royal-deep) 100%
     );
-    border: 1px solid rgba(140, 180, 255, 0.55);
+    border: 1px solid var(--accent-royal-bright);
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    text-shadow: 0 1px 2px oklch(0 0 0 / 0.40);
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.50),
-      0 2px 8px rgba(29, 74, 224, 0.40);
+      inset 0 1px 1px var(--highlight-top),
+      0 2px 8px var(--accent-royal-deep);
   }
 
   .nav-sub-item--active:hover {
@@ -342,7 +342,7 @@ const workActive = isActiveSection("/work");
   }
 
   .nav-sub-item--active .nav-sub-item-meta {
-    color: rgba(255, 255, 255, 0.75);
+    color: oklch(1 0 0 / 0.75);
   }
 
   /*

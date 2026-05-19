@@ -98,25 +98,25 @@ const Tag = isLink ? "a" : "button";
       inset 0 -4px 6px var(--highlight-bottom-soft),
       inset 3px 0 6px var(--shadow-side),
       inset -3px 0 6px var(--shadow-side),
-      0 4px 12px rgba(0, 0, 0, 0.35),
-      0 12px 32px rgba(0, 0, 0, 0.40),
-      0 0 60px rgba(180, 210, 255, 0.12);
+      0 4px 12px oklch(0 0 0 / 0.35),
+      0 12px 32px oklch(0 0 0 / 0.40),
+      0 0 60px var(--brand-glow);
   }
 
   .glass-btn--secondary:hover {
     transform: translateY(-3px);
     background: var(--glass-bg-hover);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 1),
-      inset 0 4px 6px rgba(255, 255, 255, 0.35),
-      inset 0 -2px 1px rgba(255, 255, 255, 0.60),
-      inset 0 -4px 6px rgba(255, 255, 255, 0.15),
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-bottom),
+      inset 0 -4px 6px var(--highlight-bottom-soft),
       inset 3px 0 6px var(--shadow-side),
       inset -3px 0 6px var(--shadow-side),
-      0 6px 18px rgba(0, 0, 0, 0.40),
-      0 20px 48px rgba(0, 0, 0, 0.45),
-      0 0 100px rgba(180, 210, 255, 0.45),
-      0 0 200px rgba(180, 210, 255, 0.25);
+      0 6px 18px oklch(0 0 0 / 0.40),
+      0 20px 48px oklch(0 0 0 / 0.45),
+      0 0 100px var(--brand-glow),
+      0 0 200px var(--brand-glow);
   }
 
   /* ============ PRIMARY (royal blue lit) ============ */
@@ -124,39 +124,39 @@ const Tag = isLink ? "a" : "button";
   .glass-btn--primary {
     background: linear-gradient(
       180deg,
-      rgba(91, 140, 255, 0.95) 0%,
-      rgba(59, 109, 255, 1) 50%,
-      rgba(29, 74, 224, 1) 100%
+      var(--accent-royal-bright) 0%,
+      var(--accent-royal) 50%,
+      var(--accent-royal-deep) 100%
     );
-    border: 1px solid rgba(140, 180, 255, 0.55);
+    border: 1px solid color-mix(in oklch, var(--accent-royal-bright) 55%, transparent);
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+    text-shadow: 0 1px 2px oklch(0 0 0 / 0.40);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 0.90),
-      inset 0 4px 6px rgba(255, 255, 255, 0.25),
-      inset 0 -2px 1px rgba(255, 255, 255, 0.30),
-      inset 0 -4px 6px rgba(0, 0, 0, 0.15),
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-top-soft),
+      inset 0 -4px 6px oklch(0 0 0 / 0.15),
       inset 3px 0 6px var(--shadow-side),
       inset -3px 0 6px var(--shadow-side),
-      0 4px 12px rgba(29, 74, 224, 0.40),
-      0 12px 32px rgba(29, 74, 224, 0.45),
-      0 0 80px rgba(91, 140, 255, 0.55),
-      0 0 160px rgba(91, 140, 255, 0.30);
+      0 4px 12px color-mix(in oklch, var(--accent-royal-deep) 40%, transparent),
+      0 12px 32px color-mix(in oklch, var(--accent-royal-deep) 45%, transparent),
+      0 0 80px color-mix(in oklch, var(--accent-royal-bright) 55%, transparent),
+      0 0 160px color-mix(in oklch, var(--accent-royal-bright) 30%, transparent);
   }
 
   .glass-btn--primary:hover {
     transform: translateY(-3px);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 1),
-      inset 0 4px 6px rgba(255, 255, 255, 0.30),
-      inset 0 -2px 1px rgba(255, 255, 255, 0.35),
-      inset 0 -4px 6px rgba(0, 0, 0, 0.15),
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-top-soft),
+      inset 0 -4px 6px oklch(0 0 0 / 0.15),
       inset 3px 0 6px var(--shadow-side),
       inset -3px 0 6px var(--shadow-side),
-      0 6px 18px rgba(29, 74, 224, 0.50),
-      0 20px 48px rgba(29, 74, 224, 0.55),
-      0 0 130px rgba(91, 140, 255, 0.80),
-      0 0 240px rgba(91, 140, 255, 0.45);
+      0 6px 18px color-mix(in oklch, var(--accent-royal-deep) 50%, transparent),
+      0 20px 48px color-mix(in oklch, var(--accent-royal-deep) 55%, transparent),
+      0 0 130px color-mix(in oklch, var(--accent-royal-bright) 80%, transparent),
+      0 0 240px color-mix(in oklch, var(--accent-royal-bright) 45%, transparent);
   }
 
   /* ============ EMERALD (alternate, for high-stakes CTAs) ============ */
@@ -164,39 +164,39 @@ const Tag = isLink ? "a" : "button";
   .glass-btn--emerald {
     background: linear-gradient(
       180deg,
-      rgba(128, 232, 165, 0.95) 0%,
-      rgba(93, 191, 138, 1) 50%,
-      rgba(50, 150, 100, 1) 100%
+      var(--accent-emerald-bright) 0%,
+      var(--accent-emerald) 50%,
+      var(--accent-emerald-deep) 100%
     );
-    border: 1px solid rgba(180, 240, 200, 0.55);
+    border: 1px solid color-mix(in oklch, var(--accent-emerald-bright) 55%, transparent);
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 30, 15, 0.50);
+    text-shadow: 0 1px 2px oklch(0 0 0 / 0.50);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 0.90),
-      inset 0 4px 6px rgba(255, 255, 255, 0.25),
-      inset 0 -2px 1px rgba(255, 255, 255, 0.30),
-      inset 0 -4px 6px rgba(0, 30, 15, 0.20),
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-top-soft),
+      inset 0 -4px 6px oklch(0 0 0 / 0.20),
       inset 3px 0 6px var(--shadow-side),
       inset -3px 0 6px var(--shadow-side),
-      0 4px 12px rgba(50, 150, 100, 0.45),
-      0 12px 32px rgba(50, 150, 100, 0.50),
-      0 0 80px rgba(93, 191, 138, 0.55),
-      0 0 160px rgba(93, 191, 138, 0.30);
+      0 4px 12px color-mix(in oklch, var(--accent-emerald-deep) 45%, transparent),
+      0 12px 32px color-mix(in oklch, var(--accent-emerald-deep) 50%, transparent),
+      0 0 80px color-mix(in oklch, var(--accent-emerald) 55%, transparent),
+      0 0 160px color-mix(in oklch, var(--accent-emerald) 30%, transparent);
   }
 
   .glass-btn--emerald:hover {
     transform: translateY(-3px);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 1),
-      inset 0 4px 6px rgba(255, 255, 255, 0.30),
-      inset 0 -2px 1px rgba(255, 255, 255, 0.35),
-      inset 0 -4px 6px rgba(0, 30, 15, 0.20),
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-top-soft),
+      inset 0 -4px 6px oklch(0 0 0 / 0.20),
       inset 3px 0 6px var(--shadow-side),
       inset -3px 0 6px var(--shadow-side),
-      0 6px 18px rgba(50, 150, 100, 0.55),
-      0 20px 48px rgba(50, 150, 100, 0.60),
-      0 0 130px rgba(93, 191, 138, 0.80),
-      0 0 240px rgba(93, 191, 138, 0.45);
+      0 6px 18px color-mix(in oklch, var(--accent-emerald-deep) 55%, transparent),
+      0 20px 48px color-mix(in oklch, var(--accent-emerald-deep) 60%, transparent),
+      0 0 130px color-mix(in oklch, var(--accent-emerald) 80%, transparent),
+      0 0 240px color-mix(in oklch, var(--accent-emerald) 45%, transparent);
   }
 
   /* Respect reduced motion preference. */

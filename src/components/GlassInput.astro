@@ -116,14 +116,14 @@ const {
     width: 100%;
     font-family: var(--font-body);
     color: var(--color-fg-primary);
-    background: rgba(0, 0, 0, 0.20);
+    background: oklch(0 0 0 / 0.20);
     border: 1px solid var(--glass-border);
     border-radius: 14px;
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
     box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft);
     transition:
       border-color var(--duration-base) var(--easing-out),
       background var(--duration-base) var(--easing-out),
@@ -170,13 +170,13 @@ const {
   .glass-input:focus,
   .glass-input:focus-visible {
     outline: none;
-    border-color: rgba(91, 140, 255, 0.65);
-    background: rgba(0, 0, 0, 0.25);
+    border-color: var(--accent-royal-bright);
+    background: oklch(0 0 0 / 0.25);
     box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-      0 0 0 3px rgba(91, 140, 255, 0.18),
-      0 0 24px rgba(91, 140, 255, 0.25);
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft),
+      0 0 0 3px var(--accent-royal-bright),
+      0 0 24px var(--accent-royal-bright);
   }
 
   /*
@@ -193,8 +193,8 @@ const {
   .glass-input--error:focus-visible {
     border-color: rgba(255, 130, 110, 0.85);
     box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft),
       0 0 0 3px rgba(255, 130, 110, 0.18),
       0 0 24px rgba(255, 130, 110, 0.25);
   }
@@ -206,8 +206,41 @@ const {
   }
 
   .glass-input:read-only {
-    background: rgba(0, 0, 0, 0.10);
+    background: oklch(0 0 0 / 0.10);
     cursor: default;
+  }
+
+  /*
+   * Light-surfaced themes: the rgba(0,0,0,0.20) recess overlay reads
+   * muddy on bright backgrounds and crushes placeholder contrast.
+   * Replace with a much lighter overlay so the input still reads as a
+   * subtle recess without darkening the surface.
+   */
+  :root[data-theme="light"] .glass-input,
+  :root[data-theme="neomorphic"] .glass-input {
+    background: oklch(0 0 0 / 0.05);
+  }
+  :root[data-theme="light"] .glass-input:focus,
+  :root[data-theme="light"] .glass-input:focus-visible,
+  :root[data-theme="neomorphic"] .glass-input:focus,
+  :root[data-theme="neomorphic"] .glass-input:focus-visible {
+    background: oklch(0 0 0 / 0.08);
+  }
+  :root[data-theme="light"] .glass-input:read-only,
+  :root[data-theme="neomorphic"] .glass-input:read-only {
+    background: oklch(0 0 0 / 0.03);
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] .glass-input {
+      background: oklch(0 0 0 / 0.05);
+    }
+    :root[data-theme="system"] .glass-input:focus,
+    :root[data-theme="system"] .glass-input:focus-visible {
+      background: oklch(0 0 0 / 0.08);
+    }
+    :root[data-theme="system"] .glass-input:read-only {
+      background: oklch(0 0 0 / 0.03);
+    }
   }
 
   /*
@@ -223,9 +256,9 @@ const {
   .glass-input:-webkit-autofill:focus,
   .glass-input:-webkit-autofill:active {
     -webkit-box-shadow:
-      0 0 0 1000px rgba(20, 25, 50, 0.95) inset,
-      inset 0 1px 2px rgba(0, 0, 0, 0.30),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+      0 0 0 1000px var(--bg-2) inset,
+      inset 0 1px 2px oklch(0 0 0 / 0.30),
+      inset 0 -1px 0 var(--highlight-bottom-soft) !important;
     -webkit-text-fill-color: var(--color-fg-primary) !important;
     caret-color: var(--color-fg-primary) !important;
     transition: background-color 5000s ease-in-out 0s;

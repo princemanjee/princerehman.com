@@ -56,7 +56,7 @@ const otherStudies = caseStudiesByOrder.filter((cs) => cs.slug !== study.slug);
     )}
 
     <section class="case-study-engagement">
-      <GlassPanel size="lg" class="engagement-panel">
+      <GlassPanel size="lg" class="engagement-panel" padded={false}>
         <h2 class="engagement-heading">Want this approach for your organization?</h2>
         <p class="engagement-body">
           The patterns shown in this case study apply directly to client engagements
@@ -138,19 +138,19 @@ const otherStudies = caseStudiesByOrder.filter((cs) => cs.slug !== study.slug);
     box-shadow:
       inset 0 2px 1px var(--highlight-top),
       inset 0 -2px 1px var(--highlight-bottom),
-      0 4px 12px rgba(0, 0, 0, 0.25),
-      0 12px 32px rgba(0, 0, 0, 0.30);
+      0 4px 12px oklch(0 0 0 / 0.25),
+      0 12px 32px oklch(0 0 0 / 0.30);
   }
 
   .continue-card:hover {
     transform: translateY(-3px);
     background: var(--glass-bg-hover);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 1),
+      inset 0 2px 1px var(--highlight-top),
       inset 0 -2px 1px var(--highlight-bottom),
-      0 8px 20px rgba(0, 0, 0, 0.35),
-      0 20px 48px rgba(0, 0, 0, 0.40),
-      0 0 80px rgba(91, 140, 255, 0.20);
+      0 8px 20px oklch(0 0 0 / 0.35),
+      0 20px 48px oklch(0 0 0 / 0.40),
+      0 0 80px var(--brand-glow);
   }
 
   .continue-label {

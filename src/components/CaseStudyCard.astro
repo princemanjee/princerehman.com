@@ -91,8 +91,8 @@ const href = `/work/${caseStudy.slug}`;
       inset 0 -4px 8px var(--highlight-bottom-soft),
       inset 3px 0 8px var(--shadow-side),
       inset -3px 0 8px var(--shadow-side),
-      0 6px 16px rgba(0, 0, 0, 0.30),
-      0 18px 48px rgba(0, 0, 0, 0.35);
+      0 6px 16px oklch(0 0 0 / 0.30),
+      0 18px 48px oklch(0 0 0 / 0.35);
     transition:
       transform var(--duration-slow) var(--easing-out),
       background var(--duration-slow) var(--easing-out),
@@ -103,15 +103,15 @@ const href = `/work/${caseStudy.slug}`;
     transform: translateY(-4px);
     background: var(--glass-bg-hover);
     box-shadow:
-      inset 0 2px 1px rgba(255, 255, 255, 1),
+      inset 0 2px 1px var(--highlight-top),
       inset 0 4px 8px var(--highlight-top-soft),
-      inset 0 -2px 1px rgba(255, 255, 255, 0.60),
+      inset 0 -2px 1px var(--highlight-bottom),
       inset 0 -4px 8px var(--highlight-bottom-soft),
       inset 3px 0 8px var(--shadow-side),
       inset -3px 0 8px var(--shadow-side),
-      0 12px 28px rgba(0, 0, 0, 0.40),
-      0 30px 72px rgba(0, 0, 0, 0.45),
-      0 0 100px rgba(91, 140, 255, 0.25);
+      0 12px 28px oklch(0 0 0 / 0.40),
+      0 30px 72px oklch(0 0 0 / 0.45),
+      0 0 100px var(--brand-glow);
   }
 
   /* Header: title and availability badge on the same row, tagline below */

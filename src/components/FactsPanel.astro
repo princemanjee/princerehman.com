@@ -31,7 +31,7 @@ interface Props {
 const { facts, title } = Astro.props;
 ---
 
-<GlassPanel size="md" class="facts-panel">
+<GlassPanel size="md" class="facts-panel" padded={false}>
   {title && <h3 class="facts-panel-title">{title}</h3>}
   <dl class="facts-list">
     {facts.map((fact) => (

@@ -152,6 +152,8 @@
   --brand-color: oklch(0.320 0.180 263 / 0.95);
   --brand-glow:  oklch(0.520 0.210 263 / 0.30);
 
+  --brand-filter-xs: url(#prism-polished-small);
+
   --neo-surface:      var(--glass-bg);
   --neo-shadow-light: transparent;
   --neo-shadow-dark:  transparent;
@@ -201,6 +203,8 @@
   --brand-color: oklch(0.950 0.020 245 / 0.95);
   --brand-glow:  oklch(0.760 0.130 252 / 0.45);
 
+  --brand-filter-xs: url(#prism-polished-small-bright);
+
   --neo-surface:      var(--glass-bg);
   --neo-shadow-light: transparent;
   --neo-shadow-dark:  transparent;
@@ -217,46 +221,58 @@
  * =============================================================== */
 
 :root[data-theme="neomorphic"] {
-  --bg-1: oklch(0.935 0.005 80);
-  --bg-2: oklch(0.915 0.005 80);
-  --bg-3: oklch(0.925 0.005 80);
-  --bg-4: oklch(0.905 0.005 80);
+  /* Sand palette — yellow / light-brown hue shift 2026-05-19.
+     Original hue 70 read as red-orange; hues pushed to 75-88 for a
+     proper yellow-sand and warm-brown tonality.
+       hue 70 → 75  for mid/dark browns (text + shadows)
+       hue 82-85    for surfaces (light brown / sandy yellow)
+       hue 88-90    for lighting (yellow highlights) */
+
+  --bg-1: oklch(0.91 0.06 85);
+  --bg-2: oklch(0.83 0.07 82);
+  --bg-3: oklch(0.83 0.07 82);
+  --bg-4: oklch(0.91 0.06 85);
 
   --bg-overlay-1: transparent;
   --bg-overlay-2: transparent;
 
-  --accent-royal:        oklch(0.550 0.180 263);
-  --accent-royal-bright: oklch(0.640 0.180 263);
-  --accent-royal-deep:   oklch(0.460 0.195 263);
+  --accent-royal:        oklch(0.500 0.190 263);
+  --accent-royal-bright: oklch(0.580 0.190 263);
+  --accent-royal-deep:   oklch(0.420 0.205 263);
 
-  --accent-emerald:        oklch(0.625 0.110 153);
-  --accent-emerald-bright: oklch(0.715 0.125 153);
-  --accent-emerald-deep:   oklch(0.490 0.105 154);
+  --accent-emerald:        oklch(0.550 0.130 153);
+  --accent-emerald-bright: oklch(0.650 0.140 153);
+  --accent-emerald-deep:   oklch(0.420 0.120 154);
 
-  --glass-bg:            oklch(0.935 0.005 80 / 1);
-  --glass-bg-hover:      oklch(0.945 0.005 80 / 1);
-  --glass-border:        oklch(0.700 0.005 80 / 0.20);
-  --glass-border-strong: oklch(0.700 0.005 80 / 0.35);
+  --glass-bg:            oklch(0.91 0.06 85);
+  --glass-bg-hover:      oklch(0.94 0.08 90);
+  --glass-border:        oklch(0.55 0.06 75 / 0.22);
+  --glass-border-strong: oklch(0.40 0.05 72 / 0.30);
   --glass-blur:          0px;
   --glass-saturate:      100%;
 
-  --highlight-top:         oklch(1 0 0 / 0.70);
-  --highlight-top-soft:    oklch(1 0 0 / 0.40);
-  --highlight-bottom:      oklch(0.20 0.005 80 / 0.10);
-  --highlight-bottom-soft: oklch(0.20 0.005 80 / 0.05);
-  --shadow-side:           oklch(0.20 0.005 80 / 0.18);
+  /* Lighting → yellow */
+  --highlight-top:         oklch(0.94 0.08 90 / 0.85);
+  --highlight-top-soft:    oklch(0.94 0.08 90 / 0.50);
+  /* Shadow → warm dark brown */
+  --highlight-bottom:      oklch(0.40 0.05 72 / 0.15);
+  --highlight-bottom-soft: oklch(0.40 0.05 72 / 0.08);
+  --shadow-side:           oklch(0.40 0.05 72 / 0.22);
 
-  --color-fg-primary:   oklch(0.255 0.005 80);
-  --color-fg-secondary: oklch(0.400 0.005 80);
-  --color-fg-tertiary:  oklch(0.545 0.005 80);
-  --color-fg-muted:     oklch(0.660 0.005 80);
+  --color-fg-primary:   oklch(0.32 0.03 75);
+  --color-fg-secondary: oklch(0.45 0.06 75);
+  --color-fg-tertiary:  oklch(0.52 0.06 75);
+  --color-fg-muted:     oklch(0.58 0.06 75 / 0.90);
 
-  --brand-color: oklch(0.300 0.110 263 / 0.95);
-  --brand-glow:  oklch(0.620 0.140 263 / 0.25);
+  --brand-color: oklch(0.300 0.180 263 / 0.95);
+  --brand-glow:  oklch(0.550 0.180 263 / 0.20);
 
-  --neo-surface:      oklch(0.935 0.005 80);
-  --neo-shadow-light: oklch(1 0 0 / 0.85);
-  --neo-shadow-dark:  oklch(0.30 0.005 80 / 0.15);
+  --brand-filter-xs: url(#prism-polished-small);
+
+  /* Neomorphic dual-shadow elevation source */
+  --neo-surface:      oklch(0.83 0.07 82);
+  --neo-shadow-light: oklch(0.94 0.08 90 / 0.90);
+  --neo-shadow-dark:  oklch(0.40 0.05 72 / 0.25);
 }
 
 /* ===============================================================
@@ -302,6 +318,8 @@
     --brand-color: oklch(0.320 0.180 263 / 0.95);
     --brand-glow:  oklch(0.520 0.210 263 / 0.30);
 
+    --brand-filter-xs: url(#prism-polished-small);
+
     --neo-surface:      var(--glass-bg);
     --neo-shadow-light: transparent;
     --neo-shadow-dark:  transparent;
@@ -346,6 +364,8 @@
 
     --brand-color: oklch(0.945 0.020 245 / 0.92);
     --brand-glow:  oklch(0.870 0.060 250 / 0.55);
+
+    --brand-filter-xs: url(#prism-polished-small-bright);
 
     --neo-surface:      var(--glass-bg);
     --neo-shadow-light: transparent;

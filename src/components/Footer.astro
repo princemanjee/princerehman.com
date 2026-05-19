@@ -19,6 +19,7 @@
  */
 
 import BrandMark from "./BrandMark.astro";
+import BrandName from "./BrandName.astro";
 
 const currentYear = new Date().getFullYear();
 ---
@@ -31,7 +32,7 @@ const currentYear = new Date().getFullYear();
         <a href="/" class="footer-brand-link" aria-label="Back to home">
           <BrandMark size="md" ariaLabel="P. R. Manjee" />
           <div class="footer-brand-text">
-            <div class="footer-brand-name">P. R. Manjee</div>
+            <BrandName variant="full" size="xs" />
             <div class="footer-brand-location">Chicago, Illinois</div>
           </div>
         </a>
