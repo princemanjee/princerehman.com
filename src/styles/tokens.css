@@ -54,6 +54,16 @@
   --easing-out:      cubic-bezier(0.16, 1, 0.3, 1);
   --easing-bounce:   cubic-bezier(0.34, 1.56, 0.64, 1);
   --easing-physical: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /*
+   * Popover / floating-menu surface. Derived from the active theme's
+   * --bg-2 at near-full opacity so floating menus (nav dropdown, mobile
+   * nav panel, Prism panel) occlude the content behind them instead of
+   * letting it bleed through. The var(--bg-2) reference resolves lazily
+   * at use time, so this single definition adapts to every theme and to
+   * the Phase 2 generated palette (which overrides --bg-2 inline).
+   */
+  --surface-popover: color-mix(in oklch, var(--bg-2) 95%, transparent);
 }
 
 /* ===============================================================

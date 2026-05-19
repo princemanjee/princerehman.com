@@ -243,7 +243,7 @@ const workActive = isActiveSection("/work");
     flex-direction: column;
     gap: 2px;
     padding: 8px;
-    background: var(--glass-bg-hover);
+    background: var(--surface-popover);
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     border: 1px solid var(--glass-border);
@@ -346,39 +346,12 @@ const workActive = isActiveSection("/work");
   }
 
   /*
-   * Cross-theme legibility: the dropdown menu has a hardcoded dark navy
-   * background (independent of theme tokens), so on light-surfaced themes
-   * the inherited dark text becomes dark-on-dark. Force the sub-item
-   * label and its hover state to render against the dark menu surface
-   * regardless of the active theme. Meta keeps its own --color-fg-muted
-   * which already reads in the same band.
+   * The dropdown menu now uses --surface-popover (a near-opaque,
+   * theme-adaptive surface derived from --bg-2), so the natural theme
+   * text tokens read correctly on it in every theme: light text on the
+   * dark/hybrid popover, dark text on the light/neomorphic popover. No
+   * forced per-theme text overrides needed.
    */
-  :root[data-theme="light"] .nav-sub-item,
-  :root[data-theme="neomorphic"] .nav-sub-item {
-    color: oklch(1 0 0 / 0.86);
-  }
-
-  :root[data-theme="light"] .nav-sub-item:hover,
-  :root[data-theme="neomorphic"] .nav-sub-item:hover {
-    color: oklch(1 0 0 / 0.96);
-  }
-
-  :root[data-theme="light"] .nav-sub-item-meta,
-  :root[data-theme="neomorphic"] .nav-sub-item-meta {
-    color: oklch(1 0 0 / 0.62);
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root[data-theme="system"] .nav-sub-item {
-      color: oklch(1 0 0 / 0.86);
-    }
-    :root[data-theme="system"] .nav-sub-item:hover {
-      color: oklch(1 0 0 / 0.96);
-    }
-    :root[data-theme="system"] .nav-sub-item-meta {
-      color: oklch(1 0 0 / 0.62);
-    }
-  }
 
   /*
    * Mobile: hide the desktop pill nav entirely. The MobileNav component

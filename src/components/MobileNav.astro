@@ -357,11 +357,10 @@ const workActive = isActiveSection("/work");
     z-index: 998;
 
     border-radius: 28px;
-    /* Theme-adaptive panel surface. Picks up the active theme's glass
-       hover token so the panel reads as a frosted slab in the current
-       palette (dark navy on dark, off-white on light, sand on
-       neomorphic, etc.). */
-    background: var(--glass-bg-hover);
+    /* Theme-adaptive popover surface: near-opaque so page content does
+       not bleed through the menu. Adapts per theme (dark navy on dark,
+       off-white on light, sand on neomorphic). */
+    background: var(--surface-popover);
     backdrop-filter: blur(28px) saturate(170%);
     -webkit-backdrop-filter: blur(28px) saturate(170%);
     border: 1px solid var(--glass-border-strong);

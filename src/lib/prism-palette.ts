@@ -67,6 +67,12 @@ export interface PaletteRequest {
  * src/styles/tokens.css that the runtime will overwrite for the active theme.
  */
 export interface GeneratedPalette {
+  "--bg-1": string;
+  "--bg-2": string;
+  "--bg-3": string;
+  "--bg-4": string;
+  "--bg-overlay-1": string;
+  "--bg-overlay-2": string;
   "--accent-royal": string;
   "--accent-royal-bright": string;
   "--accent-royal-deep": string;
@@ -76,6 +82,81 @@ export interface GeneratedPalette {
   "--brand-color": string;
   "--brand-glow": string;
 }
+
+/**
+ * Per-mode background templates, sampled from the locked Phase 1 values in
+ * src/styles/tokens.css. The generator rotates these stop hues by
+ * (baseHue - REFERENCE_HUE) so that at the default hue (263, royal) the
+ * output reproduces the Phase 1 baseline exactly, and moving the hue
+ * slider tints the entire page background toward the new hue while
+ * preserving each mode's lightness/chroma structure.
+ *
+ * Neomorphic is rotate:false — its sand surface is locked and does not
+ * follow the hue slider (only its accents do). The user explicitly tuned
+ * and locked the sand palette.
+ */
+const REFERENCE_HUE = 263;
+
+interface BgStop { l: number; c: number; h: number; }
+interface OverlayStop { l: number; c: number; h: number; a: number; }
+
+const MODE_BACKGROUNDS: Record<
+  ResolvedMode["kind"],
+  { rotate: boolean; stops: BgStop[]; overlays: OverlayStop[] }
+> = {
+  dark: {
+    rotate: true,
+    stops: [
+      { l: 0.135, c: 0.052, h: 271 },
+      { l: 0.210, c: 0.052, h: 263 },
+      { l: 0.190, c: 0.067, h: 265 },
+      { l: 0.165, c: 0.066, h: 285 },
+    ],
+    overlays: [
+      { l: 0.70, c: 0.18, h: 263, a: 0.12 },
+      { l: 0.55, c: 0.16, h: 305, a: 0.10 },
+    ],
+  },
+  light: {
+    rotate: true,
+    stops: [
+      { l: 0.985, c: 0.005, h: 250 },
+      { l: 0.955, c: 0.015, h: 250 },
+      { l: 0.970, c: 0.010, h: 220 },
+      { l: 0.960, c: 0.012, h: 280 },
+    ],
+    overlays: [
+      { l: 0.65, c: 0.18, h: 263, a: 0.10 },
+      { l: 0.68, c: 0.14, h: 305, a: 0.07 },
+    ],
+  },
+  hybrid: {
+    rotate: true,
+    stops: [
+      { l: 0.400, c: 0.030, h: 260 },
+      { l: 0.450, c: 0.028, h: 250 },
+      { l: 0.420, c: 0.040, h: 270 },
+      { l: 0.435, c: 0.035, h: 280 },
+    ],
+    overlays: [
+      { l: 0.70, c: 0.18, h: 263, a: 0.10 },
+      { l: 0.57, c: 0.15, h: 305, a: 0.08 },
+    ],
+  },
+  neomorphic: {
+    rotate: false,
+    stops: [
+      { l: 0.91, c: 0.06, h: 85 },
+      { l: 0.83, c: 0.07, h: 82 },
+      { l: 0.83, c: 0.07, h: 82 },
+      { l: 0.91, c: 0.06, h: 85 },
+    ],
+    overlays: [
+      { l: 0, c: 0, h: 0, a: 0 },
+      { l: 0, c: 0, h: 0, a: 0 },
+    ],
+  },
+};
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -361,6 +442,23 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   const baseHue = wrapHue(request.hue);
   const altHue = altHueFor(request.model, baseHue);
 
+  // Background regeneration: rotate the mode's template stop hues by the
+  // delta from the reference hue so the default hue reproduces Phase 1
+  // exactly and other hues tint the whole page. Neomorphic is exempt.
+  const bgConfig = MODE_BACKGROUNDS[resolved.kind];
+  const rotation = bgConfig.rotate ? baseHue - REFERENCE_HUE : 0;
+  const bg = bgConfig.stops.map((s) =>
+    formatOklch(s.l, s.c, wrapHue(s.h + rotation)),
+  );
+  // overlay-1 follows the base hue (rotated); overlay-2 follows the
+  // mixing-model alt hue so the secondary atmospheric glow visibly
+  // reflects the chosen model (analogous / split-comp / complementary).
+  const overlays = bgConfig.overlays.map((o, i) => {
+    if (o.a <= 0) return "transparent";
+    const oHue = i === 1 && bgConfig.rotate ? altHue : wrapHue(o.h + rotation);
+    return formatOklch(o.l, o.c, oHue, o.a);
+  });
+
   // Initial L values for primary accent triad.
   const Lbase = resolved.L.base;
   const Lbright = resolved.L.bright;
@@ -401,6 +499,12 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   }
 
   return {
+    "--bg-1": bg[0],
+    "--bg-2": bg[1],
+    "--bg-3": bg[2],
+    "--bg-4": bg[3],
+    "--bg-overlay-1": overlays[0],
+    "--bg-overlay-2": overlays[1],
     "--accent-royal": formatOklch(LbasePrim, C, baseHue),
     "--accent-royal-bright": formatOklch(LbrightPrim, C, baseHue),
     "--accent-royal-deep": formatOklch(LdeepPrim, C, baseHue),

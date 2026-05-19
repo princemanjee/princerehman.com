@@ -368,11 +368,11 @@ const mixingModels = [
     position: absolute;
     bottom: calc(100% + 12px);
     left: 0;
-    width: 320px;
+    width: 360px;
     max-height: 70vh;
     overflow-y: auto;
     padding: var(--space-md);
-    background: var(--glass-bg-hover);
+    background: var(--surface-popover);
     backdrop-filter: blur(calc(var(--glass-blur) * 2)) saturate(var(--glass-saturate));
     -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 2)) saturate(var(--glass-saturate));
     border: 1px solid var(--glass-border-strong);
@@ -467,7 +467,7 @@ const mixingModels = [
   .prism-segment {
     flex: 1;
     min-width: 0;
-    padding: 4px 10px;
+    padding: 5px 14px;
     border-radius: var(--radius-full);
     background: transparent;
     border: 1px solid transparent;
@@ -600,7 +600,7 @@ const mixingModels = [
     .prism { bottom: 16px; left: 16px; }
     .prism-trigger { width: 44px; height: 44px; }
     .prism-panel {
-      width: min(320px, calc(100vw - 32px));
+      width: min(360px, calc(100vw - 32px));
       max-height: 75vh;
     }
   }
