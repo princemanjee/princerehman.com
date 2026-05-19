@@ -26,6 +26,7 @@
 import {
   generatePalette,
   generatePresetPalette,
+  generatePridePalette,
   type ContrastLevel,
   type GeneratedPalette,
   type MixingModel,
@@ -224,6 +225,9 @@ export function computePalette(state: PrismState): GeneratedPalette {
   // fixed color scheme directly. Mono swatches use the hue + mixing model.
   const swatch = getSwatchById(state.swatchId);
   if (swatch && isPalette(swatch)) {
+    if (state.swatchId === "pride") {
+      return generatePridePalette(resolvedMode);
+    }
     const colors = swatch.groups.flatMap((g) => g.colors.map((c) => c.value));
     return generatePresetPalette(colors, resolvedMode);
   }

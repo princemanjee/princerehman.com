@@ -583,15 +583,12 @@ function parseOklch(value: string): ParsedOklch | null {
 
 /**
  * Generate a complete palette from a fixed multi-color scheme (Patriotic,
- * Christmas, etc.), bypassing the mixing-model generator. Auto-role rule
- * (option A): darkest color -> background, lightest -> text, most chromatic
- * -> accent, second-darkest -> surface. The whole token set including text
- * is emitted so the palette fully defines the page; the runtime clears any
- * stale overrides before applying so mono <-> palette switches stay clean.
- *
- * Pride is handled separately (a gradient render keyed by data attribute);
- * this function still returns a sensible dark base for it so text stays
- * readable beneath the gradient overlay.
+ * Christmas, etc.), bypassing the mixing-model generator. Mode-aware:
+ *   - dark / hybrid surfaces: darkest color = background, lightest = text
+ *   - light / neomorphic surfaces: lightest color = background, darkest = text
+ * Accent = most chromatic color (darkened on light surfaces so it stays
+ * legible). The whole token set including text is emitted so the palette
+ * fully defines the page; the runtime clears stale overrides on switch.
  */
 export function generatePresetPalette(
   colors: string[],
@@ -607,37 +604,43 @@ export function generatePresetPalette(
 
   const byL = [...parsed].sort((a, b) => a.l - b.l);
   const byC = [...parsed].sort((a, b) => b.c - a.c);
+  const n = byL.length;
 
-  const darkest = byL[0];
-  const lightest = byL[byL.length - 1];
-  const surface = byL[Math.min(1, byL.length - 1)];
-  const accent = byC[0];
-  const accent2 = byC[Math.min(1, byC.length - 1)];
+  const lightSurface = mode === "light" || mode === "neomorphic";
+
+  const bg = lightSurface ? byL[n - 1] : byL[0];
+  const surface = lightSurface
+    ? byL[Math.max(0, n - 2)]
+    : byL[Math.min(1, n - 1)];
+  const text = lightSurface ? byL[0] : byL[n - 1];
+
+  let accent = byC[0];
+  let accent2 = byC[Math.min(1, byC.length - 1)];
+  // On a light surface a very light accent (e.g. yellow) won't read; cap L.
+  if (lightSurface) {
+    if (accent.l > 0.6) accent = { ...accent, l: 0.55 };
+    if (accent2.l > 0.6) accent2 = { ...accent2, l: 0.55 };
+  }
 
   const fmt = (p: ParsedOklch, a?: number) =>
     formatOklch(p.l, p.c, p.h, a ?? p.a);
   const shift = (p: ParsedOklch, dl: number) =>
     formatOklch(clamp01(p.l + dl), p.c, p.h);
 
-  // Determine whether the scheme reads dark or light by comparing the
-  // background lightness, so text/surface contrast is chosen sensibly.
-  const bgIsDark = darkest.l < 0.5;
-  const textP = bgIsDark ? lightest : darkest;
-
   return {
-    "--bg-1": fmt(darkest),
+    "--bg-1": fmt(bg),
     "--bg-2": fmt(surface),
-    "--bg-3": fmt(darkest),
+    "--bg-3": fmt(bg),
     "--bg-4": fmt(surface),
     "--bg-overlay-1": fmt(accent, 0.10),
     "--bg-overlay-2": fmt(accent2, 0.08),
-    "--glass-bg": fmt(surface, bgIsDark ? 0.10 : 0.55),
-    "--glass-bg-hover": fmt(surface, bgIsDark ? 0.18 : 0.72),
-    "--glass-border": fmt(textP, 0.18),
-    "--glass-border-strong": fmt(textP, 0.32),
-    "--highlight-top": bgIsDark ? "oklch(1 0 0 / 0.6)" : "oklch(1 0 0 / 0.9)",
+    "--glass-bg": fmt(surface, lightSurface ? 0.55 : 0.12),
+    "--glass-bg-hover": fmt(surface, lightSurface ? 0.72 : 0.20),
+    "--glass-border": fmt(text, 0.18),
+    "--glass-border-strong": fmt(text, 0.32),
+    "--highlight-top": lightSurface ? "oklch(1 0 0 / 0.9)" : "oklch(1 0 0 / 0.6)",
     "--highlight-top-soft": "oklch(1 0 0 / 0.3)",
-    "--highlight-bottom": "oklch(1 0 0 / 0.4)",
+    "--highlight-bottom": lightSurface ? "oklch(0.95 0 0 / 0.3)" : "oklch(1 0 0 / 0.4)",
     "--highlight-bottom-soft": "oklch(1 0 0 / 0.12)",
     "--shadow-side": "oklch(0 0 0 / 0.12)",
     "--neo-surface": fmt(surface),
@@ -649,12 +652,73 @@ export function generatePresetPalette(
     "--accent-emerald": fmt(accent2),
     "--accent-emerald-bright": shift(accent2, +0.08),
     "--accent-emerald-deep": shift(accent2, -0.10),
-    "--brand-color": fmt(textP, 0.95),
+    "--brand-color": fmt(text, 0.95),
     "--brand-glow": fmt(accent, 0.4),
-    "--color-fg-primary": fmt(textP, 0.96),
-    "--color-fg-secondary": fmt(textP, 0.84),
-    "--color-fg-tertiary": fmt(textP, 0.68),
-    "--color-fg-muted": fmt(textP, 0.52),
+    "--color-fg-primary": fmt(text, 0.96),
+    "--color-fg-secondary": fmt(text, 0.84),
+    "--color-fg-tertiary": fmt(text, 0.68),
+    "--color-fg-muted": fmt(text, 0.52),
+  };
+}
+
+/**
+ * Pride preset — its own handler because it renders as a gradient, not flat
+ * tokens. The ROYGBIV body background is painted by global.css (mode-aware:
+ * rich+vibrant on dark, washed pastel on light). This function supplies the
+ * surrounding tokens:
+ *   - text: white on dark, near-black on light
+ *   - links / accents: dark brown (from the inclusive Progress flag's brown
+ *     stripe)
+ *   - panel surfaces: a transgender-flag wash (light blue -> pink -> white)
+ *     set on --glass-bg so panels actually carry the trans colors
+ * Black + brown + trans colors of the inclusive flag are all represented.
+ */
+export function generatePridePalette(mode: ThemeMode): GeneratedPalette {
+  const lightSurface = mode === "light" || mode === "neomorphic";
+
+  const transPanel = lightSurface
+    ? "linear-gradient(135deg, oklch(0.86 0.05 230 / 0.55), oklch(0.89 0.05 0 / 0.55), oklch(0.99 0.002 240 / 0.6))"
+    : "linear-gradient(135deg, oklch(0.78 0.06 230 / 0.18), oklch(0.83 0.06 0 / 0.18), oklch(0.98 0.002 240 / 0.20))";
+
+  const brown = lightSurface ? "oklch(0.40 0.07 50)" : "oklch(0.60 0.09 55)";
+  const brownDeep = lightSurface ? "oklch(0.32 0.07 50)" : "oklch(0.50 0.09 55)";
+  const textBase = lightSurface ? "oklch(0.20 0.01 60)" : "oklch(0.98 0.002 240)";
+  const ta = (a: number) =>
+    lightSurface ? `oklch(0.20 0.01 60 / ${a})` : `oklch(0.98 0.002 240 / ${a})`;
+  // Fallback flat base shown if the CSS gradient is unsupported.
+  const bgBase = lightSurface ? "oklch(0.95 0.01 250)" : "oklch(0.20 0.03 285)";
+
+  return {
+    "--bg-1": bgBase,
+    "--bg-2": bgBase,
+    "--bg-3": bgBase,
+    "--bg-4": bgBase,
+    "--bg-overlay-1": "transparent",
+    "--bg-overlay-2": "transparent",
+    "--glass-bg": transPanel,
+    "--glass-bg-hover": transPanel,
+    "--glass-border": ta(0.22),
+    "--glass-border-strong": ta(0.34),
+    "--highlight-top": lightSurface ? "oklch(1 0 0 / 0.9)" : "oklch(1 0 0 / 0.5)",
+    "--highlight-top-soft": "oklch(1 0 0 / 0.3)",
+    "--highlight-bottom": "oklch(1 0 0 / 0.3)",
+    "--highlight-bottom-soft": "oklch(1 0 0 / 0.1)",
+    "--shadow-side": "oklch(0 0 0 / 0.15)",
+    "--neo-surface": bgBase,
+    "--neo-shadow-light": "oklch(1 0 0 / 0.6)",
+    "--neo-shadow-dark": "oklch(0 0 0 / 0.2)",
+    "--accent-royal": brown,
+    "--accent-royal-bright": brown,
+    "--accent-royal-deep": brownDeep,
+    "--accent-emerald": brown,
+    "--accent-emerald-bright": brown,
+    "--accent-emerald-deep": brownDeep,
+    "--brand-color": textBase,
+    "--brand-glow": lightSurface ? "oklch(0.6 0.15 25 / 0.2)" : "oklch(0.7 0.18 25 / 0.3)",
+    "--color-fg-primary": textBase,
+    "--color-fg-secondary": ta(0.85),
+    "--color-fg-tertiary": ta(0.7),
+    "--color-fg-muted": ta(0.55),
   };
 }
 

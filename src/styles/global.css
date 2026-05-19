@@ -63,29 +63,60 @@ a:hover {
  * preset palette still supplies a dark base + white text underneath, so if
  * a browser ignores these gradients the page is still legible.
  */
-:root[data-prism-palette="pride"] body {
+/* Dark / hybrid: rich, vibrant ROYGBIV. Lightness held <= ~0.58 so white
+   body text stays legible (large headings clear; long body copy mostly
+   sits on panels which carry their own trans-flag wash). */
+:root[data-prism-palette="pride"][data-theme="dark"] body,
+:root[data-prism-palette="pride"][data-theme="hybrid"] body {
   background:
-    linear-gradient(
-      135deg,
-      oklch(0.48 0.20 25) 0%,
-      oklch(0.58 0.17 55) 17%,
-      oklch(0.62 0.15 95) 33%,
-      oklch(0.48 0.16 142) 50%,
-      oklch(0.48 0.16 247) 67%,
-      oklch(0.42 0.18 290) 83%,
-      oklch(0.45 0.19 320) 100%
+    linear-gradient(135deg,
+      oklch(0.50 0.22 25) 0%,
+      oklch(0.55 0.18 55) 17%,
+      oklch(0.56 0.15 95) 33%,
+      oklch(0.50 0.18 142) 50%,
+      oklch(0.48 0.18 247) 67%,
+      oklch(0.46 0.20 290) 83%,
+      oklch(0.48 0.22 320) 100%
     );
   background-attachment: fixed;
 }
 
-:root[data-prism-palette="pride"] .glass-panel {
+/* Light / neomorphic: washed pastel ROYGBIV with near-black text. */
+:root[data-prism-palette="pride"][data-theme="light"] body,
+:root[data-prism-palette="pride"][data-theme="neomorphic"] body {
   background:
-    linear-gradient(
-      135deg,
-      oklch(0.78 0.06 230 / 0.14) 0%,
-      oklch(0.83 0.06 0 / 0.14) 50%,
-      oklch(0.98 0.002 240 / 0.16) 100%
+    linear-gradient(135deg,
+      oklch(0.88 0.08 25) 0%,
+      oklch(0.90 0.08 55) 17%,
+      oklch(0.93 0.09 95) 33%,
+      oklch(0.89 0.08 142) 50%,
+      oklch(0.87 0.08 247) 67%,
+      oklch(0.85 0.09 290) 83%,
+      oklch(0.86 0.10 320) 100%
     );
+  background-attachment: fixed;
+}
+
+/* System mode: follow OS preference for vibrant vs washed. */
+@media (prefers-color-scheme: dark) {
+  :root[data-prism-palette="pride"][data-theme="system"] body {
+    background:
+      linear-gradient(135deg,
+        oklch(0.50 0.22 25) 0%, oklch(0.55 0.18 55) 17%, oklch(0.56 0.15 95) 33%,
+        oklch(0.50 0.18 142) 50%, oklch(0.48 0.18 247) 67%, oklch(0.46 0.20 290) 83%,
+        oklch(0.48 0.22 320) 100%);
+    background-attachment: fixed;
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root[data-prism-palette="pride"][data-theme="system"] body {
+    background:
+      linear-gradient(135deg,
+        oklch(0.88 0.08 25) 0%, oklch(0.90 0.08 55) 17%, oklch(0.93 0.09 95) 33%,
+        oklch(0.89 0.08 142) 50%, oklch(0.87 0.08 247) 67%, oklch(0.85 0.09 290) 83%,
+        oklch(0.86 0.10 320) 100%);
+    background-attachment: fixed;
+  }
 }
 
 /*
