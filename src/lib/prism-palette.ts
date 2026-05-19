@@ -144,7 +144,11 @@ const MODE_BACKGROUNDS: Record<
     ],
   },
   neomorphic: {
-    rotate: false,
+    // Follows the hue slider like the other modes. At the default hue
+    // (263) the rotation is zero, so the locked warm-sand surface is
+    // preserved as the default; dragging the hue rotates the sand toward
+    // the selected hue family.
+    rotate: true,
     stops: [
       { l: 0.91, c: 0.06, h: 85 },
       { l: 0.83, c: 0.07, h: 82 },
