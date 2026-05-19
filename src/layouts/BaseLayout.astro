@@ -59,21 +59,39 @@ const canonicalUrl = Astro.url.href;
     <link rel="canonical" href={canonicalUrl} />
 
     {/*
-      Prism theme bootstrap: runs synchronously before any paint to apply
-      the user's stored theme (or default to dark) on the <html> element.
-      Lives inline in <head> with is:inline so Astro does not defer it.
-      Keep this script minimal and side-effect-free beyond setting the
-      data-theme attribute, since it blocks the first paint.
+      Prism pre-paint bootstrap: runs synchronously before any paint to
+      apply the visitor's stored theme + generated palette overrides on
+      the <html> element, preventing FOUC for returning visitors. Lives
+      inline with is:inline so Astro does not defer it. Keep this script
+      minimal; the full runtime (schedule eval, palette regeneration,
+      user-pick stickiness) runs in the bundled module script below and
+      reconciles any drift post-paint.
+
+      Fallback default is Hybrid per Phase 2 spec.
     */}
     <script is:inline>
       (function () {
         try {
           var stored = localStorage.getItem("prism-theme");
           var valid = ["dark", "light", "hybrid", "system", "neomorphic"];
-          var theme = stored && valid.indexOf(stored) !== -1 ? stored : "dark";
+          var theme = stored && valid.indexOf(stored) !== -1 ? stored : "hybrid";
           document.documentElement.setAttribute("data-theme", theme);
+
+          // Apply any cached palette overrides immediately so returning
+          // visitors do not flash through the static theme tokens. The
+          // full runtime will refresh these post-paint if the schedule
+          // dictates otherwise.
+          var paletteJson = localStorage.getItem("prism-palette");
+          if (paletteJson) {
+            var overrides = JSON.parse(paletteJson);
+            for (var key in overrides) {
+              if (key.indexOf("--") === 0) {
+                document.documentElement.style.setProperty(key, overrides[key]);
+              }
+            }
+          }
         } catch (e) {
-          document.documentElement.setAttribute("data-theme", "dark");
+          document.documentElement.setAttribute("data-theme", "hybrid");
         }
       })();
     </script>

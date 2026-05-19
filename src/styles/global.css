@@ -53,6 +53,32 @@ a:hover {
   color: var(--color-fg-primary);
 }
 
+/*
+ * .oz alternate accent — the Emerald City CTA class.
+ *
+ * Use on CTAs that need to break out from the active accent palette,
+ * giving them a distinct emerald signature regardless of theme. The
+ * runtime in src/lib/prism-runtime.ts sets `--oz-color` based on the
+ * active base hue: emerald by default, but ruby red when the active
+ * hue lands in the green band (~100-180°) so the alt accent still
+ * reads as distinct on a green-keyed palette (Dorothy's ruby slippers
+ * when the world is the Emerald City).
+ *
+ * Applied to text, borders, and glows. Doesn't change layout.
+ */
+.oz {
+  color: var(--oz-color, var(--accent-emerald));
+}
+.oz-bg {
+  background-color: var(--oz-color, var(--accent-emerald));
+}
+.oz-border {
+  border-color: var(--oz-color, var(--accent-emerald));
+}
+.oz-glow {
+  box-shadow: 0 0 24px var(--oz-color, var(--accent-emerald));
+}
+
 /* Utility for visually-hidden content (still accessible to screen readers). */
 .sr-only {
   position: absolute;
