@@ -41,12 +41,30 @@ export interface MonoSwatch {
   note?: string;
 }
 
+/**
+ * Explicit role mapping for a palette (option B). Each role carries a
+ * dark-mode and light-mode value so the same palette flips arrangement by
+ * theme mode (e.g. Patriotic: navy bg + white text on dark, white bg +
+ * navy text on light). Accents are mode-independent (already chosen to
+ * read on both). Values are OKLCH strings; they may be the palette's own
+ * colors or tuned variants for contrast. When present, the preset
+ * generator uses these instead of auto-deriving roles by lightness.
+ */
+export interface PaletteRoles {
+  bg: { dark: string; light: string };
+  surface: { dark: string; light: string };
+  text: { dark: string; light: string };
+  accent: string;
+  accent2: string;
+}
+
 export interface PaletteSwatch {
   id: string;
   name: string;
   vibe: string[];
   type: "palette";
   groups: { label?: string; colors: { name: string; value: string }[] }[];
+  roles?: PaletteRoles;
   note?: string;
 }
 
@@ -65,7 +83,14 @@ export const swatches: Swatch[] = [
       { name: "Emerald",    value: "oklch(0.55 0.13 153)" },
       { name: "Ruby",       value: "oklch(0.42 0.20 15)" },
     ]}],
-    vibe: ["professional", "brand", "regal"] },
+    vibe: ["professional", "brand", "regal"],
+    roles: {
+      bg:      { dark: "oklch(0.25 0.12 250)", light: "oklch(0.98 0.002 240)" },
+      surface: { dark: "oklch(0.35 0.14 255)", light: "oklch(0.93 0.05 255)" },
+      text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.25 0.12 250)" },
+      accent:  "oklch(0.72 0.16 85)",
+      accent2: "oklch(0.50 0.18 263)",
+    } },
   { id: "navy-blue", name: "Navy Blue", type: "mono",
     oklch: { l: 0.25, c: 0.12, h: 250 }, vibe: ["professional", "deep"] },
   { id: "charcoal-noir", name: "Charcoal Noir", type: "palette",
@@ -76,7 +101,14 @@ export const swatches: Swatch[] = [
       { name: "Ash",      value: "oklch(0.62 0.010 270)" },
       { name: "Crimson",  value: "oklch(0.45 0.180 25)" },
     ]}],
-    vibe: ["noir", "professional", "moody"] },
+    vibe: ["noir", "professional", "moody"],
+    roles: {
+      bg:      { dark: "oklch(0.12 0.005 270)", light: "oklch(0.90 0.004 270)" },
+      surface: { dark: "oklch(0.28 0.020 270)", light: "oklch(0.80 0.006 270)" },
+      text:    { dark: "oklch(0.85 0.006 270)", light: "oklch(0.18 0.010 270)" },
+      accent:  "oklch(0.50 0.190 25)",
+      accent2: "oklch(0.45 0.015 270)",
+    } },
   { id: "plum-noir", name: "Plum Noir", type: "mono",
     oklch: { l: 0.38, c: 0.16, h: 320 }, vibe: ["neon noir", "moody"] },
   { id: "cyber-cyan", name: "Cyber Cyan", type: "mono",
@@ -119,7 +151,14 @@ export const swatches: Swatch[] = [
       { name: "White",       value: "oklch(0.98 0.002 240)" },
       { name: "Burgundy",    value: "oklch(0.35 0.12 15)" },
     ]}],
-    vibe: ["seasonal", "halloween"] },
+    vibe: ["seasonal", "halloween"],
+    roles: {
+      bg:      { dark: "oklch(0.15 0.010 290)", light: "oklch(0.93 0.030 60)" },
+      surface: { dark: "oklch(0.28 0.140 295)", light: "oklch(0.86 0.060 55)" },
+      text:    { dark: "oklch(0.97 0.010 60)", light: "oklch(0.18 0.020 290)" },
+      accent:  "oklch(0.62 0.140 52)",
+      accent2: "oklch(0.34 0.160 295)",
+    } },
 
   { id: "christmas", name: "Christmas", type: "palette",
     groups: [{ colors: [
@@ -128,7 +167,14 @@ export const swatches: Swatch[] = [
       { name: "White", value: "oklch(0.98 0.002 240)" },
       { name: "Gold",  value: "oklch(0.75 0.16 85)" },
     ]}],
-    vibe: ["seasonal", "christmas"] },
+    vibe: ["seasonal", "christmas"],
+    roles: {
+      bg:      { dark: "oklch(0.28 0.130 145)", light: "oklch(0.97 0.010 145)" },
+      surface: { dark: "oklch(0.36 0.140 145)", light: "oklch(0.92 0.050 145)" },
+      text:    { dark: "oklch(0.97 0.010 145)", light: "oklch(0.26 0.130 145)" },
+      accent:  "oklch(0.53 0.210 25)",
+      accent2: "oklch(0.74 0.150 85)",
+    } },
 
   { id: "patriotic", name: "Patriotic", type: "palette",
     groups: [{ colors: [
@@ -137,7 +183,14 @@ export const swatches: Swatch[] = [
       { name: "Blue",  value: "oklch(0.30 0.18 250)" },
       { name: "Navy",  value: "oklch(0.22 0.10 250)" },
     ]}],
-    vibe: ["patriotic", "july 4th"] },
+    vibe: ["patriotic", "july 4th"],
+    roles: {
+      bg:      { dark: "oklch(0.22 0.100 250)", light: "oklch(0.98 0.002 240)" },
+      surface: { dark: "oklch(0.30 0.150 250)", light: "oklch(0.93 0.050 250)" },
+      text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.22 0.100 250)" },
+      accent:  "oklch(0.50 0.220 25)",
+      accent2: "oklch(0.34 0.160 250)",
+    } },
 
   { id: "sage-pastel", name: "Sage Pastel", type: "mono",
     oklch: { l: 0.78, c: 0.06, h: 150 }, vibe: ["spring", "subtle"] },
@@ -151,7 +204,14 @@ export const swatches: Swatch[] = [
       { name: "Yellow Pastel", value: "oklch(0.92 0.08 95)" },
       { name: "Black",         value: "oklch(0.15 0.010 270)" },
     ]}],
-    vibe: ["spring", "pastel", "lavender", "floral"] },
+    vibe: ["spring", "pastel", "lavender", "floral"],
+    roles: {
+      bg:      { dark: "oklch(0.26 0.060 295)", light: "oklch(0.93 0.040 295)" },
+      surface: { dark: "oklch(0.33 0.070 295)", light: "oklch(0.88 0.060 295)" },
+      text:    { dark: "oklch(0.92 0.040 295)", light: "oklch(0.28 0.060 295)" },
+      accent:  "oklch(0.62 0.130 5)",
+      accent2: "oklch(0.66 0.110 145)",
+    } },
 
   { id: "desert-adobe", name: "Desert Adobe", type: "mono",
     oklch: { l: 0.62, c: 0.08, h: 55 }, vibe: ["earth", "warm"] },

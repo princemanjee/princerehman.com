@@ -590,10 +590,71 @@ function parseOklch(value: string): ParsedOklch | null {
  * legible). The whole token set including text is emitted so the palette
  * fully defines the page; the runtime clears stale overrides on switch.
  */
+export interface PresetRoles {
+  bg: { dark: string; light: string };
+  surface: { dark: string; light: string };
+  text: { dark: string; light: string };
+  accent: string;
+  accent2: string;
+}
+
 export function generatePresetPalette(
   colors: string[],
   mode: ThemeMode,
+  roles?: PresetRoles,
 ): GeneratedPalette {
+  const lightSurface = mode === "light" || mode === "neomorphic";
+
+  // Option B: explicit role tags. Each role flips between a dark-mode and
+  // light-mode value; the palette fully and deliberately defines the page.
+  if (roles) {
+    const pick = (r: { dark: string; light: string }) =>
+      lightSurface ? r.light : r.dark;
+    const bgP = parseOklch(pick(roles.bg));
+    const surfP = parseOklch(pick(roles.surface));
+    const textP = parseOklch(pick(roles.text));
+    const accentP = parseOklch(roles.accent);
+    const accent2P = parseOklch(roles.accent2);
+    if (bgP && surfP && textP && accentP && accent2P) {
+      const f = (p: ParsedOklch, a?: number) => formatOklch(p.l, p.c, p.h, a ?? p.a);
+      const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
+      return {
+        "--bg-1": f(bgP),
+        "--bg-2": f(surfP),
+        "--bg-3": f(bgP),
+        "--bg-4": f(surfP),
+        "--bg-overlay-1": f(accentP, 0.08),
+        "--bg-overlay-2": f(accent2P, 0.06),
+        // Panels = the surface color, near-opaque so they contrast clearly
+        // with the background and keep text readable.
+        "--glass-bg": f(surfP, 0.88),
+        "--glass-bg-hover": f(surfP, 0.96),
+        "--glass-border": f(textP, 0.20),
+        "--glass-border-strong": f(textP, 0.34),
+        "--highlight-top": lightSurface ? "oklch(1 0 0 / 0.85)" : "oklch(1 0 0 / 0.5)",
+        "--highlight-top-soft": "oklch(1 0 0 / 0.28)",
+        "--highlight-bottom": lightSurface ? "oklch(0.95 0 0 / 0.3)" : "oklch(1 0 0 / 0.35)",
+        "--highlight-bottom-soft": "oklch(1 0 0 / 0.1)",
+        "--shadow-side": "oklch(0 0 0 / 0.14)",
+        "--neo-surface": f(surfP),
+        "--neo-shadow-light": "oklch(1 0 0 / 0.7)",
+        "--neo-shadow-dark": "oklch(0 0 0 / 0.18)",
+        "--accent-royal": f(accentP),
+        "--accent-royal-bright": sh(accentP, +0.08),
+        "--accent-royal-deep": sh(accentP, -0.10),
+        "--accent-emerald": f(accent2P),
+        "--accent-emerald-bright": sh(accent2P, +0.08),
+        "--accent-emerald-deep": sh(accent2P, -0.10),
+        "--brand-color": f(textP, 0.95),
+        "--brand-glow": f(accentP, 0.4),
+        "--color-fg-primary": f(textP, 0.96),
+        "--color-fg-secondary": f(textP, 0.84),
+        "--color-fg-tertiary": f(textP, 0.68),
+        "--color-fg-muted": f(textP, 0.52),
+      };
+    }
+  }
+
   const parsed = colors
     .map(parseOklch)
     .filter((x): x is ParsedOklch => x !== null);
@@ -605,8 +666,6 @@ export function generatePresetPalette(
   const byL = [...parsed].sort((a, b) => a.l - b.l);
   const byC = [...parsed].sort((a, b) => b.c - a.c);
   const n = byL.length;
-
-  const lightSurface = mode === "light" || mode === "neomorphic";
 
   const bg = lightSurface ? byL[n - 1] : byL[0];
   const surface = lightSurface
