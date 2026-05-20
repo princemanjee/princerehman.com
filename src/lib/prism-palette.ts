@@ -618,11 +618,15 @@ export function generatePresetPalette(
     if (bgP && surfP && textP && accentP && accent2P) {
       const f = (p: ParsedOklch, a?: number) => formatOklch(p.l, p.c, p.h, a ?? p.a);
       const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
+      // Body gradient stops are ALL the bg color (subtle lightness variation
+      // only). The surface color must NOT appear here or it bleeds into the
+      // page background; surface belongs to panels (--glass-bg) exclusively.
+      const bgMul = (m: number) => formatOklch(clamp01(bgP.l * m), bgP.c, bgP.h, bgP.a);
       return {
         "--bg-1": f(bgP),
-        "--bg-2": f(surfP),
+        "--bg-2": bgMul(0.93),
         "--bg-3": f(bgP),
-        "--bg-4": f(surfP),
+        "--bg-4": bgMul(1.06),
         "--bg-overlay-1": f(accentP, 0.08),
         "--bg-overlay-2": f(accent2P, 0.06),
         // Panels = the surface color, near-opaque so they contrast clearly
@@ -686,11 +690,12 @@ export function generatePresetPalette(
   const shift = (p: ParsedOklch, dl: number) =>
     formatOklch(clamp01(p.l + dl), p.c, p.h);
 
+  const bgMul = (m: number) => formatOklch(clamp01(bg.l * m), bg.c, bg.h, bg.a);
   return {
     "--bg-1": fmt(bg),
-    "--bg-2": fmt(surface),
+    "--bg-2": bgMul(0.93),
     "--bg-3": fmt(bg),
-    "--bg-4": fmt(surface),
+    "--bg-4": bgMul(1.06),
     "--bg-overlay-1": fmt(accent, 0.10),
     "--bg-overlay-2": fmt(accent2, 0.08),
     "--glass-bg": fmt(surface, lightSurface ? 0.55 : 0.12),

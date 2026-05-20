@@ -85,11 +85,13 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["professional", "brand", "regal"],
     roles: {
-      bg:      { dark: "oklch(0.25 0.12 250)", light: "oklch(0.98 0.002 240)" },
-      surface: { dark: "oklch(0.35 0.14 255)", light: "oklch(0.93 0.05 255)" },
-      text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.25 0.12 250)" },
-      accent:  "oklch(0.72 0.16 85)",
-      accent2: "oklch(0.50 0.18 263)",
+      // Royal blue IS the background/panels so royal is unmistakably present;
+      // gold is the primary accent, brighter royal the secondary.
+      bg:      { dark: "oklch(0.30 0.16 263)", light: "oklch(0.98 0.002 250)" },
+      surface: { dark: "oklch(0.40 0.17 263)", light: "oklch(0.93 0.06 263)" },
+      text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.30 0.16 263)" },
+      accent:  "oklch(0.74 0.15 85)",
+      accent2: "oklch(0.60 0.17 263)",
     } },
   { id: "navy-blue", name: "Navy Blue", type: "mono",
     oklch: { l: 0.25, c: 0.12, h: 250 }, vibe: ["professional", "deep"] },
@@ -153,11 +155,13 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["seasonal", "halloween"],
     roles: {
-      bg:      { dark: "oklch(0.15 0.010 290)", light: "oklch(0.93 0.030 60)" },
-      surface: { dark: "oklch(0.28 0.140 295)", light: "oklch(0.86 0.060 55)" },
+      // True black background, dark-purple panels, pumpkin accent. Light
+      // mode: pale warm cream bg, black text, pumpkin + purple accents.
+      bg:      { dark: "oklch(0.13 0.008 290)", light: "oklch(0.95 0.020 60)" },
+      surface: { dark: "oklch(0.26 0.130 295)", light: "oklch(0.90 0.050 55)" },
       text:    { dark: "oklch(0.97 0.010 60)", light: "oklch(0.18 0.020 290)" },
-      accent:  "oklch(0.62 0.140 52)",
-      accent2: "oklch(0.34 0.160 295)",
+      accent:  "oklch(0.62 0.150 52)",
+      accent2: "oklch(0.40 0.160 295)",
     } },
 
   { id: "christmas", name: "Christmas", type: "palette",
@@ -185,8 +189,11 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["patriotic", "july 4th"],
     roles: {
+      // American flag: white field, navy text, red accent on light; navy
+      // field, white text, red accent on dark. Panels stay near-white on
+      // light so it doesn't read as a blue (British/Chinese) flag.
       bg:      { dark: "oklch(0.22 0.100 250)", light: "oklch(0.98 0.002 240)" },
-      surface: { dark: "oklch(0.30 0.150 250)", light: "oklch(0.93 0.050 250)" },
+      surface: { dark: "oklch(0.29 0.130 252)", light: "oklch(0.985 0.003 250)" },
       text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.22 0.100 250)" },
       accent:  "oklch(0.50 0.220 25)",
       accent2: "oklch(0.34 0.160 250)",
