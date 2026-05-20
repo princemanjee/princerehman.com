@@ -676,9 +676,13 @@ export function generatePresetPalette(
 export function generatePridePalette(mode: ThemeMode): GeneratedPalette {
   const lightSurface = mode === "light" || mode === "neomorphic";
 
+  // Near-opaque so panels clearly contrast with the rainbow background and
+  // carry the trans-flag hue progression. Dark mode darkens the trans
+  // colors so white text stays readable on the panel; light mode keeps
+  // them pastel for dark text.
   const transPanel = lightSurface
-    ? "linear-gradient(135deg, oklch(0.86 0.05 230 / 0.55), oklch(0.89 0.05 0 / 0.55), oklch(0.99 0.002 240 / 0.6))"
-    : "linear-gradient(135deg, oklch(0.78 0.06 230 / 0.18), oklch(0.83 0.06 0 / 0.18), oklch(0.98 0.002 240 / 0.20))";
+    ? "linear-gradient(135deg, oklch(0.84 0.07 230 / 0.92), oklch(0.88 0.07 0 / 0.92), oklch(0.98 0.01 240 / 0.94))"
+    : "linear-gradient(135deg, oklch(0.34 0.07 230 / 0.90), oklch(0.36 0.07 0 / 0.90), oklch(0.44 0.03 240 / 0.90))";
 
   const brown = lightSurface ? "oklch(0.40 0.07 50)" : "oklch(0.60 0.09 55)";
   const brownDeep = lightSurface ? "oklch(0.32 0.07 50)" : "oklch(0.50 0.09 55)";
