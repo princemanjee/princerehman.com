@@ -18,10 +18,15 @@ body {
 }
 
 body {
-  background:
+  /*
+   * Palette presets set --bg-gradient to a full multi-color gradient that
+   * flows through their assigned background colors; when set it wins. Mono
+   * swatches leave it unset, falling back to the bg-1..4 stops + overlays.
+   */
+  background: var(--bg-gradient,
     radial-gradient(ellipse at 20% 0%, var(--bg-overlay-1) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 100%, var(--bg-overlay-2) 0%, transparent 55%),
-    linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 35%, var(--bg-3) 70%, var(--bg-4) 100%);
+    linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 35%, var(--bg-3) 70%, var(--bg-4) 100%));
   background-attachment: fixed;
   color: var(--color-fg-primary);
   font-family: var(--font-body);
@@ -51,72 +56,6 @@ a:hover {
 ::selection {
   background: var(--accent-royal);
   color: var(--color-fg-primary);
-}
-
-/*
- * Pride palette — special render.
- *
- * When the Pride preset is active the runtime sets data-prism-palette="pride"
- * on <html>. The page background becomes a muted ROYGBIV gradient (lightness
- * held ~0.40-0.60 so white body text stays readable over it), and panels
- * pick up a faint transgender-flag wash (light blue -> pink -> white). The
- * preset palette still supplies a dark base + white text underneath, so if
- * a browser ignores these gradients the page is still legible.
- */
-/* Dark / hybrid: rich, vibrant ROYGBIV. Lightness held <= ~0.58 so white
-   body text stays legible (large headings clear; long body copy mostly
-   sits on panels which carry their own trans-flag wash). */
-:root[data-prism-palette="pride"][data-theme="dark"] body,
-:root[data-prism-palette="pride"][data-theme="hybrid"] body {
-  background:
-    linear-gradient(135deg,
-      oklch(0.50 0.22 25) 0%,
-      oklch(0.55 0.18 55) 17%,
-      oklch(0.56 0.15 95) 33%,
-      oklch(0.50 0.18 142) 50%,
-      oklch(0.48 0.18 247) 67%,
-      oklch(0.46 0.20 290) 83%,
-      oklch(0.48 0.22 320) 100%
-    );
-  background-attachment: fixed;
-}
-
-/* Light / neomorphic: washed pastel ROYGBIV with near-black text. */
-:root[data-prism-palette="pride"][data-theme="light"] body,
-:root[data-prism-palette="pride"][data-theme="neomorphic"] body {
-  background:
-    linear-gradient(135deg,
-      oklch(0.88 0.08 25) 0%,
-      oklch(0.90 0.08 55) 17%,
-      oklch(0.93 0.09 95) 33%,
-      oklch(0.89 0.08 142) 50%,
-      oklch(0.87 0.08 247) 67%,
-      oklch(0.85 0.09 290) 83%,
-      oklch(0.86 0.10 320) 100%
-    );
-  background-attachment: fixed;
-}
-
-/* System mode: follow OS preference for vibrant vs washed. */
-@media (prefers-color-scheme: dark) {
-  :root[data-prism-palette="pride"][data-theme="system"] body {
-    background:
-      linear-gradient(135deg,
-        oklch(0.50 0.22 25) 0%, oklch(0.55 0.18 55) 17%, oklch(0.56 0.15 95) 33%,
-        oklch(0.50 0.18 142) 50%, oklch(0.48 0.18 247) 67%, oklch(0.46 0.20 290) 83%,
-        oklch(0.48 0.22 320) 100%);
-    background-attachment: fixed;
-  }
-}
-@media (prefers-color-scheme: light) {
-  :root[data-prism-palette="pride"][data-theme="system"] body {
-    background:
-      linear-gradient(135deg,
-        oklch(0.88 0.08 25) 0%, oklch(0.90 0.08 55) 17%, oklch(0.93 0.09 95) 33%,
-        oklch(0.89 0.08 142) 50%, oklch(0.87 0.08 247) 67%, oklch(0.85 0.09 290) 83%,
-        oklch(0.86 0.10 320) 100%);
-    background-attachment: fixed;
-  }
 }
 
 /*

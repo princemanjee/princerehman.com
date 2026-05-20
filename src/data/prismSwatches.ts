@@ -51,11 +51,10 @@ export interface MonoSwatch {
  * generator uses these instead of auto-deriving roles by lightness.
  */
 export interface PaletteRoles {
-  bg: { dark: string; light: string };
-  surface: { dark: string; light: string };
+  bgGradient: string[]; // colors flowing through the page background gradient
+  panel: string[];      // colors for panel surfaces (1 = solid, 2+ = gradient)
   text: { dark: string; light: string };
-  accent: string;
-  accent2: string;
+  accents: string[];    // [0] primary accent, [1] secondary, ...
 }
 
 export interface PaletteSwatch {
@@ -85,13 +84,12 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["professional", "brand", "regal"],
     roles: {
-      // Royal blue IS the background/panels so royal is unmistakably present;
-      // gold is the primary accent, brighter royal the secondary.
-      bg:      { dark: "oklch(0.30 0.16 263)", light: "oklch(0.98 0.002 250)" },
-      surface: { dark: "oklch(0.40 0.17 263)", light: "oklch(0.93 0.06 263)" },
-      text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.30 0.16 263)" },
-      accent:  "oklch(0.74 0.15 85)",
-      accent2: "oklch(0.60 0.17 263)",
+      // Navy -> royal blue background gradient, royal panels, gold + ruby
+      // accents. Uses navy, royal, gold, ruby, white(text).
+      bgGradient: ["oklch(0.25 0.12 250)", "oklch(0.42 0.17 263)"],
+      panel: ["oklch(0.40 0.17 263)"],
+      text: { dark: "oklch(0.98 0.002 240)", light: "oklch(0.25 0.12 250)" },
+      accents: ["oklch(0.74 0.15 85)", "oklch(0.42 0.20 15)"],
     } },
   { id: "navy-blue", name: "Navy Blue", type: "mono",
     oklch: { l: 0.25, c: 0.12, h: 250 }, vibe: ["professional", "deep"] },
@@ -105,11 +103,12 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["noir", "professional", "moody"],
     roles: {
-      bg:      { dark: "oklch(0.12 0.005 270)", light: "oklch(0.90 0.004 270)" },
-      surface: { dark: "oklch(0.28 0.020 270)", light: "oklch(0.80 0.006 270)" },
-      text:    { dark: "oklch(0.85 0.006 270)", light: "oklch(0.18 0.010 270)" },
-      accent:  "oklch(0.50 0.190 25)",
-      accent2: "oklch(0.45 0.015 270)",
+      // Jet -> charcoal greyscale gradient, smoke-grey panels, crimson +
+      // ash accents. Uses all 5: jet, charcoal, smoke, ash, crimson.
+      bgGradient: ["oklch(0.12 0.005 270)", "oklch(0.26 0.018 270)"],
+      panel: ["oklch(0.45 0.015 270)"],
+      text: { dark: "oklch(0.86 0.006 270)", light: "oklch(0.16 0.010 270)" },
+      accents: ["oklch(0.50 0.190 25)", "oklch(0.62 0.010 270)"],
     } },
   { id: "plum-noir", name: "Plum Noir", type: "mono",
     oklch: { l: 0.38, c: 0.16, h: 320 }, vibe: ["neon noir", "moody"] },
@@ -142,7 +141,23 @@ export const swatches: Swatch[] = [
       ]},
     ],
     vibe: ["rainbow", "LGBTQ+", "trans"],
-    note: "Preset, bypasses mixing model" },
+    roles: {
+      // Rainbow flows through the background gradient; the transgender-flag
+      // colors carry the panels; dark brown (inclusive Progress flag) is the
+      // accent / link color. Black informs text. Uses every color.
+      bgGradient: [
+        "oklch(0.62 0.22 25)",
+        "oklch(0.72 0.18 55)",
+        "oklch(0.85 0.18 95)",
+        "oklch(0.65 0.18 142)",
+        "oklch(0.55 0.18 247)",
+        "oklch(0.50 0.20 305)",
+      ],
+      panel: ["oklch(0.78 0.06 230)", "oklch(0.83 0.06 0)", "oklch(0.98 0.002 240)"],
+      text: { dark: "oklch(0.98 0.002 240)", light: "oklch(0.18 0.010 60)" },
+      accents: ["oklch(0.50 0.090 55)", "oklch(0.40 0.070 50)"],
+    },
+    note: "Rainbow bg + trans-flag panels + brown accents (inclusive flag)" },
 
   { id: "halloween", name: "Halloween", type: "palette",
     groups: [{ colors: [
@@ -155,13 +170,13 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["seasonal", "halloween"],
     roles: {
-      // True black background, dark-purple panels, pumpkin accent. Light
-      // mode: pale warm cream bg, black text, pumpkin + purple accents.
-      bg:      { dark: "oklch(0.13 0.008 290)", light: "oklch(0.95 0.020 60)" },
-      surface: { dark: "oklch(0.26 0.130 295)", light: "oklch(0.90 0.050 55)" },
-      text:    { dark: "oklch(0.97 0.010 60)", light: "oklch(0.18 0.020 290)" },
-      accent:  "oklch(0.62 0.150 52)",
-      accent2: "oklch(0.40 0.160 295)",
+      // Black -> dark-purple background gradient, brown panels, pumpkin +
+      // burgundy accents. Uses all 6: black, purple, brown, pumpkin,
+      // burgundy, white(text).
+      bgGradient: ["oklch(0.13 0.008 290)", "oklch(0.30 0.180 295)"],
+      panel: ["oklch(0.35 0.070 55)"],
+      text: { dark: "oklch(0.97 0.010 60)", light: "oklch(0.18 0.020 290)" },
+      accents: ["oklch(0.60 0.150 52)", "oklch(0.35 0.120 15)"],
     } },
 
   { id: "christmas", name: "Christmas", type: "palette",
@@ -173,11 +188,13 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["seasonal", "christmas"],
     roles: {
-      bg:      { dark: "oklch(0.28 0.130 145)", light: "oklch(0.97 0.010 145)" },
-      surface: { dark: "oklch(0.36 0.140 145)", light: "oklch(0.92 0.050 145)" },
-      text:    { dark: "oklch(0.97 0.010 145)", light: "oklch(0.26 0.130 145)" },
-      accent:  "oklch(0.53 0.210 25)",
-      accent2: "oklch(0.74 0.150 85)",
+      // Holly-green background gradient, red panels, gold + red accents.
+      // Green bg + red panels + gold = Christmas. Uses holly, red, gold,
+      // white(text).
+      bgGradient: ["oklch(0.30 0.140 145)", "oklch(0.38 0.150 148)"],
+      panel: ["oklch(0.50 0.200 25)"],
+      text: { dark: "oklch(0.98 0.004 145)", light: "oklch(0.26 0.130 145)" },
+      accents: ["oklch(0.74 0.150 85)", "oklch(0.55 0.220 25)"],
     } },
 
   { id: "patriotic", name: "Patriotic", type: "palette",
@@ -189,14 +206,13 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["patriotic", "july 4th"],
     roles: {
-      // American flag: white field, navy text, red accent on light; navy
-      // field, white text, red accent on dark. Panels stay near-white on
-      // light so it doesn't read as a blue (British/Chinese) flag.
-      bg:      { dark: "oklch(0.22 0.100 250)", light: "oklch(0.98 0.002 240)" },
-      surface: { dark: "oklch(0.29 0.130 252)", light: "oklch(0.985 0.003 250)" },
-      text:    { dark: "oklch(0.98 0.002 240)", light: "oklch(0.22 0.100 250)" },
-      accent:  "oklch(0.50 0.220 25)",
-      accent2: "oklch(0.34 0.160 250)",
+      // Navy -> blue background gradient, white panels, red + blue accents.
+      // American flag: white field, navy/white text, red accent. Uses navy,
+      // blue, white, red.
+      bgGradient: ["oklch(0.22 0.100 250)", "oklch(0.32 0.150 252)"],
+      panel: ["oklch(0.98 0.002 240)"],
+      text: { dark: "oklch(0.98 0.002 240)", light: "oklch(0.22 0.100 250)" },
+      accents: ["oklch(0.50 0.220 25)", "oklch(0.32 0.160 250)"],
     } },
 
   { id: "sage-pastel", name: "Sage Pastel", type: "mono",
@@ -213,11 +229,18 @@ export const swatches: Swatch[] = [
     ]}],
     vibe: ["spring", "pastel", "lavender", "floral"],
     roles: {
-      bg:      { dark: "oklch(0.26 0.060 295)", light: "oklch(0.93 0.040 295)" },
-      surface: { dark: "oklch(0.33 0.070 295)", light: "oklch(0.88 0.060 295)" },
-      text:    { dark: "oklch(0.92 0.040 295)", light: "oklch(0.28 0.060 295)" },
-      accent:  "oklch(0.62 0.130 5)",
-      accent2: "oklch(0.66 0.110 145)",
+      // Lavender -> pink -> green -> yellow pastel spring gradient, pale
+      // lavender panels, rose + green accents. Uses lavender, pink, green,
+      // yellow, pale lavender, deep-purple(text).
+      bgGradient: [
+        "oklch(0.82 0.08 295)",
+        "oklch(0.86 0.07 5)",
+        "oklch(0.85 0.08 145)",
+        "oklch(0.92 0.08 95)",
+      ],
+      panel: ["oklch(0.88 0.06 295)"],
+      text: { dark: "oklch(0.92 0.040 295)", light: "oklch(0.28 0.060 295)" },
+      accents: ["oklch(0.62 0.130 5)", "oklch(0.60 0.110 145)"],
     } },
 
   { id: "desert-adobe", name: "Desert Adobe", type: "mono",

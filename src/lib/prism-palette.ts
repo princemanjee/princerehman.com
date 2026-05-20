@@ -67,6 +67,11 @@ export interface PaletteRequest {
  * src/styles/tokens.css that the runtime will overwrite for the active theme.
  */
 export interface GeneratedPalette {
+  // Optional full-page gradient string (palette presets set this to a
+  // multi-stop gradient flowing through all the palette colors). When set,
+  // global.css body uses it instead of the bg-1..4 stops. Mono swatches
+  // leave it undefined.
+  "--bg-gradient"?: string;
   "--bg-1": string;
   "--bg-2": string;
   "--bg-3": string;
@@ -590,12 +595,60 @@ function parseOklch(value: string): ParsedOklch | null {
  * legible). The whole token set including text is emitted so the palette
  * fully defines the page; the runtime clears stale overrides on switch.
  */
+/**
+ * A palette distributes its colors across the theme's surfaces. Like the
+ * Pride flag: some colors paint the background gradient, others the panels,
+ * others the text and accents. The bgGradient / panel arrays hold the
+ * colors assigned to each surface; the theme as a whole uses every color.
+ */
 export interface PresetRoles {
-  bg: { dark: string; light: string };
-  surface: { dark: string; light: string };
+  bgGradient: string[]; // colors flowing through the page background gradient
+  panel: string[];      // colors for panel surfaces (1 = solid, 2+ = gradient)
   text: { dark: string; light: string };
-  accent: string;
-  accent2: string;
+  accents: string[];    // accent colors: [0] primary, [1] secondary, ...
+}
+
+type ModeKind = "dark" | "light" | "hybrid" | "neomorphic";
+
+function modeKind(mode: ThemeMode): ModeKind {
+  return mode === "system" ? "dark" : mode;
+}
+
+/**
+ * Transform a palette color for the active mode. Palette colors are authored
+ * at their rich/dark form (used as-is on dark). The other three modes are
+ * genuinely distinct: hybrid = mid-tone dusk, light = pastel, neomorphic =
+ * muted/sandy. Keeps hue; adjusts lightness + chroma.
+ */
+function transformBg(p: ParsedOklch, kind: ModeKind): ParsedOklch {
+  switch (kind) {
+    case "dark":       return p;
+    case "hybrid":     return { ...p, l: clamp01(0.40 + p.l * 0.26), c: p.c * 0.92 };
+    case "light":      return { ...p, l: clamp01(0.82 + p.l * 0.14), c: p.c * 0.5 };
+    case "neomorphic": return { ...p, l: clamp01(0.80 + p.l * 0.12), c: p.c * 0.28 };
+  }
+}
+
+/** Panel transform: on dark/hybrid panels stay dark enough for white text;
+ *  on light/neomorphic they go light for dark text. Distinct from the bg
+ *  via the (different) palette colors assigned to panels. */
+function transformPanel(p: ParsedOklch, kind: ModeKind): ParsedOklch {
+  switch (kind) {
+    case "dark":       return { ...p, l: clamp01(0.10 + p.l * 0.30), c: p.c * 0.85 };
+    case "hybrid":     return { ...p, l: clamp01(0.46 + p.l * 0.16), c: p.c * 0.8 };
+    case "light":      return { ...p, l: clamp01(0.90 + p.l * 0.06), c: p.c * 0.45 };
+    case "neomorphic": return { ...p, l: clamp01(0.88 + p.l * 0.06), c: p.c * 0.30 };
+  }
+}
+
+/** Accent transform: keep accents vivid + readable against the surface. */
+function transformAccent(p: ParsedOklch, kind: ModeKind): ParsedOklch {
+  switch (kind) {
+    case "dark":       return { ...p, l: clamp01(Math.max(p.l, 0.55)) };
+    case "hybrid":     return { ...p, l: clamp01(Math.max(p.l, 0.60)) };
+    case "light":      return { ...p, l: clamp01(Math.min(p.l, 0.52)) };
+    case "neomorphic": return { ...p, l: clamp01(Math.min(p.l, 0.50)) };
+  }
 }
 
 export function generatePresetPalette(
@@ -603,190 +656,92 @@ export function generatePresetPalette(
   mode: ThemeMode,
   roles?: PresetRoles,
 ): GeneratedPalette {
-  const lightSurface = mode === "light" || mode === "neomorphic";
+  const kind = modeKind(mode);
+  const textDark = kind === "light" || kind === "neomorphic";
 
-  // Option B: explicit role tags. Each role flips between a dark-mode and
-  // light-mode value; the palette fully and deliberately defines the page.
-  if (roles) {
-    const pick = (r: { dark: string; light: string }) =>
-      lightSurface ? r.light : r.dark;
-    const bgP = parseOklch(pick(roles.bg));
-    const surfP = parseOklch(pick(roles.surface));
-    const textP = parseOklch(pick(roles.text));
-    const accentP = parseOklch(roles.accent);
-    const accent2P = parseOklch(roles.accent2);
-    if (bgP && surfP && textP && accentP && accent2P) {
-      const f = (p: ParsedOklch, a?: number) => formatOklch(p.l, p.c, p.h, a ?? p.a);
-      const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
-      // Body gradient stops are ALL the bg color (subtle lightness variation
-      // only). The surface color must NOT appear here or it bleeds into the
-      // page background; surface belongs to panels (--glass-bg) exclusively.
-      const bgMul = (m: number) => formatOklch(clamp01(bgP.l * m), bgP.c, bgP.h, bgP.a);
-      return {
-        "--bg-1": f(bgP),
-        "--bg-2": bgMul(0.93),
-        "--bg-3": f(bgP),
-        "--bg-4": bgMul(1.06),
-        "--bg-overlay-1": f(accentP, 0.08),
-        "--bg-overlay-2": f(accent2P, 0.06),
-        // Panels = the surface color, near-opaque so they contrast clearly
-        // with the background and keep text readable.
-        "--glass-bg": f(surfP, 0.88),
-        "--glass-bg-hover": f(surfP, 0.96),
-        "--glass-border": f(textP, 0.20),
-        "--glass-border-strong": f(textP, 0.34),
-        "--highlight-top": lightSurface ? "oklch(1 0 0 / 0.85)" : "oklch(1 0 0 / 0.5)",
-        "--highlight-top-soft": "oklch(1 0 0 / 0.28)",
-        "--highlight-bottom": lightSurface ? "oklch(0.95 0 0 / 0.3)" : "oklch(1 0 0 / 0.35)",
-        "--highlight-bottom-soft": "oklch(1 0 0 / 0.1)",
-        "--shadow-side": "oklch(0 0 0 / 0.14)",
-        "--neo-surface": f(surfP),
-        "--neo-shadow-light": "oklch(1 0 0 / 0.7)",
-        "--neo-shadow-dark": "oklch(0 0 0 / 0.18)",
-        "--accent-royal": f(accentP),
-        "--accent-royal-bright": sh(accentP, +0.08),
-        "--accent-royal-deep": sh(accentP, -0.10),
-        "--accent-emerald": f(accent2P),
-        "--accent-emerald-bright": sh(accent2P, +0.08),
-        "--accent-emerald-deep": sh(accent2P, -0.10),
-        "--brand-color": f(textP, 0.95),
-        "--brand-glow": f(accentP, 0.4),
-        "--color-fg-primary": f(textP, 0.96),
-        "--color-fg-secondary": f(textP, 0.84),
-        "--color-fg-tertiary": f(textP, 0.68),
-        "--color-fg-muted": f(textP, 0.52),
-      };
-    }
-  }
-
-  const parsed = colors
+  // Resolve role colors, falling back to all palette colors if no roles.
+  const allColors = colors
     .map(parseOklch)
     .filter((x): x is ParsedOklch => x !== null);
-
-  if (parsed.length === 0) {
-    return generatePalette({ mode, model: "analogous", hue: 263, contrast: "AA" });
-  }
-
-  const byL = [...parsed].sort((a, b) => a.l - b.l);
-  const byC = [...parsed].sort((a, b) => b.c - a.c);
-  const n = byL.length;
-
-  const bg = lightSurface ? byL[n - 1] : byL[0];
-  const surface = lightSurface
-    ? byL[Math.max(0, n - 2)]
-    : byL[Math.min(1, n - 1)];
-  const text = lightSurface ? byL[0] : byL[n - 1];
-
-  let accent = byC[0];
-  let accent2 = byC[Math.min(1, byC.length - 1)];
-  // On a light surface a very light accent (e.g. yellow) won't read; cap L.
-  if (lightSurface) {
-    if (accent.l > 0.6) accent = { ...accent, l: 0.55 };
-    if (accent2.l > 0.6) accent2 = { ...accent2, l: 0.55 };
-  }
-
-  const fmt = (p: ParsedOklch, a?: number) =>
-    formatOklch(p.l, p.c, p.h, a ?? p.a);
-  const shift = (p: ParsedOklch, dl: number) =>
-    formatOklch(clamp01(p.l + dl), p.c, p.h);
-
-  const bgMul = (m: number) => formatOklch(clamp01(bg.l * m), bg.c, bg.h, bg.a);
-  return {
-    "--bg-1": fmt(bg),
-    "--bg-2": bgMul(0.93),
-    "--bg-3": fmt(bg),
-    "--bg-4": bgMul(1.06),
-    "--bg-overlay-1": fmt(accent, 0.10),
-    "--bg-overlay-2": fmt(accent2, 0.08),
-    "--glass-bg": fmt(surface, lightSurface ? 0.55 : 0.12),
-    "--glass-bg-hover": fmt(surface, lightSurface ? 0.72 : 0.20),
-    "--glass-border": fmt(text, 0.18),
-    "--glass-border-strong": fmt(text, 0.32),
-    "--highlight-top": lightSurface ? "oklch(1 0 0 / 0.9)" : "oklch(1 0 0 / 0.6)",
-    "--highlight-top-soft": "oklch(1 0 0 / 0.3)",
-    "--highlight-bottom": lightSurface ? "oklch(0.95 0 0 / 0.3)" : "oklch(1 0 0 / 0.4)",
-    "--highlight-bottom-soft": "oklch(1 0 0 / 0.12)",
-    "--shadow-side": "oklch(0 0 0 / 0.12)",
-    "--neo-surface": fmt(surface),
-    "--neo-shadow-light": "oklch(1 0 0 / 0.7)",
-    "--neo-shadow-dark": "oklch(0 0 0 / 0.18)",
-    "--accent-royal": fmt(accent),
-    "--accent-royal-bright": shift(accent, +0.08),
-    "--accent-royal-deep": shift(accent, -0.10),
-    "--accent-emerald": fmt(accent2),
-    "--accent-emerald-bright": shift(accent2, +0.08),
-    "--accent-emerald-deep": shift(accent2, -0.10),
-    "--brand-color": fmt(text, 0.95),
-    "--brand-glow": fmt(accent, 0.4),
-    "--color-fg-primary": fmt(text, 0.96),
-    "--color-fg-secondary": fmt(text, 0.84),
-    "--color-fg-tertiary": fmt(text, 0.68),
-    "--color-fg-muted": fmt(text, 0.52),
+  const r: PresetRoles = roles ?? {
+    bgGradient: colors,
+    panel: colors.slice(0, 2),
+    text: { dark: "oklch(0.98 0.002 240)", light: "oklch(0.18 0.01 270)" },
+    accents: [...allColors].sort((a, b) => b.c - a.c).slice(0, 2).map((p) => formatOklch(p.l, p.c, p.h)),
   };
-}
 
-/**
- * Pride preset — its own handler because it renders as a gradient, not flat
- * tokens. The ROYGBIV body background is painted by global.css (mode-aware:
- * rich+vibrant on dark, washed pastel on light). This function supplies the
- * surrounding tokens:
- *   - text: white on dark, near-black on light
- *   - links / accents: dark brown (from the inclusive Progress flag's brown
- *     stripe)
- *   - panel surfaces: a transgender-flag wash (light blue -> pink -> white)
- *     set on --glass-bg so panels actually carry the trans colors
- * Black + brown + trans colors of the inclusive flag are all represented.
- */
-export function generatePridePalette(mode: ThemeMode): GeneratedPalette {
-  const lightSurface = mode === "light" || mode === "neomorphic";
+  const parse = (s: string) => parseOklch(s) ?? { l: 0.5, c: 0.1, h: 263, a: 1 };
 
-  // Near-opaque so panels clearly contrast with the rainbow background and
-  // carry the trans-flag hue progression. Dark mode darkens the trans
-  // colors so white text stays readable on the panel; light mode keeps
-  // them pastel for dark text.
-  const transPanel = lightSurface
-    ? "linear-gradient(135deg, oklch(0.84 0.07 230 / 0.92), oklch(0.88 0.07 0 / 0.92), oklch(0.98 0.01 240 / 0.94))"
-    : "linear-gradient(135deg, oklch(0.34 0.07 230 / 0.90), oklch(0.36 0.07 0 / 0.90), oklch(0.44 0.03 240 / 0.90))";
+  // Background gradient: assigned colors, transformed for the mode.
+  const bgStops = r.bgGradient.map((c) => {
+    const t = transformBg(parse(c), kind);
+    return formatOklch(t.l, t.c, t.h);
+  });
+  const bgStopsFull = bgStops.length >= 2 ? bgStops : [bgStops[0], bgStops[0]];
+  const bgGradient = `linear-gradient(135deg, ${bgStopsFull.join(", ")})`;
 
-  const brown = lightSurface ? "oklch(0.40 0.07 50)" : "oklch(0.60 0.09 55)";
-  const brownDeep = lightSurface ? "oklch(0.32 0.07 50)" : "oklch(0.50 0.09 55)";
-  const textBase = lightSurface ? "oklch(0.20 0.01 60)" : "oklch(0.98 0.002 240)";
-  const ta = (a: number) =>
-    lightSurface ? `oklch(0.20 0.01 60 / ${a})` : `oklch(0.98 0.002 240 / ${a})`;
-  // Fallback flat base shown if the CSS gradient is unsupported.
-  const bgBase = lightSurface ? "oklch(0.95 0.01 250)" : "oklch(0.20 0.03 285)";
+  // Panels: assigned colors, transformed. Near-opaque so they contrast and
+  // keep text readable. One color = solid, multiple = gradient.
+  const isNeo = kind === "neomorphic";
+  const panelAlpha = isNeo ? 1 : 0.9;
+  const panelStops = r.panel.map((c) => {
+    const t = transformPanel(parse(c), kind);
+    return formatOklch(t.l, t.c, t.h, panelAlpha);
+  });
+  const panelBg = panelStops.length >= 2
+    ? `linear-gradient(135deg, ${panelStops.join(", ")})`
+    : panelStops[0];
+  const panelHoverStops = r.panel.map((c) => {
+    const t = transformPanel(parse(c), kind);
+    return formatOklch(clamp01(t.l + (textDark ? 0.03 : -0.04)), t.c, t.h, panelAlpha);
+  });
+  const panelHover = panelHoverStops.length >= 2
+    ? `linear-gradient(135deg, ${panelHoverStops.join(", ")})`
+    : panelHoverStops[0];
+
+  // Text.
+  const textStr = textDark ? r.text.light : r.text.dark;
+  const textP = parse(textStr);
+  const ta = (a: number) => formatOklch(textP.l, textP.c, textP.h, a);
+
+  // Accents.
+  const aList = r.accents.length > 0 ? r.accents : [formatOklch(0.6, 0.18, 263)];
+  const aP = transformAccent(parse(aList[0]), kind);
+  const a2P = transformAccent(parse(aList[Math.min(1, aList.length - 1)]), kind);
+  const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
 
   return {
-    "--bg-1": bgBase,
-    "--bg-2": bgBase,
-    "--bg-3": bgBase,
-    "--bg-4": bgBase,
+    "--bg-gradient": bgGradient,
+    "--bg-1": bgStopsFull[0],
+    "--bg-2": bgStopsFull[Math.min(1, bgStopsFull.length - 1)],
+    "--bg-3": bgStopsFull[Math.floor(bgStopsFull.length / 2)],
+    "--bg-4": bgStopsFull[bgStopsFull.length - 1],
     "--bg-overlay-1": "transparent",
     "--bg-overlay-2": "transparent",
-    "--glass-bg": transPanel,
-    "--glass-bg-hover": transPanel,
-    "--glass-border": ta(0.22),
+    "--glass-bg": panelBg,
+    "--glass-bg-hover": panelHover,
+    "--glass-border": ta(0.20),
     "--glass-border-strong": ta(0.34),
-    "--highlight-top": lightSurface ? "oklch(1 0 0 / 0.9)" : "oklch(1 0 0 / 0.5)",
-    "--highlight-top-soft": "oklch(1 0 0 / 0.3)",
-    "--highlight-bottom": "oklch(1 0 0 / 0.3)",
+    "--highlight-top": textDark ? "oklch(1 0 0 / 0.85)" : "oklch(1 0 0 / 0.5)",
+    "--highlight-top-soft": "oklch(1 0 0 / 0.28)",
+    "--highlight-bottom": textDark ? "oklch(0.95 0 0 / 0.3)" : "oklch(1 0 0 / 0.35)",
     "--highlight-bottom-soft": "oklch(1 0 0 / 0.1)",
-    "--shadow-side": "oklch(0 0 0 / 0.15)",
-    "--neo-surface": bgBase,
-    "--neo-shadow-light": "oklch(1 0 0 / 0.6)",
-    "--neo-shadow-dark": "oklch(0 0 0 / 0.2)",
-    "--accent-royal": brown,
-    "--accent-royal-bright": brown,
-    "--accent-royal-deep": brownDeep,
-    "--accent-emerald": brown,
-    "--accent-emerald-bright": brown,
-    "--accent-emerald-deep": brownDeep,
-    "--brand-color": textBase,
-    "--brand-glow": lightSurface ? "oklch(0.6 0.15 25 / 0.2)" : "oklch(0.7 0.18 25 / 0.3)",
-    "--color-fg-primary": textBase,
-    "--color-fg-secondary": ta(0.85),
-    "--color-fg-tertiary": ta(0.7),
-    "--color-fg-muted": ta(0.55),
+    "--shadow-side": isNeo ? "oklch(0.35 0.04 80 / 0.20)" : "oklch(0 0 0 / 0.14)",
+    "--neo-surface": panelStops[0] ?? bgStopsFull[0],
+    "--neo-shadow-light": isNeo ? "oklch(1 0 0 / 0.85)" : "oklch(1 0 0 / 0.7)",
+    "--neo-shadow-dark": isNeo ? "oklch(0.40 0.04 80 / 0.18)" : "oklch(0 0 0 / 0.18)",
+    "--accent-royal": formatOklch(aP.l, aP.c, aP.h),
+    "--accent-royal-bright": sh(aP, +0.08),
+    "--accent-royal-deep": sh(aP, -0.10),
+    "--accent-emerald": formatOklch(a2P.l, a2P.c, a2P.h),
+    "--accent-emerald-bright": sh(a2P, +0.08),
+    "--accent-emerald-deep": sh(a2P, -0.10),
+    "--brand-color": formatOklch(textP.l, textP.c, textP.h, 0.95),
+    "--brand-glow": formatOklch(aP.l, aP.c, aP.h, 0.4),
+    "--color-fg-primary": ta(0.96),
+    "--color-fg-secondary": ta(0.84),
+    "--color-fg-tertiary": ta(0.68),
+    "--color-fg-muted": ta(0.52),
   };
 }
 
