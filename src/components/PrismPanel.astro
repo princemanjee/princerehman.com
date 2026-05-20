@@ -18,7 +18,12 @@
  * Mounted once in BaseLayout so the panel appears site-wide.
  */
 
-import { swatches, isMono, formatMonoOklch } from "../data/prismSwatches";
+import { swatches, isMono, isPalette, formatMonoOklch } from "../data/prismSwatches";
+
+// Two distinct groups: mono swatches drive the hue + mixing-model
+// generator; palette presets apply a fixed multi-color scheme.
+const monoSwatches = swatches.filter(isMono);
+const paletteSwatches = swatches.filter(isPalette);
 
 const modes = [
   { id: "light",      label: "Light" },
@@ -124,22 +129,38 @@ const mixingModels = [
       </div>
     </section>
 
-    {/* Quick-select swatches */}
+    {/* Swatches — single-hue, drive the generator above */}
     <section class="prism-section">
-      <span class="prism-section-label">Swatches</span>
+      <span class="prism-section-label">Swatches · hue + mixing model</span>
       <div class="prism-swatch-row">
-        {swatches.map((s) => {
-          const previewColor = isMono(s)
-            ? formatMonoOklch(s)
-            : s.groups[0]?.colors[0]?.value ?? "oklch(0.5 0.18 263)";
+        {monoSwatches.map((s) => (
+          <button
+            type="button"
+            class="prism-quick-swatch"
+            title={s.name}
+            aria-label={`Select ${s.name}`}
+            data-prism-swatch={s.id}>
+            <span class="prism-quick-swatch-chip" style={`background: ${formatMonoOklch(s)};`} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    </section>
+
+    {/* Palettes — fixed multi-color schemes, bypass the generator */}
+    <section class="prism-section">
+      <span class="prism-section-label">Palettes · fixed schemes</span>
+      <div class="prism-swatch-row">
+        {paletteSwatches.map((s) => {
+          const stops = s.groups.flatMap((g) => g.colors.map((c) => c.value)).slice(0, 5);
+          const gradient = `linear-gradient(135deg, ${stops.join(", ")})`;
           return (
             <button
               type="button"
-              class="prism-quick-swatch"
+              class="prism-quick-swatch prism-quick-swatch--palette"
               title={s.name}
-              aria-label={`Select ${s.name}`}
+              aria-label={`Select ${s.name} palette`}
               data-prism-swatch={s.id}>
-              <span class="prism-quick-swatch-chip" style={`background: ${previewColor};`} aria-hidden="true" />
+              <span class="prism-quick-swatch-chip" style={`background: ${gradient};`} aria-hidden="true" />
             </button>
           );
         })}
