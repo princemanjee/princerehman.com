@@ -84,6 +84,144 @@ a:hover {
   box-shadow: 0 0 24px var(--oz-color, var(--accent-emerald));
 }
 
+/*
+ * ─────────────────────────────────────────────────────────────────────
+ * SURFACE FINISH — the material distinction between glass and neomorphic.
+ *
+ * Glass themes (dark, light, hybrid, system): a high-polish glossy sheen
+ * (bright top gloss + diagonal reflection streak) over the frosted
+ * surface. Wet, reflective.
+ *
+ * Neomorphic: NO gloss, NO backdrop blur. A dry, coarse sandpaper grain
+ * (SVG fractal noise) over a soft matte surface. This grain is the key
+ * cue that separates neomorphic from the light glass theme, which
+ * otherwise share a light background.
+ *
+ * Applies to EVERY part regardless of color scheme, keyed only on
+ * data-theme (so it is identical for mono swatches and palette presets):
+ *   - Full finish (gloss/grit ::after): .glass-panel (Hero, FactsPanel,
+ *     CaseStudy, contact), .case-study-card, .nav-bar, .nav-dropdown-menu,
+ *     .mobile-nav-panel, .prism-panel.
+ *   - Buttons / trigger (gloss ::after, matte in neo; no grain so bare-text
+ *     labels stay crisp per the WCAG hard rule): .glass-btn, .prism-trigger.
+ *   - Form controls (can't host pseudo-elements): kept frosted in glass,
+ *     forced matte (no blur) in neo via the matte rule below.
+ * ─────────────────────────────────────────────────────────────────────
+ */
+
+/* Only set position on surfaces that are statically positioned. The
+ * floating ones (.nav-dropdown-menu, .mobile-nav-panel, .prism-panel,
+ * .prism-trigger) are already absolute/fixed, so their ::after is
+ * contained without us touching position. .glass-btn / .nav-bar are
+ * already position:relative. */
+.glass-panel,
+.case-study-card {
+  position: relative;
+}
+
+/* Finish overlay. ::after matches the box (border-radius: inherit) so it
+ * never spills past rounded corners and needs no overflow clip (which
+ * would cut ambient drop shadows). Sits below content. */
+.glass-panel::after,
+.case-study-card::after,
+.nav-bar::after,
+.nav-dropdown-menu::after,
+.mobile-nav-panel::after,
+.prism-panel::after,
+.glass-btn::after,
+.prism-trigger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keep each surface's content above the finish overlay. */
+.glass-panel > *,
+.case-study-card > *,
+.nav-bar > *,
+.nav-dropdown-menu > *,
+.mobile-nav-panel > *,
+.prism-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Glass high-polish — every theme except neomorphic. Large surfaces get
+ * the diagonal reflection + top gloss; buttons/trigger get a softer top
+ * sheen (their bare-text labels sit in the transparent zone). */
+:root:not([data-theme="neomorphic"]) .glass-panel::after,
+:root:not([data-theme="neomorphic"]) .case-study-card::after,
+:root:not([data-theme="neomorphic"]) .nav-bar::after,
+:root:not([data-theme="neomorphic"]) .nav-dropdown-menu::after,
+:root:not([data-theme="neomorphic"]) .mobile-nav-panel::after,
+:root:not([data-theme="neomorphic"]) .prism-panel::after {
+  background:
+    linear-gradient(125deg,
+      oklch(1 0 0 / 0.16) 0%,
+      oklch(1 0 0 / 0.06) 13%,
+      transparent 33%),
+    linear-gradient(180deg,
+      oklch(1 0 0 / 0.10) 0%,
+      oklch(1 0 0 / 0.03) 11%,
+      transparent 28%);
+}
+
+:root:not([data-theme="neomorphic"]) .glass-btn::after,
+:root:not([data-theme="neomorphic"]) .prism-trigger::after {
+  background: linear-gradient(180deg,
+    oklch(1 0 0 / 0.16) 0%,
+    oklch(1 0 0 / 0.05) 38%,
+    transparent 70%);
+}
+
+/* Neomorphic matte — kill backdrop blur on EVERY glass surface, including
+ * form controls. !important beats the components' own scoped backdrop
+ * rules. Nothing reads as frosted glass in neomorphic. */
+:root[data-theme="neomorphic"] .glass-panel,
+:root[data-theme="neomorphic"] .case-study-card,
+:root[data-theme="neomorphic"] .nav-bar,
+:root[data-theme="neomorphic"] .nav-dropdown-menu,
+:root[data-theme="neomorphic"] .mobile-nav-panel,
+:root[data-theme="neomorphic"] .prism-panel,
+:root[data-theme="neomorphic"] .prism-trigger,
+:root[data-theme="neomorphic"] .glass-btn,
+:root[data-theme="neomorphic"] .glass-input,
+:root[data-theme="neomorphic"] .glass-textarea,
+:root[data-theme="neomorphic"] .glass-select {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Neomorphic — soft matte dual-shadow extrusion on the main panel families. */
+:root[data-theme="neomorphic"] .glass-panel,
+:root[data-theme="neomorphic"] .case-study-card {
+  border-color: transparent;
+  box-shadow:
+    7px 7px 16px var(--neo-shadow-dark, oklch(0.40 0.04 80 / 0.20)),
+    -7px -7px 16px var(--neo-shadow-light, oklch(1 0 0 / 0.85)),
+    inset 0 1px 1px var(--neo-shadow-light, oklch(1 0 0 / 0.85));
+}
+
+/* Neomorphic — coarse sandpaper grain over the matte surfaces. Two grain
+ * layers (a larger cloudy tooth + a finer speckle), raw (no blend) so the
+ * dry black-and-white grit reads at full strength. Not applied to buttons
+ * or the trigger so their labels/icons stay crisp. */
+:root[data-theme="neomorphic"] .glass-panel::after,
+:root[data-theme="neomorphic"] .case-study-card::after,
+:root[data-theme="neomorphic"] .nav-bar::after,
+:root[data-theme="neomorphic"] .nav-dropdown-menu::after,
+:root[data-theme="neomorphic"] .mobile-nav-panel::after,
+:root[data-theme="neomorphic"] .prism-panel::after {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+  background-size: 120px 120px, 80px 80px;
+  opacity: 0.32;
+}
+
 /* Utility for visually-hidden content (still accessible to screen readers). */
 .sr-only {
   position: absolute;

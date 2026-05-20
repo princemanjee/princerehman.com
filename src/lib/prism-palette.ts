@@ -159,8 +159,11 @@ const MODE_SURFACES: Record<ResolvedMode["kind"], Record<SurfaceKey, SurfaceToke
   hybrid: {
     "--glass-bg": { l: 1, c: 0, h: 0, a: 0.08 },
     "--glass-bg-hover": { l: 1, c: 0, h: 0, a: 0.14 },
-    "--glass-border": { l: 1, c: 0, h: 0, a: 0.18 },
-    "--glass-border-strong": { l: 1, c: 0, h: 0, a: 0.30 },
+    // Stronger borders so secondary / ghost buttons keep a defined edge
+    // against the saturated mid-tone hybrid surface (they have a subtle fill
+    // and rely on the border to separate from the same-hue background).
+    "--glass-border": { l: 1, c: 0, h: 0, a: 0.32 },
+    "--glass-border-strong": { l: 1, c: 0, h: 0, a: 0.46 },
     "--highlight-top": { l: 1, c: 0, h: 0, a: 0.90 },
     "--highlight-top-soft": { l: 1, c: 0, h: 0, a: 0.35 },
     "--highlight-bottom": { l: 1, c: 0, h: 0, a: 0.50 },
@@ -234,16 +237,19 @@ const MODE_BACKGROUNDS: Record<
     ],
   },
   hybrid: {
+    // Richer dusk mid-tone. Earlier low-chroma stops read as washed-out grey;
+    // these carry real chroma so hybrid is clearly a saturated mid-tone of the
+    // selected hue, distinct from both the deep dark and the pale light modes.
     rotate: true,
     stops: [
-      { l: 0.400, c: 0.030, h: 260 },
-      { l: 0.450, c: 0.028, h: 250 },
-      { l: 0.420, c: 0.040, h: 270 },
-      { l: 0.435, c: 0.035, h: 280 },
+      { l: 0.360, c: 0.090, h: 260 },
+      { l: 0.420, c: 0.085, h: 250 },
+      { l: 0.380, c: 0.100, h: 270 },
+      { l: 0.400, c: 0.092, h: 280 },
     ],
     overlays: [
-      { l: 0.70, c: 0.18, h: 263, a: 0.10 },
-      { l: 0.57, c: 0.15, h: 305, a: 0.08 },
+      { l: 0.70, c: 0.18, h: 263, a: 0.12 },
+      { l: 0.57, c: 0.16, h: 305, a: 0.10 },
     ],
   },
   neomorphic: {
@@ -315,12 +321,17 @@ function resolveMode(mode: ThemeMode): ResolvedMode {
         L: { base: 0.6, bright: 0.69, deep: 0.49 },
       };
     case "hybrid":
+      // Accent runs distinctly brighter than the mid-tone hybrid surface
+      // (panel ≈ L0.43). Earlier the deep stop (0.49) sat right on top of the
+      // panel, so accent buttons melted into the same-hue background under the
+      // analogous and complementary models. Lifting the whole triad makes the
+      // button read as a clearly raised, lit element regardless of hue match.
       return {
         kind: "hybrid",
-        surfaceL: 0.42,
+        surfaceL: 0.50,
         textL: 0.97,
         chroma: 0.22,
-        L: { base: 0.6, bright: 0.69, deep: 0.49 },
+        L: { base: 0.68, bright: 0.78, deep: 0.60 },
       };
     case "light":
       return {
@@ -366,21 +377,6 @@ function accentHueFor(model: MixingModel, baseHue: number): number {
       return wrapHue(baseHue + 150);
     case "complementary":
       return wrapHue(baseHue + 180);
-  }
-}
-
-/**
- * Secondary accent hue (the "emerald" slot): a different derived angle so
- * the alt accent stays distinct from both base and primary accent.
- */
-function secondaryHueFor(model: MixingModel, baseHue: number): number {
-  switch (model) {
-    case "analogous":
-      return wrapHue(baseHue - 30);
-    case "split-complementary":
-      return wrapHue(baseHue + 210);
-    case "complementary":
-      return wrapHue(baseHue + 150);
   }
 }
 
@@ -586,26 +582,115 @@ function parseOklch(value: string): ParsedOklch | null {
   };
 }
 
+// ---------------------------------------------------------------------------
+// WCAG text-readability guarantee (HARD RULE)
+//
+// Body text must always meet WCAG contrast against every surface it can sit
+// on (panels AND the page background). If the authored text color fails, we
+// fail over to black or white — whichever maximizes the minimum contrast
+// across all surfaces. Translucent text tokens (secondary/tertiary/muted)
+// then have their alpha raised until their composited contrast also passes.
+// AA = 4.5:1 (default); AAA = 7:1. On mid-tone surfaces 7:1 is sometimes
+// mathematically unreachable for any color, so AAA is best-effort while AA
+// is guaranteed.
+// ---------------------------------------------------------------------------
+
+const FAILOVER_BLACK: ParsedOklch = { l: 0.16, c: 0.006, h: 270, a: 1 };
+const FAILOVER_WHITE: ParsedOklch = { l: 0.985, c: 0.001, h: 240, a: 1 };
+
+function textThreshold(contrast: ContrastLevel | undefined): number {
+  return contrast === "AAA" ? 7 : 4.5;
+}
+
+function srgbOf(p: ParsedOklch): SrgbTriplet {
+  return oklchToSrgb(p.l, p.c, p.h);
+}
+
+function minContrastAcross(text: SrgbTriplet, surfaces: SrgbTriplet[]): number {
+  let lowest = Infinity;
+  for (const s of surfaces) lowest = Math.min(lowest, wcagContrast(text, s));
+  return lowest === Infinity ? 21 : lowest;
+}
+
 /**
- * Generate a complete palette from a fixed multi-color scheme (Patriotic,
- * Christmas, etc.), bypassing the mixing-model generator. Mode-aware:
- *   - dark / hybrid surfaces: darkest color = background, lightest = text
- *   - light / neomorphic surfaces: lightest color = background, darkest = text
- * Accent = most chromatic color (darkened on light surfaces so it stays
- * legible). The whole token set including text is emitted so the palette
- * fully defines the page; the runtime clears stale overrides on switch.
+ * Return a guaranteed-readable text color. Keeps the authored color if it
+ * already clears the threshold against every surface; otherwise fails over
+ * to black or white, picking whichever yields the higher minimum contrast.
  */
+function guaranteeTextColor(
+  text: ParsedOklch,
+  surfaces: ParsedOklch[],
+  threshold: number,
+): ParsedOklch {
+  if (surfaces.length === 0) return text;
+  const surfRgbs = surfaces.map(srgbOf);
+  if (minContrastAcross(srgbOf(text), surfRgbs) >= threshold) return text;
+  const blackMin = minContrastAcross(srgbOf(FAILOVER_BLACK), surfRgbs);
+  const whiteMin = minContrastAcross(srgbOf(FAILOVER_WHITE), surfRgbs);
+  return whiteMin >= blackMin ? FAILOVER_WHITE : FAILOVER_BLACK;
+}
+
+/** The surface (among the set) that contrasts least with the given text. */
+function worstSurfaceFor(text: ParsedOklch, surfaces: ParsedOklch[]): ParsedOklch {
+  const t = srgbOf(text);
+  let worst = surfaces[0];
+  let worstRatio = Infinity;
+  for (const s of surfaces) {
+    const r = wcagContrast(t, srgbOf(s));
+    if (r < worstRatio) { worstRatio = r; worst = s; }
+  }
+  return worst;
+}
+
+/** Gamma-sRGB composite of translucent text painted over a surface. */
+function blendOver(text: SrgbTriplet, surf: SrgbTriplet, alpha: number): SrgbTriplet {
+  return {
+    r: text.r * alpha + surf.r * (1 - alpha),
+    g: text.g * alpha + surf.g * (1 - alpha),
+    b: text.b * alpha + surf.b * (1 - alpha),
+  };
+}
+
 /**
- * A palette distributes its colors across the theme's surfaces. Like the
- * Pride flag: some colors paint the background gradient, others the panels,
- * others the text and accents. The bgGradient / panel arrays hold the
- * colors assigned to each surface; the theme as a whole uses every color.
+ * Lowest alpha >= desired whose composited text meets the threshold against
+ * the worst surface. Caps at 1. Because the base text color is guaranteed to
+ * pass at full opacity, this always terminates with a passing alpha.
  */
+function alphaForContrast(
+  text: ParsedOklch,
+  worstSurf: ParsedOklch,
+  desired: number,
+  threshold: number,
+): number {
+  const t = srgbOf(text);
+  const s = srgbOf(worstSurf);
+  let a = desired;
+  for (let i = 0; i < 50 && a < 1; i++) {
+    if (wcagContrast(blendOver(t, s, a), s) >= threshold) return round(a, 2);
+    a += 0.02;
+  }
+  return 1;
+}
+
+/**
+ * Each palette specifies EXACT colors per mode (no auto-transform). A scheme
+ * assigns the palette's colors to surfaces: bg (background gradient), panel,
+ * text (body text), accents. dark and light are authored explicitly so the
+ * designer controls e.g. "Patriotic light = white bg, navy text, red accent."
+ * hybrid and neomorphic are derived to stay distinct: hybrid lifts the dark
+ * scheme to a mid-tone dusk; neomorphic mutes the light scheme to a flat,
+ * sandy, soft-shadow surface.
+ */
+export interface PaletteScheme {
+  bg: string[];      // background colors (1 = flat, 2+ = gradient)
+  panel: string[];   // panel surface colors
+  text: string;      // body text color
+  accents: string[]; // [0] primary accent, [1] secondary
+}
+
 export interface PresetRoles {
-  bgGradient: string[]; // colors flowing through the page background gradient
-  panel: string[];      // colors for panel surfaces (1 = solid, 2+ = gradient)
-  text: { dark: string; light: string };
-  accents: string[];    // accent colors: [0] primary, [1] secondary, ...
+  dark: PaletteScheme;
+  light: PaletteScheme;
 }
 
 type ModeKind = "dark" | "light" | "hybrid" | "neomorphic";
@@ -614,108 +699,106 @@ function modeKind(mode: ThemeMode): ModeKind {
   return mode === "system" ? "dark" : mode;
 }
 
-/**
- * Transform a palette color for the active mode. Palette colors are authored
- * at their rich/dark form (used as-is on dark). The other three modes are
- * genuinely distinct: hybrid = mid-tone dusk, light = pastel, neomorphic =
- * muted/sandy. Keeps hue; adjusts lightness + chroma.
- */
-function transformBg(p: ParsedOklch, kind: ModeKind): ParsedOklch {
-  switch (kind) {
-    case "dark":       return p;
-    case "hybrid":     return { ...p, l: clamp01(0.40 + p.l * 0.26), c: p.c * 0.92 };
-    case "light":      return { ...p, l: clamp01(0.82 + p.l * 0.14), c: p.c * 0.5 };
-    case "neomorphic": return { ...p, l: clamp01(0.80 + p.l * 0.12), c: p.c * 0.28 };
-  }
+/** Hybrid = mid-tone dusk between dark and light. Lifts the dark scheme's
+ *  bg/panel into the low-mid range: clearly lighter than dark, but still dark
+ *  enough that the (white) text keeps AA contrast. Keeps the palette hues, so
+ *  the theme identity carries through. */
+function deriveHybrid(dark: PaletteScheme): PaletteScheme {
+  const lift = (s: string) => {
+    const p = parseOklch(s);
+    if (!p) return s;
+    return formatOklch(clamp01(0.26 + p.l * 0.24), p.c * 0.95, p.h, p.a);
+  };
+  return { bg: dark.bg.map(lift), panel: dark.panel.map(lift), text: dark.text, accents: dark.accents };
 }
 
-/** Panel transform: on dark/hybrid panels stay dark enough for white text;
- *  on light/neomorphic they go light for dark text. Distinct from the bg
- *  via the (different) palette colors assigned to panels. */
-function transformPanel(p: ParsedOklch, kind: ModeKind): ParsedOklch {
-  switch (kind) {
-    case "dark":       return { ...p, l: clamp01(0.10 + p.l * 0.30), c: p.c * 0.85 };
-    case "hybrid":     return { ...p, l: clamp01(0.46 + p.l * 0.16), c: p.c * 0.8 };
-    case "light":      return { ...p, l: clamp01(0.90 + p.l * 0.06), c: p.c * 0.45 };
-    case "neomorphic": return { ...p, l: clamp01(0.88 + p.l * 0.06), c: p.c * 0.30 };
-  }
-}
-
-/** Accent transform: keep accents vivid + readable against the surface. */
-function transformAccent(p: ParsedOklch, kind: ModeKind): ParsedOklch {
-  switch (kind) {
-    case "dark":       return { ...p, l: clamp01(Math.max(p.l, 0.55)) };
-    case "hybrid":     return { ...p, l: clamp01(Math.max(p.l, 0.60)) };
-    case "light":      return { ...p, l: clamp01(Math.min(p.l, 0.52)) };
-    case "neomorphic": return { ...p, l: clamp01(Math.min(p.l, 0.50)) };
-  }
+/** Neomorphic = soft monochrome surface in the palette's hue. bg and panel
+ *  share one light, low-chroma tone, separated only by the soft-shadow tokens
+ *  applied downstream (classic neomorphism). A faint hue tint plus the vivid
+ *  accents keep the theme identity, while the single-tone surface makes it
+ *  clearly distinct from light's gradient bg + colored panels. */
+function deriveNeo(light: PaletteScheme): PaletteScheme {
+  const firstBg = parseOklch(light.bg[0]) ?? { l: 0.9, c: 0.02, h: 80, a: 1 };
+  const tone = formatOklch(0.91, Math.min(firstBg.c * 0.5, 0.045), firstBg.h);
+  return { bg: [tone], panel: [tone], text: light.text, accents: light.accents };
 }
 
 export function generatePresetPalette(
   colors: string[],
   mode: ThemeMode,
   roles?: PresetRoles,
+  contrast?: ContrastLevel,
 ): GeneratedPalette {
   const kind = modeKind(mode);
+  const isNeo = kind === "neomorphic";
   const textDark = kind === "light" || kind === "neomorphic";
 
-  // Resolve role colors, falling back to all palette colors if no roles.
-  const allColors = colors
-    .map(parseOklch)
-    .filter((x): x is ParsedOklch => x !== null);
-  const r: PresetRoles = roles ?? {
-    bgGradient: colors,
-    panel: colors.slice(0, 2),
-    text: { dark: "oklch(0.98 0.002 240)", light: "oklch(0.18 0.01 270)" },
-    accents: [...allColors].sort((a, b) => b.c - a.c).slice(0, 2).map((p) => formatOklch(p.l, p.c, p.h)),
-  };
+  // Fallback scheme if a palette has no explicit roles.
+  const fallback: PresetRoles = (() => {
+    const ps = colors.map(parseOklch).filter((x): x is ParsedOklch => x !== null);
+    const byC = [...ps].sort((a, b) => b.c - a.c);
+    const acc = byC.slice(0, 2).map((p) => formatOklch(p.l, p.c, p.h));
+    return {
+      dark: { bg: [colors[0]], panel: [colors[Math.min(1, colors.length - 1)]], text: "oklch(0.98 0.002 240)", accents: acc },
+      light: { bg: [colors[colors.length - 1]], panel: ["oklch(0.97 0.005 270)"], text: "oklch(0.18 0.01 270)", accents: acc },
+    };
+  })();
+  const rr = roles ?? fallback;
+
+  // Pick the scheme for the active mode (hybrid/neo derived for distinctness).
+  let scheme: PaletteScheme;
+  switch (kind) {
+    case "dark":       scheme = rr.dark; break;
+    case "light":      scheme = rr.light; break;
+    case "hybrid":     scheme = deriveHybrid(rr.dark); break;
+    case "neomorphic": scheme = deriveNeo(rr.light); break;
+  }
 
   const parse = (s: string) => parseOklch(s) ?? { l: 0.5, c: 0.1, h: 263, a: 1 };
+  const f = (p: ParsedOklch, a?: number) => formatOklch(p.l, p.c, p.h, a ?? p.a);
+  const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
 
-  // Background gradient: assigned colors, transformed for the mode.
-  const bgStops = r.bgGradient.map((c) => {
-    const t = transformBg(parse(c), kind);
-    return formatOklch(t.l, t.c, t.h);
-  });
-  const bgStopsFull = bgStops.length >= 2 ? bgStops : [bgStops[0], bgStops[0]];
-  const bgGradient = `linear-gradient(135deg, ${bgStopsFull.join(", ")})`;
+  // Background gradient: exact scheme colors (no transform).
+  const bgStops = scheme.bg.map((c) => f(parse(c), 1));
+  const bgFull = bgStops.length >= 2 ? bgStops : [bgStops[0], bgStops[0]];
+  const bgGradient = `linear-gradient(135deg, ${bgFull.join(", ")})`;
 
-  // Panels: assigned colors, transformed. Near-opaque so they contrast and
-  // keep text readable. One color = solid, multiple = gradient.
-  const isNeo = kind === "neomorphic";
-  const panelAlpha = isNeo ? 1 : 0.9;
-  const panelStops = r.panel.map((c) => {
-    const t = transformPanel(parse(c), kind);
-    return formatOklch(t.l, t.c, t.h, panelAlpha);
+  // Panels: exact scheme colors. Solid for neomorphic, near-opaque otherwise.
+  const panelAlpha = isNeo ? 1 : 0.92;
+  const panelStops = scheme.panel.map((c) => {
+    const p = parse(c);
+    return formatOklch(p.l, p.c, p.h, panelAlpha);
   });
-  const panelBg = panelStops.length >= 2
-    ? `linear-gradient(135deg, ${panelStops.join(", ")})`
-    : panelStops[0];
-  const panelHoverStops = r.panel.map((c) => {
-    const t = transformPanel(parse(c), kind);
-    return formatOklch(clamp01(t.l + (textDark ? 0.03 : -0.04)), t.c, t.h, panelAlpha);
+  const panelBg = panelStops.length >= 2 ? `linear-gradient(135deg, ${panelStops.join(", ")})` : panelStops[0];
+  const panelHoverStops = scheme.panel.map((c) => {
+    const p = parse(c);
+    return formatOklch(clamp01(p.l + (textDark ? -0.04 : 0.05)), p.c, p.h, panelAlpha);
   });
-  const panelHover = panelHoverStops.length >= 2
-    ? `linear-gradient(135deg, ${panelHoverStops.join(", ")})`
-    : panelHoverStops[0];
+  const panelHover = panelHoverStops.length >= 2 ? `linear-gradient(135deg, ${panelHoverStops.join(", ")})` : panelHoverStops[0];
 
-  // Text.
-  const textStr = textDark ? r.text.light : r.text.dark;
-  const textP = parse(textStr);
+  // WCAG text guarantee. The text must read against every surface it can sit
+  // on: the panel(s) AND the page background gradient stops. If the authored
+  // text fails, fail over to black/white; then raise each token's alpha until
+  // its composited contrast also clears the threshold.
+  const threshold = textThreshold(contrast);
+  const textSurfaces = [...scheme.bg, ...scheme.panel].map(parse);
+  const textP = guaranteeTextColor(parse(scheme.text), textSurfaces, threshold);
+  const worstSurf = worstSurfaceFor(textP, textSurfaces);
+  const aPrimary = alphaForContrast(textP, worstSurf, 0.97, threshold);
+  const aSecondary = alphaForContrast(textP, worstSurf, 0.86, threshold);
+  const aTertiary = alphaForContrast(textP, worstSurf, 0.70, threshold);
+  const aMuted = alphaForContrast(textP, worstSurf, 0.54, threshold);
   const ta = (a: number) => formatOklch(textP.l, textP.c, textP.h, a);
 
-  // Accents.
-  const aList = r.accents.length > 0 ? r.accents : [formatOklch(0.6, 0.18, 263)];
-  const aP = transformAccent(parse(aList[0]), kind);
-  const a2P = transformAccent(parse(aList[Math.min(1, aList.length - 1)]), kind);
-  const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
+  const aP = parse(scheme.accents[0] ?? "oklch(0.6 0.18 263)");
+  const a2P = parse(scheme.accents[Math.min(1, scheme.accents.length - 1)] ?? scheme.accents[0] ?? "oklch(0.6 0.18 263)");
 
   return {
     "--bg-gradient": bgGradient,
-    "--bg-1": bgStopsFull[0],
-    "--bg-2": bgStopsFull[Math.min(1, bgStopsFull.length - 1)],
-    "--bg-3": bgStopsFull[Math.floor(bgStopsFull.length / 2)],
-    "--bg-4": bgStopsFull[bgStopsFull.length - 1],
+    "--bg-1": bgFull[0],
+    "--bg-2": bgFull[Math.min(1, bgFull.length - 1)],
+    "--bg-3": bgFull[Math.floor(bgFull.length / 2)],
+    "--bg-4": bgFull[bgFull.length - 1],
     "--bg-overlay-1": "transparent",
     "--bg-overlay-2": "transparent",
     "--glass-bg": panelBg,
@@ -727,47 +810,71 @@ export function generatePresetPalette(
     "--highlight-bottom": textDark ? "oklch(0.95 0 0 / 0.3)" : "oklch(1 0 0 / 0.35)",
     "--highlight-bottom-soft": "oklch(1 0 0 / 0.1)",
     "--shadow-side": isNeo ? "oklch(0.35 0.04 80 / 0.20)" : "oklch(0 0 0 / 0.14)",
-    "--neo-surface": panelStops[0] ?? bgStopsFull[0],
+    "--neo-surface": panelStops[0] ?? bgFull[0],
     "--neo-shadow-light": isNeo ? "oklch(1 0 0 / 0.85)" : "oklch(1 0 0 / 0.7)",
     "--neo-shadow-dark": isNeo ? "oklch(0.40 0.04 80 / 0.18)" : "oklch(0 0 0 / 0.18)",
-    "--accent-royal": formatOklch(aP.l, aP.c, aP.h),
+    "--accent-royal": f(aP),
     "--accent-royal-bright": sh(aP, +0.08),
     "--accent-royal-deep": sh(aP, -0.10),
-    "--accent-emerald": formatOklch(a2P.l, a2P.c, a2P.h),
+    "--accent-emerald": f(a2P),
     "--accent-emerald-bright": sh(a2P, +0.08),
     "--accent-emerald-deep": sh(a2P, -0.10),
-    "--brand-color": formatOklch(textP.l, textP.c, textP.h, 0.95),
-    "--brand-glow": formatOklch(aP.l, aP.c, aP.h, 0.4),
-    "--color-fg-primary": ta(0.96),
-    "--color-fg-secondary": ta(0.84),
-    "--color-fg-tertiary": ta(0.68),
-    "--color-fg-muted": ta(0.52),
+    "--brand-color": ta(Math.max(0.95, aPrimary)),
+    "--brand-glow": f(aP, 0.4),
+    "--color-fg-primary": ta(aPrimary),
+    "--color-fg-secondary": ta(aSecondary),
+    "--color-fg-tertiary": ta(aTertiary),
+    "--color-fg-muted": ta(aMuted),
   };
 }
 
 export function generatePalette(request: PaletteRequest): GeneratedPalette {
   const resolved = resolveMode(request.mode);
   const baseHue = wrapHue(request.hue);
-  // Background sits at the base hue; the primary accent rotates away from
-  // it by the mixing-model angle; the secondary accent takes a third angle.
-  const accentHue = accentHueFor(request.model, baseHue);
-  const secondaryHue = secondaryHueFor(request.model, baseHue);
+  // The selected hue IS the primary, dominant theme color. The background AND
+  // the primary accent both sit at the base hue, so picking red gives a
+  // red-dominant site. The mixing model only derives the SECONDARY accent
+  // (and the atmospheric glow), so it still visibly changes the palette
+  // without ever flipping the dominant color (red must never read as green).
+  const primaryHue = baseHue;
+  const secondaryHue = accentHueFor(request.model, baseHue);
 
-  // Background regeneration: rotate the mode's template stop hues by the
-  // delta from the reference hue so the default hue reproduces Phase 1
-  // exactly and other hues tint the whole page. Neomorphic is exempt.
+  // Background regeneration. For glass modes the gradient TRAVELS from the
+  // base hue (leading, dominant stop) toward the mixing-model's secondary
+  // hue at the trailing stop — back-loaded (exponent 1.4) so the base hue
+  // occupies most of the gradient. This makes the mixing-model choice clearly
+  // visible across the whole page background while the base hue stays
+  // dominant. Neomorphic keeps its sand template (rotated by the slider) so
+  // the locked warm-sand default is preserved.
   const bgConfig = MODE_BACKGROUNDS[resolved.kind];
+  const isNeoMode = resolved.kind === "neomorphic";
   const rotation = bgConfig.rotate ? baseHue - REFERENCE_HUE : 0;
-  const bg = bgConfig.stops.map((s) =>
-    formatOklch(s.l, s.c, wrapHue(s.h + rotation)),
-  );
-  // overlay-1 follows the base hue (rotated); overlay-2 follows the primary
-  // accent hue so the secondary atmospheric glow echoes the accent and the
-  // mixing-model choice is visible in the page glow.
+  // Each mixing model paints a structurally DIFFERENT gradient, all leading
+  // with the base hue (dominant). The four numbers are per-stop hue offsets
+  // from the base hue:
+  //   analogous           — a tight single-family sweep (calm, harmonious)
+  //   split-complementary — base + the TWO hues flanking the complement
+  //                         (±30° around 180°): a colourful 3-hue gradient
+  //   complementary       — a clean base↔complement two-tone (bold duotone)
+  // The escalating spread (≈36° → ≈210° span → 180° hard split) makes the
+  // three models read as clearly distinct styles.
+  const stopOffsets =
+    request.model === "analogous" ? [0, 12, 24, 36]
+    : request.model === "split-complementary" ? [0, 150, 210, 150]
+    : [0, 0, 180, 180];
+  const bg = bgConfig.stops.map((s, i) => {
+    if (isNeoMode) return formatOklch(s.l, s.c, wrapHue(s.h + rotation));
+    const off = stopOffsets[Math.min(i, stopOffsets.length - 1)];
+    return formatOklch(s.l, s.c, wrapHue(baseHue + off));
+  });
+  // overlay-1 follows the base hue; overlay-2 echoes the secondary
+  // (mixing-model) accent so the model choice also shows in the page glow.
+  // overlay-2 alpha is boosted so the secondary hue reads even in pale modes.
   const overlays = bgConfig.overlays.map((o, i) => {
     if (o.a <= 0) return "transparent";
-    const oHue = i === 1 ? accentHue : wrapHue(o.h + rotation);
-    return formatOklch(o.l, o.c, oHue, o.a);
+    const oHue = i === 1 ? secondaryHue : wrapHue(o.h + rotation);
+    const oAlpha = i === 1 ? Math.min(o.a * 1.9, 0.32) : o.a;
+    return formatOklch(o.l, o.c, oHue, oAlpha);
   });
 
   // Surfaces (glass + highlights + neomorphic elevation): rotate each
@@ -795,7 +902,7 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   // Contrast guardrail: shift the primary accent away from the surface L if
   // the candidate accent fails the 3:1 floor. Apply the same delta to bright
   // and deep so the triad stays coherent.
-  const delta = adjustForSurfaceContrast(Lbase, C, accentHue, resolved.surfaceL);
+  const delta = adjustForSurfaceContrast(Lbase, C, primaryHue, resolved.surfaceL);
   const LbaseAdj = clamp01(Lbase + delta);
   const LbrightAdj = clamp01(Lbright + delta);
   const LdeepAdj = clamp01(Ldeep + delta);
@@ -814,8 +921,8 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   let LbrightPrim = LbrightAdj;
   let LdeepPrim = LdeepAdj;
   if (request.contrast === "AAA") {
-    const surface = oklchToSrgb(resolved.surfaceL, 0, accentHue);
-    const accent = oklchToSrgb(LbasePrim, C, accentHue);
+    const surface = oklchToSrgb(resolved.surfaceL, 0, primaryHue);
+    const accent = oklchToSrgb(LbasePrim, C, primaryHue);
     const ratio = wcagContrast(accent, surface);
     if (ratio < 4.5) {
       const direction = resolved.surfaceL < 0.5 ? +1 : -1;
@@ -844,9 +951,9 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     "--neo-surface": surfaces["--neo-surface"],
     "--neo-shadow-light": surfaces["--neo-shadow-light"],
     "--neo-shadow-dark": surfaces["--neo-shadow-dark"],
-    "--accent-royal": formatOklch(LbasePrim, C, accentHue),
-    "--accent-royal-bright": formatOklch(LbrightPrim, C, accentHue),
-    "--accent-royal-deep": formatOklch(LdeepPrim, C, accentHue),
+    "--accent-royal": formatOklch(LbasePrim, C, primaryHue),
+    "--accent-royal-bright": formatOklch(LbrightPrim, C, primaryHue),
+    "--accent-royal-deep": formatOklch(LdeepPrim, C, primaryHue),
     "--accent-emerald": formatOklch(LbaseAlt, C, secondaryHue),
     "--accent-emerald-bright": formatOklch(LbrightAlt, C, secondaryHue),
     "--accent-emerald-deep": formatOklch(LdeepAlt, C, secondaryHue),

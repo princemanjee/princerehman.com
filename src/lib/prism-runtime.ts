@@ -225,7 +225,7 @@ export function computePalette(state: PrismState): GeneratedPalette {
   const swatch = getSwatchById(state.swatchId);
   if (swatch && isPalette(swatch)) {
     const colors = swatch.groups.flatMap((g) => g.colors.map((c) => c.value));
-    return generatePresetPalette(colors, resolvedMode, swatch.roles);
+    return generatePresetPalette(colors, resolvedMode, swatch.roles, state.contrast);
   }
 
   // Mono path: state.hue is the single source of truth for the base hue.

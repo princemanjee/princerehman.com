@@ -140,10 +140,14 @@ const availabilityLabel =
         <h3 class="case-study-section-heading">Architecture</h3>
         <figure class="case-study-diagram">
           <img
+            class="case-study-zoomable"
             src={architectureDiagramUrl}
             alt={architectureDiagramAlt ?? `${title} architecture diagram`}
             loading="lazy"
             decoding="async"
+            role="button"
+            tabindex="0"
+            aria-label={`Enlarge ${architectureDiagramAlt ?? `${title} architecture diagram`}`}
           />
         </figure>
       </section>
@@ -170,10 +174,14 @@ const availabilityLabel =
           {screenshots.map((shot) => (
             <figure class="case-study-screenshot">
               <img
+                class="case-study-zoomable"
                 src={shot.src}
                 alt={shot.alt}
                 loading="lazy"
                 decoding="async"
+                role="button"
+                tabindex="0"
+                aria-label={`Enlarge ${shot.alt}`}
               />
               {shot.caption && (
                 <figcaption class="case-study-screenshot-caption">
@@ -246,7 +254,276 @@ const availabilityLabel =
   </footer>
 </GlassPanel>
 
+<!--
+  Lightbox: a single overlay reused by every zoomable image/diagram in this
+  case study. Hidden until a .case-study-zoomable image is clicked. Blurred
+  backdrop, enlarged image, round close button. Closes on the X, a backdrop
+  click, or Escape.
+-->
+<div class="cs-lightbox" data-cs-lightbox hidden aria-hidden="true">
+  <div class="cs-lightbox-backdrop" data-cs-lightbox-dismiss></div>
+  <div class="cs-lightbox-stage" role="dialog" aria-modal="true" aria-label="Enlarged image">
+    <img class="cs-lightbox-img" data-cs-lightbox-img src="" alt="" />
+    <button
+      type="button"
+      class="cs-lightbox-close"
+      data-cs-lightbox-dismiss
+      aria-label="Close enlarged image"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 6 L18 18 M18 6 L6 18" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const lightbox = document.querySelector<HTMLElement>("[data-cs-lightbox]");
+    if (!lightbox) return;
+    const stageImg = lightbox.querySelector<HTMLImageElement>("[data-cs-lightbox-img]");
+    if (!stageImg) return;
+
+    let lastFocused: HTMLElement | null = null;
+    let hideTimer: number | null = null;
+
+    const open = (src: string, alt: string) => {
+      // Cancel any pending hide from a just-closed instance so re-opening
+      // immediately can never leave the overlay stuck in the layout.
+      if (hideTimer !== null) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+      stageImg.src = src;
+      stageImg.alt = alt;
+      // Match the stage's aspect ratio to the image so it shrink-wraps and the
+      // close button lands on the image's real corner. Natural dimensions may
+      // not be ready until load (lazy-loaded images), so set both now and on
+      // load. Fall back to 16:9 until known.
+      const setAspect = () => {
+        if (stageImg.naturalWidth && stageImg.naturalHeight) {
+          lightbox.style.setProperty(
+            "--cs-img-aspect",
+            String(stageImg.naturalWidth / stageImg.naturalHeight),
+          );
+        }
+      };
+      if (stageImg.complete) setAspect();
+      else stageImg.addEventListener("load", setAspect, { once: true });
+      lightbox.hidden = false;
+      lightbox.setAttribute("aria-hidden", "false");
+      // Force reflow so the opacity transition runs from the hidden state.
+      void lightbox.offsetWidth;
+      lightbox.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+      const closeBtn = lightbox.querySelector<HTMLElement>(".cs-lightbox-close");
+      closeBtn?.focus();
+    };
+
+    const close = () => {
+      lightbox.classList.remove("is-open");
+      document.body.style.overflow = "";
+      lightbox.setAttribute("aria-hidden", "true");
+      // Hide on a fixed timer rather than waiting for transitionend, which is
+      // unreliable (never fires under reduced-motion or if interrupted) and
+      // would otherwise leave the overlay covering the page and eating clicks.
+      if (hideTimer !== null) clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => {
+        lightbox.hidden = true;
+        stageImg.src = "";
+        hideTimer = null;
+      }, 260);
+      lastFocused?.focus();
+    };
+
+    document.querySelectorAll<HTMLImageElement>(".case-study-zoomable").forEach((img) => {
+      const trigger = () => {
+        lastFocused = img;
+        open(img.currentSrc || img.src, img.alt);
+      };
+      img.addEventListener("click", trigger);
+      img.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          trigger();
+        }
+      });
+    });
+
+    lightbox.querySelectorAll<HTMLElement>("[data-cs-lightbox-dismiss]").forEach((el) => {
+      el.addEventListener("click", close);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && lightbox.classList.contains("is-open")) close();
+    });
+  })();
+</script>
+
 <style>
+  /* Zoomable images invite a click. */
+  .case-study-zoomable {
+    cursor: zoom-in;
+  }
+  .case-study-zoomable:focus-visible {
+    outline: 2px solid var(--accent-royal-bright);
+    outline-offset: 3px;
+  }
+
+  /* ── Lightbox ────────────────────────────────────────────────────── */
+  .cs-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: opacity var(--duration-base, 240ms) var(--easing-out, ease);
+  }
+  .cs-lightbox.is-open {
+    opacity: 1;
+  }
+  /* The `hidden` attribute must win over display:flex, otherwise the overlay
+   * stays in the layout (invisible at opacity 0) and its backdrop intercepts
+   * every click on the page. */
+  .cs-lightbox[hidden] {
+    display: none;
+  }
+
+  .cs-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: oklch(0 0 0 / 0.62);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    cursor: zoom-out;
+  }
+
+  /* The stage shrink-wraps the displayed image: its aspect ratio is set from
+   * the image's natural dimensions (--cs-img-aspect, written by the script),
+   * and it grows to the largest box of that ratio that fits within 94vw×92vh.
+   * Because the stage now matches the image bounds exactly, the close button
+   * anchored to the stage corner sits on the image's actual corner (no
+   * letterbox gap). The image still scales UP to fill it. */
+  .cs-lightbox-stage {
+    position: relative;
+    aspect-ratio: var(--cs-img-aspect, 1.7778);
+    width: min(92vw, calc(90vh * var(--cs-img-aspect, 1.7778)));
+    height: auto;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0.96);
+    transition: transform var(--duration-base, 240ms) var(--easing-out, ease);
+  }
+  .cs-lightbox.is-open .cs-lightbox-stage {
+    transform: scale(1);
+  }
+
+  .cs-lightbox-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 18px 50px oklch(0 0 0 / 0.55));
+  }
+
+  /* Round close button CENTERED on the image's top-right corner: its center
+   * sits exactly on the corner point, so ~3/4 of it floats in the dark
+   * diagonal outside the image and only its inner edge reaches the corner
+   * (empty image padding, not content). top/right = -(size/2). */
+  .cs-lightbox-close {
+    position: absolute;
+    top: -22px;
+    right: -22px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid color-mix(in oklch, var(--accent-royal-bright) 70%, white 30%);
+    background: oklch(0.18 0.02 270 / 0.9);
+    color: oklch(1 0 0 / 0.98);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    /* Steady strong accent glow under the radar-ping rings below. */
+    box-shadow:
+      0 4px 14px oklch(0 0 0 / 0.45),
+      0 0 26px color-mix(in oklch, var(--accent-royal-bright) 85%, transparent);
+    transition:
+      transform var(--duration-fast, 150ms) var(--easing-out, ease),
+      background var(--duration-fast, 150ms) var(--easing-out, ease);
+  }
+
+  /* Two staggered "radar ping" rings expand and fade out from the button so
+   * the close affordance is unmistakable. Pseudo-elements (the X itself is an
+   * <svg> child) so their scale animation never conflicts with the button's
+   * own hover/press transforms. */
+  .cs-lightbox-close::before,
+  .cs-lightbox-close::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in oklch, var(--accent-royal-bright) 80%, white 20%);
+    animation: cs-close-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    pointer-events: none;
+  }
+  .cs-lightbox-close::after {
+    animation-delay: 0.9s;
+  }
+  @keyframes cs-close-ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+
+  .cs-lightbox-close:hover {
+    transform: scale(1.12);
+    background: oklch(0.28 0.03 270 / 0.95);
+  }
+  .cs-lightbox-close:active {
+    transform: scale(0.94);
+  }
+  .cs-lightbox-close svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    fill: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cs-lightbox,
+    .cs-lightbox-stage,
+    .cs-lightbox-close {
+      transition: none;
+    }
+    /* No ping rings, but keep a strong steady glow so the button is still
+     * easy to find. */
+    .cs-lightbox-close::before,
+    .cs-lightbox-close::after {
+      animation: none;
+      opacity: 0;
+    }
+    .cs-lightbox-close {
+      box-shadow:
+        0 4px 14px oklch(0 0 0 / 0.45),
+        0 0 26px color-mix(in oklch, var(--accent-royal-bright) 85%, transparent);
+    }
+  }
+
   :global(.case-study) {
     padding: var(--space-3xl);
     margin-bottom: var(--space-3xl);
@@ -385,6 +662,115 @@ const availabilityLabel =
     text-transform: uppercase;
     letter-spacing: var(--tracking-widest);
     margin: 0 0 var(--space-md) 0;
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+   * LAYOUT MODES (opt-in via a class on .case-study; the live /work pages
+   * don't set any of these, so their default single-column layout is
+   * unchanged). Used by the /layouts comparison sandbox.
+   * ════════════════════════════════════════════════════════════════════ */
+
+  /* Sections stay full-width and stacked in narrative order in EVERY mode.
+   * What changes is (1) the overall width cap and (2) the long LIST sections
+   * — "What it does" and "Tech decisions" — lay their items into an internal
+   * grid, which is what actually uses the width and cuts the scroll, while
+   * prose stays readable and the story stays in order. */
+  :global(.case-study--multicol) .case-study-feature-list,
+  :global(.case-study--twopane) .case-study-feature-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-sm) var(--space-2xl);
+  }
+  :global(.case-study--multicol) .case-study-feature-item,
+  :global(.case-study--twopane) .case-study-feature-item {
+    max-width: none;
+  }
+  :global(.case-study--multicol) .case-study-decisions-list,
+  :global(.case-study--twopane) .case-study-decisions-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+  }
+  :global(.case-study--multicol) .case-study-decision-rationale,
+  :global(.case-study--twopane) .case-study-decision-rationale {
+    max-width: none;
+  }
+
+  /* Prose-only sections (problem / approach / status / role — no list, no
+   * media) flow their paragraphs into two readable columns so the narrative
+   * fills the width instead of leaving the right half empty, while each
+   * column stays a comfortable line length. The heading spans both columns. */
+  :global(.case-study--multicol)
+    .case-study-section:not(:has(ul)):not(:has(figure)):not(:has(.case-study-screenshots)),
+  :global(.case-study--twopane)
+    .case-study-section:not(:has(ul)):not(:has(figure)):not(:has(.case-study-screenshots)) {
+    columns: 2;
+    column-gap: var(--space-2xl);
+  }
+  :global(.case-study--multicol) .case-study-section-heading,
+  :global(.case-study--twopane) .case-study-section-heading {
+    column-span: all;
+  }
+  :global(.case-study--multicol) .case-study-para,
+  :global(.case-study--twopane) .case-study-para {
+    max-width: none;
+    break-inside: avoid;
+  }
+
+  /* A · WIDE — readable single column, just a touch wider than the default. */
+  :global(.case-study--wide) {
+    max-width: 1120px;
+    margin-inline: auto;
+  }
+
+  /* Each section becomes a full-width PANEL, stacked vertically; the content
+   * INSIDE the panel uses columns (prose flows 2-up, lists grid out). */
+  :global(.case-study--multicol) .case-study-section,
+  :global(.case-study--twopane) .case-study-section {
+    margin: 0;
+    padding: var(--space-xl);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+  }
+
+  /* B · MULTI-COLUMN — wider container; panels stack, content columns inside. */
+  :global(.case-study--multicol) {
+    max-width: 1360px;
+    margin-inline: auto;
+  }
+  :global(.case-study--multicol) .case-study-body {
+    gap: var(--space-lg);
+  }
+
+  /* C · TWO-PANE — a left meta/actions rail (title, tagline, tech stack,
+   * downloads, CTA) and the content panels filling the right.
+   *
+   * The rail items live in column 1 rows 1-4; the body spans every row in
+   * column 2. The trailing `1fr` row absorbs the body's extra height so the
+   * rail items stay grouped at the top instead of being spread apart by the
+   * tall body (shared grid rows would otherwise pull them down). */
+  :global(.case-study--twopane) {
+    max-width: 1500px;
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: auto auto auto auto 1fr;
+    column-gap: var(--space-2xl);
+    row-gap: var(--space-xl);
+    align-items: start;
+  }
+  :global(.case-study--twopane) .case-study-header  { grid-column: 1; grid-row: 1; margin: 0; }
+  :global(.case-study--twopane) .case-study-tech      { grid-column: 1; grid-row: 2; margin: 0; border-top: 0; padding-top: 0; }
+  :global(.case-study--twopane) .case-study-downloads { grid-column: 1; grid-row: 3; }
+  :global(.case-study--twopane) .case-study-footer    { grid-column: 1; grid-row: 4; }
+  :global(.case-study--twopane) .case-study-body      { grid-column: 2; grid-row: 1 / -1; margin: 0; }
+
+  @media (max-width: 900px) {
+    :global(.case-study--twopane) {
+      display: flex;
+      flex-direction: column;
+    }
   }
 
   .case-study-para {
