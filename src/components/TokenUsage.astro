@@ -1,0 +1,145 @@
+---
+/**
+ * TokenUsage.astro
+ *
+ * Renders a small, collapsible list of selectors / files that reference a
+ * given CSS custom property. Data source: `src/data/tokenUsage.json`, which
+ * is produced by `scripts/build-token-usage.mjs`. Regenerate with:
+ *   npm run scan:tokens
+ *
+ * Usage:
+ *   <TokenUsage token="--accent-royal" />
+ *   <TokenUsage token="--bg-1" collapsedByDefault={false} />
+ *
+ * If the token is not present in the scan, a friendly empty-state is shown.
+ * The component intentionally renders nothing dependent on a runtime fetch —
+ * the JSON is imported at build time and tree-shaken per page.
+ */
+
+import usage from "../data/tokenUsage.json";
+
+interface UsageEntry {
+  file: string;
+  line: number;
+  context: string;
+}
+
+interface Props {
+  token: string; // e.g. "--accent-royal"
+  collapsedByDefault?: boolean;
+}
+
+const { token, collapsedByDefault = true } = Astro.props;
+
+const tokensMap = (usage as { tokens: Record<string, UsageEntry[]> }).tokens;
+const entries: UsageEntry[] = tokensMap[token] ?? [];
+---
+
+{entries.length === 0 ? (
+  <span class="token-usage-empty">No references found.</span>
+) : (
+  <details class="token-usage" open={!collapsedByDefault}>
+    <summary class="token-usage-summary">
+      Used in <strong>{entries.length}</strong>{" "}
+      {entries.length === 1 ? "place" : "places"}
+    </summary>
+    <ul class="token-usage-list">
+      {entries.map((e) => (
+        <li class="token-usage-item">
+          <code class="token-usage-context" title={e.context}>{e.context}</code>
+          <span class="token-usage-file" title={`${e.file}:${e.line}`}>
+            {e.file}:{e.line}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </details>
+)}
+
+<style>
+  /*
+   * Component inherits theme tokens via the design system. Keep visual
+   * weight low — this is a developer-affordance, not a primary UI element.
+   */
+  .token-usage {
+    display: block;
+    margin-top: var(--space-xs, 0.25rem);
+    color: var(--color-fg-secondary, inherit);
+  }
+
+  .token-usage-empty {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-family: var(--font-ui, system-ui, sans-serif);
+    opacity: 0.55;
+    font-style: italic;
+  }
+
+  .token-usage-summary {
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: var(--font-ui, system-ui, sans-serif);
+    opacity: 0.7;
+    user-select: none;
+    list-style: none;
+    padding: 0.25rem 0;
+  }
+  .token-usage-summary::-webkit-details-marker {
+    display: none;
+  }
+  .token-usage-summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.35em;
+    transition: transform var(--duration-fast, 120ms)
+      var(--easing-out, ease-out);
+  }
+  .token-usage[open] > .token-usage-summary::before {
+    transform: rotate(90deg);
+  }
+  .token-usage-summary strong {
+    color: var(--color-fg-primary, inherit);
+    font-weight: 600;
+  }
+
+  .token-usage-list {
+    list-style: none;
+    padding: 0.5rem 0 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  }
+
+  .token-usage-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+    border-bottom: 1px solid
+      var(--glass-border-subtle, rgba(255, 255, 255, 0.04));
+  }
+  .token-usage-item:last-child {
+    border-bottom: none;
+  }
+
+  .token-usage-context {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: var(--accent-royal, currentColor);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .token-usage-file {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    opacity: 0.6;
+    font-size: 0.7rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+</style>

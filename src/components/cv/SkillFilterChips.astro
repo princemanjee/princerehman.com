@@ -1,0 +1,166 @@
+---
+/**
+ * SkillFilterChips: multi-select skill chip row for the Adaptive CV.
+ *
+ * REFACTOR: each chip is now a <GlassButton size="sm"> using primary
+ * (active) / secondary (inactive) variants, matching AudienceSwitcher.
+ * The "More skills" disclosure is a native <details>/<summary>; the
+ * "Clear all" action is a small secondary GlassButton.
+ */
+
+import { KNOWN_SKILLS } from "../../data/cvSkillIndex";
+import { slugifySkill } from "../../lib/cv-render";
+import Stack from "../Stack.astro";
+import GlassButton from "../GlassButton.astro";
+
+interface Props {
+  active: string[];
+  all: string[];
+}
+
+const { active, all } = Astro.props;
+
+const defaultSet = new Set(all);
+const extras = (KNOWN_SKILLS || []).filter((s) => !defaultSet.has(s));
+
+const activeSet = new Set(active);
+function isActive(skill: string): boolean {
+  return activeSet.has(slugifySkill(skill));
+}
+---
+
+<div class="cv-skill-filter-chips" data-cv-skill-filter>
+  <Stack direction="horizontal" gap="xs" wrap align="center">
+    {all.map((skill) => {
+      const slug = slugifySkill(skill);
+      const on = isActive(skill);
+      return (
+        <GlassButton variant={on ? "primary" : "secondary"} size="sm">
+          <span
+            data-cv-skill={slug}
+            data-cv-skill-label={skill}
+            aria-pressed={on ? "true" : "false"}
+            class="cv-skill-chip__inner">
+            {on && <span aria-hidden="true">✓ </span>}
+            {skill}
+          </span>
+        </GlassButton>
+      );
+    })}
+
+    {active.length > 0 && (
+      <GlassButton variant="secondary" size="sm">
+        <span data-cv-skill-clear class="cv-skill-chip__inner">Clear all</span>
+      </GlassButton>
+    )}
+  </Stack>
+
+  {extras.length > 0 && (
+    <details class="cv-skill-filter-chips__more">
+      <summary class="cv-skill-filter-chips__summary">More skills</summary>
+      <div class="cv-skill-filter-chips__extras">
+        <Stack direction="horizontal" gap="xs" wrap align="center">
+          {extras.map((skill) => {
+            const slug = slugifySkill(skill);
+            const on = isActive(skill);
+            return (
+              <GlassButton variant={on ? "primary" : "secondary"} size="sm">
+                <span
+                  data-cv-skill={slug}
+                  data-cv-skill-label={skill}
+                  aria-pressed={on ? "true" : "false"}
+                  class="cv-skill-chip__inner">
+                  {on && <span aria-hidden="true">✓ </span>}
+                  {skill}
+                </span>
+              </GlassButton>
+            );
+          })}
+        </Stack>
+      </div>
+    </details>
+  )}
+</div>
+
+<style>
+  .cv-skill-chip__inner { color: inherit; font: inherit; line-height: 1; }
+  .cv-skill-filter-chips__more { margin-top: var(--space-xs); }
+  .cv-skill-filter-chips__summary {
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding: 0.4rem 0.85rem; border-radius: var(--radius-full);
+    border: 1px dashed var(--glass-border); color: var(--color-fg-tertiary);
+    font-family: var(--font-ui); font-size: var(--text-sm); cursor: pointer; list-style: none;
+  }
+  .cv-skill-filter-chips__summary::-webkit-details-marker { display: none; }
+  .cv-skill-filter-chips__summary:hover,
+  .cv-skill-filter-chips__summary:focus-visible { color: var(--color-fg-primary); border-color: var(--glass-border-strong); outline: none; }
+  .cv-skill-filter-chips__extras { margin-top: var(--space-xs); }
+</style>
+
+<script>
+  /*
+   * Toggle logic. Active set lives in ?skill= as comma-joined slug list.
+   * Click → toggle slug in URL via cv-state's patchState helper. The
+   * root state applier handles URL + DOM + storage sync.
+   *
+   * onStateChange re-paints the chip's active variant by toggling the
+   * GlassButton classes so external state changes (clear-all, popstate)
+   * reflect into the UI without a reload.
+   */
+  import {
+    patchState,
+    onStateChange,
+    readStateFromUrl,
+  } from "../../lib/cv-state";
+
+  (() => {
+    const root = document.querySelector<HTMLElement>("[data-cv-skill-filter]");
+    if (!root) return;
+
+    const chips = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-cv-skill]"),
+    );
+
+    function toggleSlug(slug: string) {
+      const current = readStateFromUrl().skills;
+      const idx = current.indexOf(slug);
+      const next =
+        idx >= 0
+          ? [...current.slice(0, idx), ...current.slice(idx + 1)]
+          : [...current, slug];
+      patchState({ skills: next });
+    }
+
+    chips.forEach((chip) => {
+      const button = chip.closest<HTMLElement>("button, a") ?? chip;
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const slug = chip.getAttribute("data-cv-skill");
+        if (slug) toggleSlug(slug);
+      });
+    });
+
+    const clearChip = root.querySelector<HTMLElement>("[data-cv-skill-clear]");
+    if (clearChip) {
+      const button = clearChip.closest<HTMLElement>("button, a") ?? clearChip;
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        patchState({ skills: [] });
+      });
+    }
+
+    onStateChange((state) => {
+      const active = new Set(state.skills);
+      chips.forEach((chip) => {
+        const slug = chip.getAttribute("data-cv-skill") ?? "";
+        const on = active.has(slug);
+        chip.setAttribute("aria-pressed", on ? "true" : "false");
+        const button = chip.closest<HTMLElement>("button, a");
+        if (button) {
+          button.classList.toggle("glass-btn--primary", on);
+          button.classList.toggle("glass-btn--secondary", !on);
+        }
+      });
+    });
+  })();
+</script>

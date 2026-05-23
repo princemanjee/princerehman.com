@@ -1,0 +1,230 @@
+---
+/**
+ * RoleCard: expandable role/project card for the Adaptive CV.
+ *
+ * REFACTOR: this component is now a thin wrapper around <GlassPanel>.
+ * All surface treatment (background, border, radius, shadow, blur) comes
+ * from the design-system primitive, so every other page on the site and
+ * this card share the same visual language. Layout inside the card uses
+ * <Stack> for vertical rhythm; the highlight expander still owns a tiny
+ * sliver of scoped CSS for the collapse/reveal transition.
+ *
+ * Data-attribute contract on the outer element drives the client-side
+ * state machine (cv-state.ts):
+ *   data-cv-role-card        marker so cv-state can find every card
+ *   data-cv-card-kind        "experience" | "project"
+ *   data-cv-role-id          stable engine roleId for cross-references
+ *   data-cv-emphasis         initial SSR emphasis (informational)
+ *   data-cv-audience         the audience the page was SSR'd for
+ *   data-cv-audiences        audiences where this role is primary/secondary
+ *   data-cv-hidden-for       audiences where this role should be hidden
+ *   data-cv-skills           space-separated slug list for client filtering
+ *   data-cv-year-end         integer year (time-axis filter)
+ *
+ * CSS that toggles visibility / dim based on these attributes lives in
+ * src/styles/cv-adaptive.css (loaded once by the page).
+ */
+
+import type { Audience } from "../../data/cvAudienceTags";
+import GlassPanel from "../GlassPanel.astro";
+import GlassButton from "../GlassButton.astro";
+import Stack from "../Stack.astro";
+
+export interface RenderedRole {
+  roleId?: string;
+  company: string;
+  position: string;
+  dateRange?: string;
+  location?: string;
+  summary?: string;
+  highlights?: string[];
+  emphasis?: "primary" | "secondary" | "hidden";
+  matchedSkills?: string[];
+  matchesAllActiveSkills?: boolean;
+  audiencesData?: string[];
+  hiddenForAudiences?: string[];
+  skillsData?: string[];
+  yearEnd?: number;
+}
+
+interface Props {
+  role: RenderedRole;
+  audience: Audience;
+  activeSkills: string[];
+  defaultExpandedHighlights?: number;
+  kind?: "experience" | "project";
+}
+
+const {
+  role,
+  audience,
+  activeSkills,
+  defaultExpandedHighlights = 3,
+  kind = "experience",
+} = Astro.props;
+
+const emphasis = role.emphasis ?? "secondary";
+const highlights = role.highlights ?? [];
+const visibleHighlights = highlights.slice(0, defaultExpandedHighlights);
+const hiddenHighlights = highlights.slice(defaultExpandedHighlights);
+const hasHidden = hiddenHighlights.length > 0;
+
+const showSkillPills =
+  Array.isArray(activeSkills) && activeSkills.length > 0;
+const matchedSkills = role.matchedSkills ?? [];
+
+const collapsedLabel = `Show all ${highlights.length} highlights`;
+const expandedLabel = "Hide extra highlights";
+
+const audiencesAttr = (role.audiencesData ?? []).join(" ");
+const hiddenForAttr = (role.hiddenForAudiences ?? []).join(" ");
+const skillsAttr = (role.skillsData ?? []).join(" ");
+const yearEndAttr = role.yearEnd != null ? String(role.yearEnd) : "";
+const roleIdAttr = role.roleId ?? "";
+---
+
+<div
+  class="cv-role-card-wrapper"
+  data-cv-role-card
+  data-cv-card-kind={kind}
+  data-cv-role-id={roleIdAttr}
+  data-cv-emphasis={emphasis}
+  data-cv-audience={audience}
+  data-cv-audiences={audiencesAttr}
+  data-cv-hidden-for={hiddenForAttr}
+  data-cv-skills={skillsAttr}
+  data-cv-year-end={yearEndAttr}>
+  <GlassPanel size="md">
+    <Stack gap="sm">
+      <header class="cv-role-card__header">
+        <h3 class="cv-role-card__company">{role.company}</h3>
+        {role.position && (
+          <>
+            <span class="cv-role-card__sep" aria-hidden="true">·</span>
+            <span class="cv-role-card__position">{role.position}</span>
+          </>
+        )}
+        {role.dateRange && (
+          <>
+            <span class="cv-role-card__sep" aria-hidden="true">·</span>
+            <span class="cv-role-card__meta">{role.dateRange}</span>
+          </>
+        )}
+        {role.location && (
+          <>
+            <span class="cv-role-card__sep" aria-hidden="true">·</span>
+            <span class="cv-role-card__meta">{role.location}</span>
+          </>
+        )}
+      </header>
+
+      {showSkillPills && matchedSkills.length > 0 && (
+        <ul class="cv-role-card__matches" aria-label="Matched skills">
+          {matchedSkills.map((s) => (
+            <li class="tech-tag tech-tag--accent">
+              <span aria-hidden="true">✓</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {role.summary && <p class="cv-role-card__summary">{role.summary}</p>}
+
+      {highlights.length > 0 && (
+        <ul class="cv-role-card__highlights">
+          {visibleHighlights.map((h) => (
+            <li>{h}</li>
+          ))}
+        </ul>
+      )}
+
+      {hasHidden && (
+        <div class="cv-role-card__highlights-extra" aria-hidden="true">
+          <ul class="cv-role-card__highlights">
+            {hiddenHighlights.map((h) => (
+              <li>{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {hasHidden && (
+        <div class="cv-role-card__expand-wrap">
+          <GlassButton
+            variant="secondary"
+            size="sm"
+            type="button"
+            aria-expanded="false"
+            data-cv-role-expand
+            data-label-collapsed={collapsedLabel}
+            data-label-expanded={expandedLabel}>
+            {collapsedLabel}
+          </GlassButton>
+        </div>
+      )}
+    </Stack>
+  </GlassPanel>
+</div>
+
+<style>
+  /* Left-edge accent for primary emphasis via inset shadow on the panel. */
+  .cv-role-card-wrapper[data-cv-emphasis="primary"] :global(.glass-panel) {
+    box-shadow:
+      inset 4px 0 0 var(--accent-royal),
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 8px 24px oklch(0 0 0 / 0.35),
+      0 24px 64px oklch(0 0 0 / 0.45);
+  }
+  .cv-role-card__header {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    gap: 0.35rem var(--space-sm); margin: 0;
+  }
+  .cv-role-card__company {
+    margin: 0; font-family: var(--font-display); font-weight: 600;
+    font-size: var(--text-lg); color: var(--color-fg-primary); line-height: 1.2;
+  }
+  .cv-role-card__sep { color: var(--color-fg-muted); }
+  .cv-role-card__position { color: var(--color-fg-secondary); }
+  .cv-role-card__meta { font-size: var(--text-xs); color: var(--color-fg-tertiary); }
+  .cv-role-card__matches { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+  .cv-role-card__summary { margin: 0; color: var(--color-fg-secondary); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+  .cv-role-card__highlights { margin: 0; padding-left: 1.1rem; color: var(--color-fg-secondary); line-height: var(--leading-relaxed); }
+  .cv-role-card__highlights li { margin-bottom: 0.35rem; }
+  .cv-role-card__highlights-extra {
+    overflow: hidden; max-height: 0; opacity: 0;
+    transition: max-height var(--duration-slow) var(--easing-out), opacity var(--duration-base) var(--easing-out);
+  }
+  .cv-role-card-wrapper[data-cv-expanded="true"] .cv-role-card__highlights-extra { max-height: 2000px; opacity: 1; }
+  .cv-role-card__expand-wrap { display: flex; }
+</style>
+
+<script>
+  /*
+   * Per-card expand toggle. Each card maintains its own data-cv-expanded
+   * attribute on the wrapper; CSS hooks the max-height transition.
+   * Deliberately NOT mirrored to the URL — expander state is ephemeral.
+   */
+  (() => {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-cv-role-expand]")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest<HTMLElement>("[data-cv-role-card]");
+          if (!card) return;
+          const open = card.getAttribute("data-cv-expanded") === "true";
+          const next = open ? "false" : "true";
+          card.setAttribute("data-cv-expanded", next);
+          btn.setAttribute("aria-expanded", next);
+          const extra = card.querySelector<HTMLElement>(
+            ".cv-role-card__highlights-extra",
+          );
+          if (extra) extra.setAttribute("aria-hidden", open ? "true" : "false");
+          btn.textContent = open
+            ? btn.getAttribute("data-label-collapsed") || "Show all highlights"
+            : btn.getAttribute("data-label-expanded") || "Hide extra highlights";
+        });
+      });
+  })();
+</script>

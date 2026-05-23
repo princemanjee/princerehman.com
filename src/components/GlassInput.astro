@@ -76,32 +76,36 @@ const {
 } = Astro.props;
 ---
 
-<input
-  type={type}
-  name={name}
-  id={id}
-  value={value}
-  placeholder={placeholder}
-  required={required}
-  disabled={disabled}
-  readonly={readonly}
-  autocomplete={autocomplete}
-  inputmode={inputmode}
-  pattern={pattern}
-  minlength={minlength}
-  maxlength={maxlength}
-  min={min}
-  max={max}
-  step={step}
-  aria-invalid={hasError || undefined}
-  aria-describedby={ariaDescribedBy}
-  class:list={[
-    "glass-input",
-    `glass-input--${size}`,
-    hasError && "glass-input--error",
-    className,
-  ]}
-/>
+{/* Shell wraps the field so it can host a glass-finish ::after sheen — an
+    <input> can't have pseudo-elements itself. */}
+<span class="glass-field-shell">
+  <input
+    type={type}
+    name={name}
+    id={id}
+    value={value}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    readonly={readonly}
+    autocomplete={autocomplete}
+    inputmode={inputmode}
+    pattern={pattern}
+    minlength={minlength}
+    maxlength={maxlength}
+    min={min}
+    max={max}
+    step={step}
+    aria-invalid={hasError || undefined}
+    aria-describedby={ariaDescribedBy}
+    class:list={[
+      "glass-input",
+      `glass-input--${size}`,
+      hasError && "glass-input--error",
+      className,
+    ]}
+  />
+</span>
 
 <style>
   /*
@@ -111,6 +115,14 @@ const {
    * Inset top shadow creates the depressed appearance.
    * Subtle bottom inset highlight suggests inner light bouncing up.
    */
+  /* Shell hosts the glass-finish sheen (::after, added in global.css) over the
+   * field, since an <input> can't carry pseudo-elements itself. */
+  .glass-field-shell {
+    display: block;
+    position: relative;
+    border-radius: 14px;
+  }
+
   .glass-input {
     display: block;
     width: 100%;

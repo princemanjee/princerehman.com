@@ -1,0 +1,959 @@
+{
+  "_snapshotMeta": {
+    "source": "JobApplyFramework/Assets/resume.json",
+    "snapshotDate": "2026-05-21",
+    "sha256": "98ace50dc897d5c139bf71c526ba5430db13094f1dfc17c0ca4d47a50e93925c",
+    "syncedAt": "2026-05-21T10:56:28.471Z"
+  },
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "P. R. Manjee, EE, MIS",
+    "label": "Digital Transformation & AI Readiness Strategist | Modern Workplace Consultant | Technology Enablement Leader",
+    "image": "https://gravatar.com/userimage/234357823/2447b5ff3fcbc496e1c0cc9757cfd27e.jpeg?size=256",
+    "email": "princemanjee@gmail.com",
+    "phone": "312.296.9067 / 574.329.3218",
+    "url": "https://cv.princerehman.com/",
+    "summary": "Digital transformation strategist with 30 years of experience guiding organizations through modernization, AI readiness, and practical technology adoption. Skilled at translating complex technical concepts into clear business value, aligning stakeholders, and improving workforce productivity through modern workplace solutions. Known for reducing transformation failure rates, improving collaboration, and helping SMB, mid-market, and mission-driven organizations adopt cloud, automation, and AI technologies in a sustainable, human-centered way.",
+    "location": {
+      "postalCode": "60605",
+      "city": "Chicago",
+      "countryCode": "US",
+      "region": "Illinois"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "princemanjee",
+        "url": "https://www.linkedin.com/in/princemanjee/"
+      },
+      {
+        "network": "GitHub",
+        "username": "princemanjee",
+        "url": "https://github.com/princemanjee"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "MMR - Modern Workplace Consultant",
+      "company": "MMR - Modern Workplace Consultant",
+      "position": "AI Adoption Program Lead (Software Engineering Transformation)",
+      "startDate": "2025-07",
+      "endDate": "2026-01",
+      "description": "Full-time, 6 months",
+      "summary": "Led digital transformation initiatives across healthcare and business environments, focusing on assessments, modernization planning, and technology enablement. Guided organizations through AI readiness, workflow improvement, and adoption of modern workplace tools. Evaluated operational gaps and developed practical roadmaps that aligned leadership, staff, and technology teams. Keywords: AI adoption, context engineering, software development, prompt engineering, machine learning integration, workflow automation, developer training, engineering transformation.",
+      "highlights": [
+        "Designed digital workplace solutions using Microsoft 365, Teams, and SharePoint to improve collaboration and reduce operational friction",
+        "Developed modernization roadmaps based on business, clinical, and IT assessments",
+        "Led change enablement efforts to support adoption of new tools and processes",
+        "Managed cloud migration and modernization efforts across multiple platforms",
+        "Evaluated emerging technologies including AI, automation, and digital tools to support organizational readiness",
+        "Improved cross-functional alignment by translating technical requirements into clear business outcomes"
+      ]
+    },
+    {
+      "name": "Cognesense",
+      "company": "Cognesense",
+      "position": "Contract Cybersecurity Lead (Incident Response & Recovery)",
+      "startDate": "2025-10",
+      "endDate": "2025-12",
+      "description": "Contract, < 60 Days",
+      "summary": "Brought in as an external consultant to lead Cognesense’s on-site response after a ransomware attack exploiting a SonicWall router vulnerability. Tasked with mitigating the crisis, restoring operations, and building long-term resiliency within the IT environment. Keywords: Incident response, ransomware recovery, network security, SonicWall, cybersecurity architecture, business continuity, data recovery, forensic analysis, mitigation, team leadership.",
+      "highlights": [
+        "Led cross-functional team through full incident response cycle, including threat assessment, system isolation, negotiation strategy, and coordinated recovery.",
+        "Designed and implemented technical playbooks for rapid incident response and infrastructure restoration.",
+        "Directed negotiations with threat actors and coordinated forensic containment efforts to minimize data loss.",
+        "Re-architected core information systems and implemented segmentation and monitoring frameworks to prevent future exploits.",
+        "Conducted team training on incident response methodology, containment, and post-breach remediation to strengthen internal capability.",
+        "Executed post-incident analysis to identify root causes and implement preventive measures."
+      ]
+    },
+    {
+      "name": "DTIG",
+      "company": "DTIG",
+      "position": "UX Strategy & Digital Transformation Consultant",
+      "url": "https://www.linkedin.com/company/DTIG/",
+      "startDate": "2021-05",
+      "endDate": "2024-12",
+      "description": "Full-time, 4 years 7 months",
+      "summary": "Led digital transformation initiatives across healthcare and business environments, focusing on assessments, modernization planning, and technology enablement. Guided organizations through AI readiness, workflow improvement, and adoption of modern workplace tools. Evaluated operational gaps and developed practical roadmaps that aligned leadership, staff, and technology teams. Keywords: Digital transformation, Microsoft 365, Teams, SharePoint, AI readiness, workflow improvement, modernization roadmaps, change enablement, cloud migration, operational assessments, technology adoption, cross-functional alignment",
+      "highlights": [
+        "Designed digital workplace solutions using Microsoft 365, Teams, and SharePoint to improve collaboration and reduce operational friction",
+        "Developed modernization roadmaps based on business, clinical, and IT assessments",
+        "Led change enablement efforts to support adoption of new tools and processes",
+        "Managed cloud migration and modernization efforts across multiple platforms",
+        "Evaluated emerging technologies including AI, automation, and digital tools to support organizational readiness",
+        "Improved cross-functional alignment by translating technical requirements into clear business outcomes"
+      ]
+    },
+    {
+      "name": "Tahoe Partners",
+      "company": "Tahoe Partners",
+      "position": "Information Technology Solutions Architect",
+      "url": "https://www.linkedin.com/company/tahoe-partners/",
+      "startDate": "2019-05",
+      "endDate": "2021-05",
+      "description": "2 years",
+      "summary": "Provided consulting services for healthcare organizations undergoing modernization. Conducted assessments, identified capability gaps, and developed transformation strategies that improved operational efficiency and technology adoption. Keywords: Digital transformation, process improvement, AI evaluation, automation, SharePoint migration, Microsoft 365, cloud migration, re-platforming, capability assessments, transformation strategies, operational efficiency",
+      "highlights": [
+        "Created standardized methodologies for digital transformation assessments",
+        "Developed process improvement recommendations aligned with future-state goals",
+        "Evaluated digital tools including AI, automation, and online engagement systems",
+        "Designed SharePoint migration strategies for organizations moving to Microsoft 365",
+        "Supported cloud migration initiatives using lift-and-shift and re-platforming approaches",
+        "Developed business models and documentation to support modernization efforts"
+      ]
+    },
+    {
+      "name": "MICAH Legal Services Inc",
+      "company": "MICAH Legal Services Inc",
+      "position": "Digital Transformation Director",
+      "url": "https://www.linkedin.com/company/micah-legal-services-inc/",
+      "startDate": "2020-05",
+      "endDate": "",
+      "description": "Part-time",
+      "summary": "Provided technology leadership for a statewide legal services organization, improving operational efficiency and supporting remote work capabilities. Keywords: Cloud-first strategy, IT operations, technical standards, system reliability, security posture, technology governance, operational continuity, modernization roadmaps, IT staffing",
+      "highlights": [
+        "Developed a cloud-first strategy to improve access, performance, and scalability",
+        "Improved IT operations, staffing, and support processes",
+        "Established technical standards and roadmaps for modernization",
+        "Ensured system reliability and operational continuity",
+        "Led initiatives to improve security posture and technology governance"
+      ]
+    },
+    {
+      "name": "Groove Science Studios, Inc.",
+      "company": "Groove Science Studios, Inc.",
+      "position": "Member of the Board of Advisors",
+      "location": "Denver, Colorado",
+      "url": "https://www.soundscapeuniverse.com/magic-mirror/",
+      "startDate": "2014-06",
+      "endDate": "",
+      "description": "Part-time",
+      "summary": "Advisor for Soundscape VR, supporting product development, partnerships, and strategic planning. Keywords: Product roadmaps, strategic planning, partnership development, hardware/software integration, VR development, business alignment, solution delivery",
+      "highlights": [
+        "Co-founded and served on the board",
+        "Developed partnership strategies with industry stakeholders",
+        "Owned product roadmaps and planning cycles",
+        "Aligned hardware and software initiatives with business goals",
+        "Supported solution delivery and best practices across teams"
+      ]
+    },
+    {
+      "name": "Strive Consulting, LLC",
+      "company": "Strive Consulting, LLC",
+      "position": "Technology Solutions Architect",
+      "url": "https://www.linkedin.com/company/strive-consulting-llc/",
+      "startDate": "2019-06",
+      "endDate": "2020-01",
+      "description": "7 months",
+      "summary": "Provided consulting services focused on cloud strategy, modernization, and technology adoption. Keywords: Cloud strategy, privacy compliance, modernization trends, migration planning, technology adoption, operational needs, strategic alignment",
+      "highlights": [
+        "Developed cloud strategies aligned with organizational goals",
+        "Monitored privacy and compliance considerations",
+        "Provided guidance on cloud technologies and modernization trends",
+        "Supported migration planning and execution",
+        "Identified solutions to meet strategic and operational needs"
+      ]
+    },
+    {
+      "name": "Heitman",
+      "company": "Heitman",
+      "position": "Senior SharePoint Architect",
+      "url": "https://www.linkedin.com/company/heitman/",
+      "startDate": "2019-07",
+      "endDate": "2019-12",
+      "description": "5 months",
+      "summary": "Led SharePoint modernization, migration, and team restructuring to improve collaboration and operational efficiency. Keywords: SharePoint modernization, migration, team restructuring, process evaluation, Microsoft 365, operational challenges, collaboration platforms",
+      "highlights": [
+        "Evaluated internal processes and recommended improvements",
+        "Developed SharePoint solutions aligned with business goals",
+        "Restructured development team to improve delivery outcomes",
+        "Migrated data to SharePoint 2016 and SharePoint Online",
+        "Identified and resolved operational challenges"
+      ]
+    },
+    {
+      "name": "Kaufman Hall",
+      "company": "Kaufman Hall",
+      "position": "Senior SharePoint Architect / Office365 Administrator",
+      "url": "https://www.linkedin.com/company/kaufman-hall/",
+      "startDate": "2015-06",
+      "endDate": "2019-08",
+      "description": "4 years 2 months",
+      "summary": "Supported enterprise collaboration platforms, modernized SharePoint environments, and improved digital workplace capabilities. Keywords: SharePoint development, Microsoft 365 training, platform upgrades, automation workflows, information architecture, governance, cost optimization, enterprise collaboration",
+      "highlights": [
+        "Developed custom SharePoint solutions and integrated business applications",
+        "Led training and adoption programs for Microsoft 365",
+        "Managed upgrades and migrations across SharePoint environments",
+        "Improved performance, reliability, and maintainability of collaboration systems",
+        "Created automation tools and workflows to streamline operations",
+        "Developed information models that reduced IT spending by $1.2M",
+        "Facilitated governance and improvement initiatives through steering committees"
+      ]
+    },
+    {
+      "name": "Rockit Ranch Productions",
+      "company": "Rockit Ranch Productions",
+      "position": "Director of Technology and Digital Strategy",
+      "url": "https://www.linkedin.com/company/rockit-ranch-productions/",
+      "startDate": "2013-09",
+      "endDate": "2015-07",
+      "description": "1 year 10 months",
+      "summary": "Led modernization of business systems to support expansion from regional to national operations. Keywords: Identity management, LAMP stack, cloud migration, Microsoft 365 deployment, analytics dashboards, knowledgebase development, enterprise systems",
+      "highlights": [
+        "Implemented identity and access solutions for unified authentication",
+        "Designed and deployed LAMP-based web applications",
+        "Migrated on-premise systems to cloud platforms",
+        "Completed enterprise Microsoft 365 deployment",
+        "Developed dashboards and analytics tools",
+        "Authored over 200 knowledgebase articles for IT operations"
+      ]
+    },
+    {
+      "name": "4Medapproved",
+      "company": "4Medapproved",
+      "position": "Software Engineer and Healthcare IT Consultant",
+      "url": "https://www.linkedin.com/company/emrapproved/",
+      "startDate": "2013-01",
+      "endDate": "2013-08",
+      "description": "7 months",
+      "summary": "Supported healthcare organizations with compliance, application deployment, and software development. Keywords: Healthcare compliance, LMS management, web development, REST APIs, MySQL, SQL Server, infrastructure engineering, application deployment",
+      "highlights": [
+        "Assisted medical practices with compliance and application configuration",
+        "Managed LMS content for training and certification",
+        "Developed web applications and REST APIs",
+        "Designed and administered MySQL and SQL Server databases",
+        "Engineered infrastructure solutions for client networks"
+      ]
+    },
+    {
+      "name": "TheSiteKings.com",
+      "company": "TheSiteKings.com",
+      "position": "Web Technologies Developer/Designer",
+      "startDate": "2010-01",
+      "endDate": "2013-07",
+      "description": "3 years 6 months",
+      "summary": "Developed websites and applications using PHP, JavaScript, and Drupal. Keywords: PHP development, JavaScript, Drupal CMS, UI/UX design, Adobe Creative Suite, bash scripting, web applications",
+      "highlights": [
+        "Developed custom CMS frameworks",
+        "Built web applications and REST APIs",
+        "Designed UI/UX components",
+        "Created websites and graphics using Adobe Creative Suite",
+        "Automated processes using bash scripting"
+      ]
+    },
+    {
+      "name": "Kehoe Designs & Floral Exhibits",
+      "company": "Kehoe Designs & Floral Exhibits",
+      "position": "IT Services Manager and Lead Web Developer",
+      "url": "https://www.linkedin.com/company/kehoe-designs/",
+      "startDate": "2011-08",
+      "endDate": "2012-12",
+      "description": "1 year 4 months",
+      "summary": "Managed IT services, digital systems, and web development for a large creative production environment. Keywords: CMS development, server infrastructure, helpdesk management, intranet systems, disaster recovery, mixed OS environments, custom software",
+      "highlights": [
+        "Developed custom CMS frameworks",
+        "Upgraded server infrastructure",
+        "Managed helpdesk and IT operations for 500+ users",
+        "Designed websites and intranet systems",
+        "Implemented disaster recovery solutions",
+        "Supported mixed OS environments",
+        "Developed custom software to meet business needs"
+      ]
+    },
+    {
+      "name": "WiredTree",
+      "company": "WiredTree",
+      "position": "Data Center Engineer & Infrastructure Architect",
+      "url": "https://www.linkedin.com/company/wiredtree/",
+      "startDate": "2009-01",
+      "endDate": "2010-01",
+      "description": "1 year",
+      "summary": "Supported data center operations, server deployment, and infrastructure automation. Keywords: Data center operations, Linux administration, Python scripting, bash automation, mail servers, DNS configuration, disaster recovery",
+      "highlights": [
+        "Deployed and managed bare metal servers",
+        "Performed Linux server administration",
+        "Developed automation scripts in Python and bash",
+        "Configured mail servers, DNS, and web servers",
+        "Supported disaster recovery and data restoration"
+      ]
+    },
+    {
+      "name": "PriceHonest LLC",
+      "company": "PriceHonest LLC",
+      "position": "Lead Software Engineer and Database Administrator",
+      "startDate": "2007-01",
+      "endDate": "2010-01",
+      "description": "3 years",
+      "summary": "Developed ERP systems and web applications in partnership with academic and international stakeholders. Keywords: LAMP ERP systems, MySQL administration, ETL engineering, hybrid environments, software engineering, academic partnerships, international stakeholders",
+      "highlights": [
+        "Developed LAMP-based ERP systems",
+        "Administered MySQL databases",
+        "Engineered ETL tools",
+        "Managed hybrid Windows/Linux environments"
+      ]
+    },
+    {
+      "name": "ARM-S Electric, Inc.",
+      "company": "ARM-S Electric, Inc.",
+      "position": "Sales and Field Engineer",
+      "startDate": "1998-06",
+      "endDate": "2004-08",
+      "description": "6 years 2 months",
+      "summary": "Provided technical support, diagnostics, and process automation solutions in heavy manufacturing environments. Keywords: Electrical diagnostics, logic controller software, automation solutions, root cause analysis, manufacturing environments, customer support, engineering teams, process improvements, High-voltage diagnostics, microelectronics, PLC programming, automation engineering, root cause analysis, process improvement, manufacturing systems",
+      "highlights": [
+        "Performed diagnostics on high-voltage and microelectronic systems",
+        "Provided customer support for engineered systems",
+        "Developed logic controller software",
+        "Engineered automation solutions",
+        "Conducted root cause analysis",
+        "Supported construction and engineering teams",
+        "Designed process improvements for manufacturing environments"
+      ]
+    }
+  ],
+  "volunteer": [
+    {
+      "organization": "Friends of Fur",
+      "position": "Founder",
+      "startDate": "2018-08",
+      "summary": "Founded and led an animal welfare organization focused on rescue, medical support, and adoption services."
+    },
+    {
+      "organization": "Random Hacks of Kindness",
+      "position": "Participant",
+      "startDate": "2004-08",
+      "endDate": "2004-08",
+      "summary": "Supported the Sohana Project for Chicago's CERT Team."
+    },
+    {
+      "organization": "PAWS Chicago",
+      "position": "Animal Care",
+      "startDate": "2004-08",
+      "endDate": "2009-08",
+      "summary": "Provided care and support for shelter animals."
+    },
+    {
+      "organization": "Village Senior Care",
+      "position": "Pet Therapy",
+      "startDate": "2004-08",
+      "endDate": "2007-08",
+      "summary": "Trained and managed animals for therapeutic support in senior care facilities."
+    }
+  ],
+  "education": [
+    {
+      "institution": "Massachusetts Institute of Technology",
+      "area": "Information Systems",
+      "studyType": "MS",
+      "startDate": "2001-12",
+      "endDate": "2002-12"
+    },
+    {
+      "institution": "University of Notre Dame",
+      "area": "Electrical Engineering",
+      "studyType": "BS",
+      "startDate": "1998-12",
+      "endDate": "2001-12",
+      "score": "3.5"
+    },
+    {
+      "institution": "Columbia College Chicago",
+      "area": "Arts, Entertainment, and Media Management",
+      "studyType": "Bachelor's Degree",
+      "startDate": "2004-12",
+      "endDate": "2007-12",
+      "score": "3.2"
+    },
+    {
+      "institution": "Roosevelt University",
+      "area": "Biology, General",
+      "studyType": "BS",
+      "startDate": "2009-12",
+      "endDate": "2013-12",
+      "score": "3.7"
+    },
+    {
+      "institution": "MIT Sloan School of Management",
+      "area": "Digital Transformation",
+      "studyType": "Master of Technology",
+      "startDate": "2020-08",
+      "endDate": "2022-05"
+    }
+  ],
+  "awards": [
+    {
+      "title": "Makithapin Award",
+      "date": "2014-11-30",
+      "awarder": "Rockit Ranch Productions",
+      "summary": "Recognized for exceptional contributions to organizational mission and culture."
+    },
+    {
+      "title": "Employee of the Year",
+      "date": "2012-01-31",
+      "awarder": "Tom Kehoe - President and CEO",
+      "summary": "Awarded for outstanding performance, dedication, and organizational impact."
+    },
+    {
+      "title": "Pilot of the Year",
+      "date": "2010-04-30",
+      "awarder": "New York Television Film Festival",
+      "summary": "Recognized for excellence in executive production and creative direction."
+    },
+    {
+      "title": "Highest Rated Engineer for Customer Satisfaction",
+      "date": "2009-04-30",
+      "awarder": "Zac Cogswell - President",
+      "summary": "Awarded for exceptional customer service and technical expertise."
+    },
+    {
+      "title": "Top Sales Engineer 2003",
+      "date": "2004-01-31",
+      "awarder": "ARM-S Electric, Inc.",
+      "summary": "Accomplished the distinction of being recognized as the Top Sales Engineer for Field Service and Electrical Apparatus Sales. Demonstrated exceptional sales acumen, technical expertise, and a deep understanding of the field service and electrical apparatus industry. Consistently exceeded sales targets by effectively identifying customer needs, providing tailored solutions, and building strong relationships with clients. This achievement highlights a track record of driving revenue growth, delivering exceptional customer service, and playing a pivotal role in the success of the organization."
+    }
+  ],
+  "certificates": [
+    {
+      "name": "Certified HIPAA Security Professional",
+      "issuer": "4Med"
+    },
+    {
+      "name": "Microsoft Certified Systems Engineer",
+      "issuer": "Productivity Point"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Modern Workplace & Technology Enablement",
+      "keywords": [
+        "Microsoft 365",
+        "Office 365",
+        "Microsoft Teams",
+        "OneDrive for Business",
+        "Exchange Online",
+        "Microsoft Copilot",
+        "Viva Suite",
+        "Power Platform",
+        "Microsoft Intune",
+        "Entra ID",
+        "Azure Active Directory",
+        "Hybrid Work Solutions",
+        "Employee Experience Platform",
+        "Digital Asset Management",
+        "Unified Communications",
+        "Collaboration Tools",
+        "Productivity Tools"
+      ]
+    },
+    {
+      "name": "Cloud Computing & Migrations",
+      "keywords": [
+        "Azure",
+        "AWS",
+        "Google Cloud Platform (GCP)",
+        "IaaS",
+        "PaaS",
+        "SaaS",
+        "Multi-Cloud",
+        "Cloud Native",
+        "Azure Cloud Solutions",
+        "AWS Cloud Services",
+        "Cloud Migration Strategy",
+        "Lift and Shift",
+        "Re-platforming",
+        "Cloud Cost Optimization",
+        "FinOps",
+        "Azure Migrate",
+        "CloudEndure",
+        "Metalogix",
+        "SPMT",
+        "Sharegate"
+      ]
+    },
+    {
+      "name": "Web Application Development",
+      "keywords": [
+        "LAMP Stack",
+        "HTML",
+        "CSS",
+        "PHP",
+        "JavaScript",
+        "TypeScript",
+        "REST API",
+        "RESTful Services",
+        "GraphQL",
+        "Microservices",
+        "Node.js",
+        "React",
+        "Angular",
+        "Vue.js",
+        "JSON",
+        "XML",
+        "SOAP",
+        "Single Page Applications (SPA)",
+        "Progressive Web Apps (PWA)",
+        "Responsive Design",
+        "HTML5",
+        "CSS3",
+        "Bootstrap",
+        "Tailwind CSS",
+        "IIS",
+        "Apache",
+        "NGINX",
+        "Tomcat",
+        "Websphere"
+      ]
+    },
+    {
+      "name": "Database Backend",
+      "keywords": [
+        "MySQL",
+        "SQL Server",
+        "PostgreSQL",
+        "MongoDB",
+        "Firebase",
+        "SQL",
+        "NoSQL",
+        "Azure SQL Database",
+        "Cosmos DB",
+        "DynamoDB",
+        "Redis",
+        "Database Design",
+        "Database Administration (DBA)",
+        "T-SQL",
+        "Stored Procedures",
+        "Database Optimization",
+        "Data Warehousing"
+      ]
+    },
+    {
+      "name": "Virtualization, Containers & Orchestration",
+      "keywords": [
+        "Hyper-V",
+        "VMware",
+        "Virtuozzo",
+        "VirtualBox",
+        "Docker",
+        "Kubernetes",
+        "Balena",
+        "Infrastructure as Code",
+        "IaC",
+        "Ansible",
+        "Terraform",
+        "Container Orchestration",
+        "Helm",
+        "Azure Kubernetes Service (AKS)",
+        "Amazon EKS",
+        "Docker Compose",
+        "Containerization",
+        "GitOps",
+        "ArgoCD",
+        "Jenkins",
+        "Azure Resource Manager (ARM)",
+        "Bicep",
+        "CloudFormation",
+        "VMware vSphere",
+        "ESXi"
+      ]
+    },
+    {
+      "name": "Process & Performance Improvement",
+      "keywords": [
+        "Power Automate",
+        "UI Path",
+        "Nintex",
+        "K2",
+        "Zapier",
+        "IFTTT",
+        "Bitrix24",
+        "Robotic Process Automation (RPA)",
+        "Business Process Management (BPM)",
+        "Process Automation",
+        "Workflow Automation",
+        "Blue Prism",
+        "Automation Anywhere",
+        "Lean Six Sigma",
+        "Process Optimization",
+        "Business Process Reengineering",
+        "Digital Process Automation",
+        "Intelligent Automation",
+        "Hyperautomation"
+      ]
+    },
+    {
+      "name": "Information Architecture & CMS Design",
+      "keywords": [
+        "SharePoint",
+        "SharePoint Online",
+        "SharePoint Server",
+        "SharePoint 2013/2016/2019",
+        "Microsoft SharePoint",
+        "Drupal",
+        "Joomla",
+        "WordPress",
+        "Confluence",
+        "Confluence Cloud",
+        "Jira Software",
+        "Atlassian Suite",
+        "LiveTiles",
+        "NextCloud",
+        "Azure DevOps",
+        "JIRA",
+        "Content Management Systems (CMS)",
+        "Enterprise Content Management (ECM)",
+        "Document Management",
+        "Knowledge Management",
+        "Information Governance",
+        "Taxonomy Design",
+        "Metadata Management"
+      ]
+    },
+    {
+      "name": "System Development Life Cycle (SDLC)",
+      "keywords": [
+        "Agile",
+        "Scrum",
+        "Waterfall",
+        "CI/CD",
+        "Pipelines"
+      ]
+    },
+    {
+      "name": "UX Design & Experience Augmentation",
+      "keywords": [
+        "CLI",
+        "GUI",
+        "VUI",
+        "VRI"
+      ]
+    },
+    {
+      "name": "Scripting & Automation Tools",
+      "keywords": [
+        "PowerShell",
+        "Python",
+        "Bash"
+      ]
+    },
+    {
+      "name": "Linux Server & Desktop Administration",
+      "keywords": [
+        "Ubuntu",
+        "Debian",
+        "Mint",
+        "Red Hat / RHEL",
+        "CentOS",
+        "Raspbian"
+      ]
+    },
+    {
+      "name": "Regulatory & Compliance",
+      "keywords": [
+        "Certified HIPAA Security Professional",
+        "Policy Governance",
+        "Compliance",
+        "Enforcement",
+        "Disaster Recovery & Business Continuity",
+        "Budget Management",
+        "Resource Management",
+        "Project Management",
+        "HIPAA Compliance",
+        "Healthcare IT Security",
+        "Disaster Recovery Planning (DRP)",
+        "Business Continuity Planning (BCP)",
+        "IT Governance",
+        "Risk Assessment",
+        "Audit Management",
+        "Regulatory Compliance"
+      ]
+    },
+    {
+      "name": "AI Adoption & Applied AI Skills",
+      "keywords": [
+        "AI Adoption",
+        "AI Readiness",
+        "Context Engineering",
+        "Prompt Engineering",
+        "AI Literacy",
+        "Automation Strategy",
+        "OpenAI",
+        "Anthropic",
+        "Google AI",
+        "Grok",
+        "Ollama",
+        "LM Studio",
+        "Huggingface",
+        "Local LLMs",
+        "Model Evaluation",
+        "Responsible AI Use",
+        "AI Workflow Integration"
+      ]
+    },
+    {
+      "name": "Data, BI & Analytics",
+      "keywords": [
+        "Data Visualization",
+        "Business Intelligence (BI)",
+        "Data Analytics",
+        "Tableau",
+        "Excel",
+        "Power BI",
+        "Reporting",
+        "Dashboard Design"
+      ]
+    },
+    {
+      "name": "Security, Compliance & Identity",
+      "keywords": [
+        "Information Security",
+        "Zero Trust Architecture",
+        "Identity and Access Management (IAM)",
+        "Multi-Factor Authentication (MFA)",
+        "Single Sign-On (SSO)",
+        "GDPR",
+        "SOC 2",
+        "ISO 27001",
+        "Security Compliance",
+        "Risk Management",
+        "Penetration Testing",
+        "Vulnerability Assessment"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "CONFIDENTIAL | Cybersecurity & Disaster Recovery Lead",
+      "description": "Brought in on a 30‑day emergency contract to help Cognesense recover from a severe ransomware incident caused by a SonicWall router exploit. I led an on-site technical response team to stabilize operations, isolate infected assets, and manage communications with attackers. I developed custom playbooks for network restoration, oversaw forensic data analysis, and guided negotiations to minimize damage. Once operations were stabilized, I re‑architected the organization’s systems to improve resilience and trained staff on incident response, reducing exposure to future exploits.",
+      "highlights": [
+        "Led emergency response team after a ransomware attack exploiting a SonicWall router vulnerability.",
+        "Directed containment, negotiation, and recovery phases to restore uptime and secure data integrity.",
+        "Authored and implemented incident response playbooks and disaster recovery frameworks.",
+        "Performed full-system restoration and architected a hardened infrastructure to prevent recurrence.",
+        "Delivered team training on incident response methodology, threat mitigation, and resilience planning."
+      ],
+      "keywords": [],
+      "startDate": "2025-10",
+      "endDate": "2025-12",
+      "roles": [],
+      "entity": "FVK Solutions",
+      "type": ""
+    },
+    {
+      "name": "MMR AI Adoption Program Lead (Software Engineering Transformation)",
+      "description": "Over a six‑month engagement, I was contracted to modernize the company’s engineering operations by embedding AI into their development lifecycle. The team had been experimenting with basic prompt-based coding (“vibe coding”), so I introduced structured context-engineering practices and reusable frameworks to maximize AI output quality. I built educational materials, delivered workshops, and implemented measurement systems that tied AI usage directly to measurable performance improvements. By project end, the team had adopted sustainable AI-driven engineering methodologies aligned with industry best practices.",
+      "highlights": [
+        "Guided software engineering teams to adopt AI technologies for context-driven coding and development.",
+        "Transitioned workflows from ad hoc prompting to structured context-engineering frameworks.",
+        "Developed internal training modules for prompt engineering and model-driven project design.",
+        "Defined key performance indicators (KPIs) linking AI integration to productivity and code quality.",
+        "Advised leadership on ethical AI deployment, change management, and long-term strategic adoption."
+      ],
+      "keywords": [],
+      "startDate": "2025-07",
+      "endDate": "2026-01",
+      "roles": [],
+      "entity": "",
+      "type": ""
+    },
+    {
+      "name": "Co-Authored DTIG Automated SharePoint Migration Tool Set",
+      "description": "Contributed to design, development and deployment of migration automation tools for SharePoint.",
+      "highlights": [
+        "Helped build a library of orchestration and automation tools using Portainer, Terraform, Balena, Ansible, Chef, Docker, and Kubernetes",
+        "Drafted playbooks to facilitate cloud migrations for enterprise support systems."
+      ],
+      "keywords": [],
+      "startDate": "2021-03",
+      "endDate": "2021-06",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "DTIG",
+      "type": ""
+    },
+    {
+      "name": "Plan and Deploy New Information Architecture for HIMSS",
+      "description": "Worked with stakeholders across the healthcare space to analyze, define, and design information architecture for a governing body responsible for healthcare information management systems.",
+      "highlights": [
+        "Collaborated with stakeholders to design a modern information architecture for healthcare information systems.",
+        "Engineered and deployed information systems to provide a logical single source of truth using SharePoint and Dataverse.",
+        "Measured and reported efficiency gains, demonstrating a 28% improvement in knowledge worker capacity."
+      ],
+      "keywords": [],
+      "startDate": "2020-12",
+      "endDate": "",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "HIMSS",
+      "type": ""
+    },
+    {
+      "name": "Assist and Advise on SharePoint Migration for Reyes Holdings",
+      "description": "Aligned client needs with engineering requirements for automation tools supporting migration workflows.",
+      "highlights": [
+        "Defined requirements for migration automation workflows.",
+        "Identified KPIs for the migration PMO and designed Power BI reports for real-time decision making and stakeholder communication."
+      ],
+      "keywords": [],
+      "startDate": "2020-04",
+      "endDate": "2021-02",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Reyes Holdings",
+      "type": ""
+    },
+    {
+      "name": "HIMSS UX Transformation",
+      "description": "Updated user experience in an on-premise SharePoint 2016 platform using a more intuitive interface.",
+      "highlights": [
+        "Redesigned the SharePoint 2016 user experience with a more intuitive interface.",
+        "Consolidated CSS, JavaScript, and design elements.",
+        "Improved performance using CDNs and code optimization.",
+        "Aligned design elements with updated branding requirements."
+      ],
+      "keywords": [],
+      "startDate": "2020-10",
+      "endDate": "2021-02",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "HIMSS",
+      "type": ""
+    },
+    {
+      "name": "Information Architecture Redesign and SharePoint Server Farm Migration for University of Chicago Medicine",
+      "description": "Completed discovery and redesign of information architecture for SharePoint farm products at University of Chicago Medicine.",
+      "highlights": [
+        "Redesigned information architecture for multiple SharePoint farms.",
+        "Performed a seamless, no-downtime migration of 5 server farms with zero interruption to emergency care operations."
+      ],
+      "keywords": [],
+      "startDate": "2020-04",
+      "endDate": "2021-02",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "University of Chicago Medicine",
+      "type": ""
+    },
+    {
+      "name": "HEITMAN Financial SharePoint Upgrade, Migration and Deployment",
+      "description": "Realigned stakeholder expectations and delivered a successful SharePoint upgrade and migration project.",
+      "highlights": [
+        "Migrated SharePoint 2013 data to SharePoint Online and SharePoint 2016 in a hybrid model.",
+        "Installed, designed, and deployed LiveTiles skin for the SharePoint intranet site.",
+        "Created standard and executive dashboards backed by Power BI using data from Salesforce.com."
+      ],
+      "keywords": [],
+      "startDate": "2019-07",
+      "endDate": "2019-12",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Heitman",
+      "type": ""
+    },
+    {
+      "name": "SharePoint Migration 2013 to 2016",
+      "description": "Architected a SharePoint 2016 fault-tolerant farm and planned migration from SharePoint 2013.",
+      "highlights": [
+        "Migrated SharePoint 2013 data to SharePoint Online and SharePoint 2016 in a hybrid model.",
+        "Installed, designed, and deployed LiveTiles skin for the SharePoint intranet site.",
+        "Created standard and executive dashboards backed by Power BI using data from AXIOM ERP and other LOB tools."
+      ],
+      "keywords": [],
+      "startDate": "2017-08",
+      "endDate": "2017-10",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Kaufman Hall",
+      "type": ""
+    },
+    {
+      "name": "SharePoint 2010 to SharePoint 2016 Migration",
+      "description": "Used a multistage migration path to consolidate SharePoint data from M&A activities.",
+      "highlights": [],
+      "keywords": [],
+      "startDate": "2017-02",
+      "endDate": "2017-04",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Kaufman Hall",
+      "type": ""
+    },
+    {
+      "name": "Kaufman Hall - SharePoint 2013 to SharePoint 2016 Migration",
+      "description": "Architected a SharePoint 2016 fault-tolerant farm and migrated all site collections from SharePoint 2013.",
+      "highlights": [
+        "Planned and migrated all site collections from SharePoint 2013 farm to SharePoint 2016 farm."
+      ],
+      "keywords": [],
+      "startDate": "2016-08",
+      "endDate": "2016-10",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Kaufman Hall",
+      "type": ""
+    },
+    {
+      "name": "AD and File Server Migration - Rockit Bar & Grill and Rockit Burger Bar",
+      "description": "Migrated on-premise file and Windows Active Directory servers to SharePoint and Azure AD.",
+      "highlights": [],
+      "keywords": [],
+      "startDate": "2014-11",
+      "endDate": "2014-11",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Rockit Ranch Productions",
+      "type": ""
+    },
+    {
+      "name": "SharePoint Deployment - RRP - Corporate",
+      "description": "Designed and deployed company resources to SharePoint Online for increased collaboration.",
+      "highlights": [
+        "Engineered data structures and workflows to automate business process management (BPM)."
+      ],
+      "keywords": [],
+      "startDate": "2014-07",
+      "endDate": "2014-07",
+      "url": "https://www.linkedin.com/in/princemanjee/",
+      "roles": [],
+      "entity": "Rockit Ranch Productions",
+      "type": ""
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "Native speaker"
+    }
+  ],
+  "publications": [
+    {
+      "name": "Photonic Computing: A Light-Based Architectural Response to the End of Electronic Scaling",
+      "publisher": "Medium",
+      "releaseDate": "2026-04-21",
+      "url": "https://medium.com/@princemanjee/photonic-computing-a-light-based-architectural-response-to-the-end-of-electronic-scaling-e36af481e679?source=friends_link&sk=017127607c34e79871e7d7e1a78e51ce",
+      "summary": ""
+    },
+    {
+      "name": "The Panopticon Paradigm: Structural Subversion and the Controlled Illusion of Digital Privacy",
+      "publisher": "Medium",
+      "releaseDate": "2026-02-09",
+      "url": "https://medium.com/@princemanjee/the-panopticon-paradigm-s%CC%B6t%CC%B6r%CC%B6u%CC%B6c%CC%B6t%CC%B6u%CC%B6r%CC%B6a%CC%B6l%CC%B6-%CC%B6s%CC%B6u%CC%B6b%CC%B6v%CC%B6e%CC%B6r%CC%B6s%CC%B6i%CC%B6o%CC%B6n%CC%B6-%CC%B6a%CC%B6n%CC%B6d%CC%B6-%CC%B6t%CC%B6h%CC%B6e%CC%B6-d408565109e2?source=friends_link&sk=6511133e3da83f9a434c56961f0701e5",
+      "summary": ""
+    },
+    {
+      "name": "Reasoning Strategies for AI Decision Making: A Practical Guide",
+      "publisher": "Medium",
+      "releaseDate": "2025-12-22",
+      "url": "https://medium.com/@princemanjee/reasoning-strategies-for-ai-decision-making-a-practical-guide-520cf517fe9a?source=friends_link&sk=a3867849002cb82f2c6bdba25ae2e8fb",
+      "summary": ""
+    },
+    {
+      "name": "Claire's Transformation Plan",
+      "publisher": "Ames Watson",
+      "releaseDate": "2026-05-01",
+      "url": "https://cv.princerehman.com/Claire-s/",
+      "summary": ""
+    }
+  ]
+}

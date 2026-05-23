@@ -1,0 +1,206 @@
+---
+/**
+ * TimeAxisSlider: horizontal range input for the years-back collapse.
+ *
+ * REFACTOR: the slider now lives INSIDE a <GlassPanel size="md"> so it
+ * picks up the same glass surface treatment as every other control on
+ * the site. The native <input type="range"> is unavoidable (no GlassRange
+ * primitive exists), but its track/thumb use --accent-royal and
+ * --glass-border tokens so the styling stays on-brand without bespoke
+ * theme values.
+ *
+ * URL contract:
+ *   ?since=YYYY  — four-digit year, 1990 ≤ year ≤ currentYear
+ *   removed      — show-all (default)
+ *
+ * Toggle button is a <GlassButton size="sm">.
+ */
+
+import GlassPanel from "../GlassPanel.astro";
+import GlassButton from "../GlassButton.astro";
+import Stack from "../Stack.astro";
+
+interface Props {
+  since: number | null;
+  min?: number;
+  max?: number;
+}
+
+const currentYear = new Date().getFullYear();
+const { since, min = 1990, max = currentYear } = Astro.props;
+
+const showAll = since == null;
+const value = since ?? min;
+
+const label = showAll
+  ? "Showing all roles at full detail"
+  : `Show full detail since ${value}`;
+---
+
+<div
+  class="cv-time-slider"
+  data-cv-time-slider
+  data-min={min}
+  data-max={max}
+  data-show-all={showAll ? "true" : "false"}>
+  <GlassPanel size="md">
+    <Stack gap="sm">
+      <div class="cv-time-slider__header">
+        <label class="cv-time-slider__label" for="cv-time-slider-input">
+          {label}
+        </label>
+        <GlassButton
+          variant={showAll ? "primary" : "secondary"}
+          size="sm">
+          <span
+            data-cv-time-toggle
+            aria-pressed={showAll ? "true" : "false"}
+            class="cv-time-slider__toggle-inner">
+            {showAll ? "Limit by year" : "Show all"}
+          </span>
+        </GlassButton>
+      </div>
+
+      <div class="cv-time-slider__track-wrap">
+        <div
+          class="cv-time-slider__bubble"
+          data-cv-time-bubble
+          aria-hidden="true">
+          {showAll ? "All" : value}
+        </div>
+        <input
+          id="cv-time-slider-input"
+          type="range"
+          class="cv-time-slider__input"
+          min={min}
+          max={max}
+          step="1"
+          value={value}
+          disabled={showAll}
+          aria-label="Show full detail since year"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+        />
+        <div class="cv-time-slider__scale" aria-hidden="true">
+          <span>{min}</span>
+          <span>{max}</span>
+        </div>
+      </div>
+    </Stack>
+  </GlassPanel>
+</div>
+
+<style>
+  .cv-time-slider { position: sticky; top: 4rem; z-index: 4; }
+  .cv-time-slider__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap; }
+  .cv-time-slider__label { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 500; color: var(--color-fg-secondary); }
+  .cv-time-slider__toggle-inner { color: inherit; font: inherit; line-height: 1; }
+  .cv-time-slider__track-wrap { position: relative; padding-top: 1.6rem; }
+  .cv-time-slider__bubble {
+    position: absolute; top: 0;
+    left: calc(var(--bubble-pos, 0) * 100%); transform: translateX(-50%);
+    min-width: 2.5rem; padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    background: var(--accent-royal); color: var(--color-fg-primary);
+    font-family: var(--font-ui); font-size: var(--text-xs); font-weight: 600; text-align: center;
+    transition: left var(--duration-fast) var(--easing-out), opacity var(--duration-fast) var(--easing-out);
+  }
+  .cv-time-slider[data-show-all="true"] .cv-time-slider__bubble { left: 50%; opacity: 0.55; }
+  .cv-time-slider__input { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; cursor: pointer; }
+  .cv-time-slider__input:focus-visible { outline: 2px solid var(--accent-royal); outline-offset: 4px; border-radius: var(--radius-full); }
+  .cv-time-slider__input::-webkit-slider-runnable-track,
+  .cv-time-slider__input::-moz-range-track { height: 4px; border-radius: var(--radius-full); background: var(--glass-border); }
+  .cv-time-slider__input::-webkit-slider-thumb,
+  .cv-time-slider__input::-moz-range-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: var(--radius-full);
+    background: var(--accent-royal); border: 2px solid var(--color-fg-primary); cursor: grab;
+  }
+  .cv-time-slider__input::-webkit-slider-thumb { margin-top: -8px; }
+  .cv-time-slider__input:disabled { opacity: 0.5; cursor: not-allowed; }
+  .cv-time-slider__scale { display: flex; justify-content: space-between; font-family: var(--font-ui); font-size: var(--text-xs); color: var(--color-fg-tertiary); margin-top: var(--space-2xs); }
+</style>
+
+<script>
+  /*
+   * Slider interactivity.
+   *
+   * Drag (input) only updates the bubble locally (no dispatch). Release
+   * (change) dispatches the final value via patchState. The toggle button
+   * flips show-all on/off.
+   *
+   * onStateChange syncs slider value / toggle label when state changes
+   * externally (popstate, defaults reset).
+   */
+  import { patchState, onStateChange } from "../../lib/cv-state";
+
+  (() => {
+    const root = document.querySelector<HTMLElement>("[data-cv-time-slider]");
+    if (!root) return;
+
+    const input = root.querySelector<HTMLInputElement>(".cv-time-slider__input");
+    const bubble = root.querySelector<HTMLElement>("[data-cv-time-bubble]");
+    const toggle = root.querySelector<HTMLElement>("[data-cv-time-toggle]");
+    if (!input || !bubble || !toggle) return;
+
+    const min = Number(root.getAttribute("data-min") ?? "1990");
+    const max = Number(
+      root.getAttribute("data-max") ?? String(new Date().getFullYear()),
+    );
+
+    function positionBubble(val: number) {
+      const span = max - min;
+      const pct = span > 0 ? (val - min) / span : 0;
+      root!.style.setProperty("--bubble-pos", String(pct));
+    }
+
+    input.addEventListener("input", () => {
+      const v = Number(input.value);
+      bubble.textContent = String(v);
+      positionBubble(v);
+    });
+    input.addEventListener("change", () => {
+      const v = Number(input.value);
+      if (Number.isFinite(v) && v >= min && v <= max) {
+        patchState({ since: v });
+      }
+    });
+
+    const toggleButton =
+      toggle.closest<HTMLElement>("button, a") ?? toggle;
+    toggleButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      const showAll = root.getAttribute("data-show-all") === "true";
+      if (showAll) {
+        const v = Number(input.value);
+        const safe = Number.isFinite(v) && v >= min && v <= max ? v : min;
+        patchState({ since: safe });
+      } else {
+        patchState({ since: null });
+      }
+    });
+
+    onStateChange((state) => {
+      const showAll = state.since == null;
+      root.setAttribute("data-show-all", showAll ? "true" : "false");
+      toggle.setAttribute("aria-pressed", showAll ? "true" : "false");
+      toggle.textContent = showAll ? "Limit by year" : "Show all";
+      const button = toggle.closest<HTMLElement>("button, a");
+      if (button) {
+        button.classList.toggle("glass-btn--primary", showAll);
+        button.classList.toggle("glass-btn--secondary", !showAll);
+      }
+      input.disabled = showAll;
+      if (state.since != null) {
+        input.value = String(state.since);
+        bubble.textContent = String(state.since);
+        positionBubble(state.since);
+      } else {
+        bubble.textContent = "All";
+      }
+    });
+
+    positionBubble(Number(input.value));
+  })();
+</script>

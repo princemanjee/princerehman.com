@@ -7,10 +7,18 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "npm run sync:resume",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "astro check"
+    "check": "astro check",
+    "scan:tokens": "node scripts/build-token-usage.mjs",
+    "sync:resume": "node scripts/sync-resume.mjs",
+    "sync:resume:check": "node scripts/sync-resume.mjs --dry-run --verbose",
+    "test:sync": "node --test scripts/sync-resume.test.mjs",
+    "build:archive": "node scripts/build-archive.mjs",
+    "gateway:dev": "cd gateway && npx wrangler dev",
+    "gateway:deploy": "cd gateway && npx wrangler deploy"
   },
   "dependencies": {
     "astro": "^5.0.0"

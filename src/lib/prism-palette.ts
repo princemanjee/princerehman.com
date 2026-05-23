@@ -105,6 +105,13 @@ export interface GeneratedPalette {
   "--color-fg-secondary"?: string;
   "--color-fg-tertiary"?: string;
   "--color-fg-muted"?: string;
+  // Four distinct vivid tint colors for panel differentiation. Presets draw
+  // them from the palette's own colors; mono swatches derive them from hue
+  // rotations of the base. Consumed by the .panel-* tint classes in global.css.
+  "--panel-c1"?: string;
+  "--panel-c2"?: string;
+  "--panel-c3"?: string;
+  "--panel-c4"?: string;
 }
 
 /**
@@ -509,6 +516,33 @@ function formatOklch(
   return `oklch(${Lr} ${Cr} ${hr} / ${ar})`;
 }
 
+/**
+ * Four distinct, vivid tint colours used to differentiate stacked/nested
+ * panels. Built from a list of source hues (a palette's own colours, or hue
+ * rotations of a mono base) and normalized to a consistent vivid L/C so they
+ * read clearly as tints over any surface in any mode. Pads to four by rotating
+ * the supplied hues when fewer than four are available.
+ */
+function panelTintColors(hues: number[]): [string, string, string, string] {
+  const seed = hues.filter((h) => Number.isFinite(h));
+  const base = seed.length > 0 ? seed : [263, 153, 320, 85];
+  const picked: number[] = [];
+  let rot = 0;
+  while (picked.length < 4) {
+    for (const h of base) {
+      picked.push(wrapHue(h + rot));
+      if (picked.length >= 4) break;
+    }
+    rot += 45;
+  }
+  return [
+    formatOklch(0.62, 0.17, picked[0]),
+    formatOklch(0.62, 0.17, picked[1]),
+    formatOklch(0.62, 0.17, picked[2]),
+    formatOklch(0.62, 0.17, picked[3]),
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // Contrast guardrail
 // ---------------------------------------------------------------------------
@@ -758,6 +792,14 @@ export function generatePresetPalette(
   const f = (p: ParsedOklch, a?: number) => formatOklch(p.l, p.c, p.h, a ?? p.a);
   const sh = (p: ParsedOklch, dl: number) => formatOklch(clamp01(p.l + dl), p.c, p.h);
 
+  // Panel tint set: drawn from the palette's own chromatic colours (most
+  // palettes have 4+), so stacked panels each pick a distinct real colour.
+  const paletteHues = colors
+    .map(parseOklch)
+    .filter((x): x is ParsedOklch => x !== null && x.c > 0.045)
+    .map((x) => x.h);
+  const presetTints = panelTintColors(paletteHues);
+
   // Background gradient: exact scheme colors (no transform).
   const bgStops = scheme.bg.map((c) => f(parse(c), 1));
   const bgFull = bgStops.length >= 2 ? bgStops : [bgStops[0], bgStops[0]];
@@ -825,6 +867,10 @@ export function generatePresetPalette(
     "--color-fg-secondary": ta(aSecondary),
     "--color-fg-tertiary": ta(aTertiary),
     "--color-fg-muted": ta(aMuted),
+    "--panel-c1": presetTints[0],
+    "--panel-c2": presetTints[1],
+    "--panel-c3": presetTints[2],
+    "--panel-c4": presetTints[3],
   };
 }
 
@@ -932,7 +978,20 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     }
   }
 
+  // Panel tint set: four hue rotations of the base (using the mixing-model
+  // relationships) so stacked panels read as distinct colours.
+  const monoTints = panelTintColors([
+    baseHue,
+    wrapHue(baseHue + 30),
+    wrapHue(baseHue + 150),
+    wrapHue(baseHue + 210),
+  ]);
+
   return {
+    "--panel-c1": monoTints[0],
+    "--panel-c2": monoTints[1],
+    "--panel-c3": monoTints[2],
+    "--panel-c4": monoTints[3],
     "--bg-1": bg[0],
     "--bg-2": bg[1],
     "--bg-3": bg[2],

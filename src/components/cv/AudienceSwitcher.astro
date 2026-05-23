@@ -1,0 +1,125 @@
+---
+/**
+ * AudienceSwitcher: chip group for switching the Adaptive CV audience.
+ *
+ * REFACTOR: chips are now <GlassButton variant="primary"|"secondary"
+ * size="sm">. Active state is the "primary" variant (the lit royal blue
+ * already used everywhere on the site for active CTAs); inactive is
+ * "secondary" (the polished default). This replaces the bespoke
+ * .cv-audience-switcher__chip + .--active classes with the shared button
+ * system, so every page on the site reads the same way.
+ *
+ * Sticky positioning is preserved via the wrapper data-cv-audience-switcher
+ * (the script needs a stable hook to find the chips on hydration).
+ */
+
+import {
+  AUDIENCES,
+  AUDIENCE_LABELS,
+  AUDIENCE_DESCRIPTIONS,
+  type Audience,
+} from "../../data/cvAudienceTags";
+import Stack from "../Stack.astro";
+import GlassButton from "../GlassButton.astro";
+
+interface Props {
+  current: Audience;
+}
+
+const { current } = Astro.props;
+---
+
+<div
+  class="cv-audience-switcher"
+  data-cv-audience-switcher
+  role="tablist"
+  aria-label="Choose CV audience">
+  <Stack direction="horizontal" gap="xs" wrap align="center">
+    {AUDIENCES.map((key) => {
+      const active = key === current;
+      return (
+        <GlassButton
+          variant={active ? "primary" : "secondary"}
+          size="sm"
+          class="cv-audience-chip">
+          <span
+            role="tab"
+            aria-selected={active ? "true" : "false"}
+            data-cv-audience={key}
+            class="cv-audience-chip__inner">
+            {AUDIENCE_LABELS[key]}
+          </span>
+        </GlassButton>
+      );
+    })}
+  </Stack>
+
+  {AUDIENCE_DESCRIPTIONS[current] && (
+    <p class="cv-audience-switcher__desc" id="cv-audience-desc">
+      {AUDIENCE_DESCRIPTIONS[current]}
+    </p>
+  )}
+</div>
+
+<style>
+  .cv-audience-switcher { position: sticky; top: 1rem; z-index: 5; display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-sm) 0; }
+  .cv-audience-switcher__desc { margin: 0; padding: 0 var(--space-2xs); font-size: var(--text-sm); line-height: var(--leading-relaxed); color: var(--color-fg-tertiary); }
+  .cv-audience-chip__inner { color: inherit; font: inherit; line-height: 1; }
+</style>
+
+<script>
+  /*
+   * Click handler: dispatch a state patch via cv-state. The root state
+   * applier mutates <html data-cv-audience> and CSS swaps the view.
+   *
+   * Re-sync on external state changes (popstate, reset) so the chips
+   * stay in lockstep with the live state.
+   */
+  import { patchState, onStateChange } from "../../lib/cv-state";
+
+  (() => {
+    const root = document.querySelector<HTMLElement>(
+      "[data-cv-audience-switcher]",
+    );
+    if (!root) return;
+
+    const chips = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-cv-audience]"),
+    );
+
+    chips.forEach((chip) => {
+      // The click target is the GlassButton wrapper; we listen on the
+      // chip's parent so taps anywhere on the button fire the handler.
+      const button = chip.closest<HTMLElement>("button, a") ?? chip;
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const audience = chip.getAttribute("data-cv-audience");
+        if (!audience) return;
+        patchState({ audience });
+      });
+    });
+
+    function syncActive(audience: string) {
+      chips.forEach((chip) => {
+        const isActive = chip.getAttribute("data-cv-audience") === audience;
+        chip.setAttribute("aria-selected", isActive ? "true" : "false");
+        const button = chip.closest<HTMLElement>("button, a");
+        if (button) {
+          // Repaint via the GlassButton variant classes the SSR'd markup
+          // already understands. Removing + adding the class is cheap
+          // and avoids re-parenting the DOM.
+          button.classList.toggle("glass-btn--primary", isActive);
+          button.classList.toggle("glass-btn--secondary", !isActive);
+        }
+      });
+    }
+
+    onStateChange((state) => {
+      syncActive(state.audience);
+      const wrapper = document.querySelector<HTMLElement>(
+        "[data-audience-switcher]",
+      );
+      if (wrapper) wrapper.dataset.current = state.audience;
+    });
+  })();
+</script>

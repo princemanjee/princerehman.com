@@ -115,7 +115,8 @@ a:hover {
  * contained without us touching position. .glass-btn / .nav-bar are
  * already position:relative. */
 .glass-panel,
-.case-study-card {
+.case-study-card,
+.mobile-nav-trigger {
   position: relative;
 }
 
@@ -129,7 +130,10 @@ a:hover {
 .mobile-nav-panel::after,
 .prism-panel::after,
 .glass-btn::after,
-.prism-trigger::after {
+.prism-trigger::after,
+.mobile-nav-trigger::after,
+.glass-field-shell::after,
+.case-study-download-icon::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -170,7 +174,10 @@ a:hover {
 }
 
 :root:not([data-theme="neomorphic"]) .glass-btn::after,
-:root:not([data-theme="neomorphic"]) .prism-trigger::after {
+:root:not([data-theme="neomorphic"]) .prism-trigger::after,
+:root:not([data-theme="neomorphic"]) .mobile-nav-trigger::after,
+:root:not([data-theme="neomorphic"]) .glass-field-shell::after,
+:root:not([data-theme="neomorphic"]) .case-study-download-icon::after {
   background: linear-gradient(180deg,
     oklch(1 0 0 / 0.16) 0%,
     oklch(1 0 0 / 0.05) 38%,
@@ -187,6 +194,7 @@ a:hover {
 :root[data-theme="neomorphic"] .mobile-nav-panel,
 :root[data-theme="neomorphic"] .prism-panel,
 :root[data-theme="neomorphic"] .prism-trigger,
+:root[data-theme="neomorphic"] .mobile-nav-trigger,
 :root[data-theme="neomorphic"] .glass-btn,
 :root[data-theme="neomorphic"] .glass-input,
 :root[data-theme="neomorphic"] .glass-textarea,
@@ -220,6 +228,297 @@ a:hover {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
   background-size: 120px 120px, 80px 80px;
   opacity: 0.32;
+}
+
+/*
+ * ALL inner case-study panels (section cards + feature-bullet cards) AND ALL
+ * badges (availability + tech-stack chips) get the SAME polished-glass finish
+ * as the big panels: a beveled glass body (inset top/bottom highlights) plus a
+ * glossy sheen. Neomorphic swaps the glass for dry grain on the panels.
+ *
+ * --cs-glass-surface : panels + feature cards (full bevel)
+ * --cs-glass-badge   : availability + tech-stack badges (lighter bevel)
+ */
+.case-study--twopane .case-study-section,
+.case-study--multicol .case-study-section,
+.case-study--twopane .case-study-feature-item,
+.case-study--multicol .case-study-feature-item,
+.case-study--twopane .case-study-decision,
+.case-study--multicol .case-study-decision,
+.case-study-availability,
+.case-study-card-availability,
+.case-study-tech-tag {
+  position: relative;
+}
+.case-study--twopane .case-study-section::after,
+.case-study--multicol .case-study-section::after,
+.case-study--twopane .case-study-feature-item::after,
+.case-study--multicol .case-study-feature-item::after,
+.case-study--twopane .case-study-decision::after,
+.case-study--multicol .case-study-decision::after,
+.case-study-availability::after,
+.case-study-card-availability::after,
+.case-study-tech-tag::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+.case-study--twopane .case-study-section > *,
+.case-study--multicol .case-study-section > *,
+.case-study--twopane .case-study-decision > *,
+.case-study--multicol .case-study-decision > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Glass themes: beveled glass body on every panel, card and badge. */
+:root:not([data-theme="neomorphic"]) .case-study--twopane .case-study-section,
+:root:not([data-theme="neomorphic"]) .case-study--multicol .case-study-section,
+:root:not([data-theme="neomorphic"]) .case-study--twopane .case-study-feature-item,
+:root:not([data-theme="neomorphic"]) .case-study--multicol .case-study-feature-item,
+:root:not([data-theme="neomorphic"]) .case-study--twopane .case-study-decision,
+:root:not([data-theme="neomorphic"]) .case-study--multicol .case-study-decision {
+  box-shadow:
+    inset 0 2px 1px var(--highlight-top),
+    inset 0 5px 10px var(--highlight-top-soft),
+    inset 0 -2px 1px var(--highlight-bottom),
+    inset 0 -5px 10px var(--highlight-bottom-soft),
+    0 6px 18px oklch(0 0 0 / 0.18);
+}
+:root:not([data-theme="neomorphic"]) .case-study-availability,
+:root:not([data-theme="neomorphic"]) .case-study-card-availability,
+:root:not([data-theme="neomorphic"]) .case-study-tech-tag {
+  box-shadow:
+    inset 0 1px 1px var(--highlight-top),
+    inset 0 2px 4px var(--highlight-top-soft),
+    inset 0 -1px 1px var(--highlight-bottom),
+    0 2px 6px oklch(0 0 0 / 0.20);
+}
+
+/* Glass themes: glossy sheen overlay on all of the above. */
+:root:not([data-theme="neomorphic"]) .case-study--twopane .case-study-section::after,
+:root:not([data-theme="neomorphic"]) .case-study--multicol .case-study-section::after,
+:root:not([data-theme="neomorphic"]) .case-study--twopane .case-study-feature-item::after,
+:root:not([data-theme="neomorphic"]) .case-study--multicol .case-study-feature-item::after,
+:root:not([data-theme="neomorphic"]) .case-study--twopane .case-study-decision::after,
+:root:not([data-theme="neomorphic"]) .case-study--multicol .case-study-decision::after,
+:root:not([data-theme="neomorphic"]) .case-study-availability::after,
+:root:not([data-theme="neomorphic"]) .case-study-card-availability::after,
+:root:not([data-theme="neomorphic"]) .case-study-tech-tag::after {
+  background:
+    linear-gradient(125deg,
+      oklch(1 0 0 / 0.22) 0%,
+      oklch(1 0 0 / 0.08) 16%,
+      transparent 40%),
+    linear-gradient(180deg,
+      oklch(1 0 0 / 0.16) 0%,
+      oklch(1 0 0 / 0.05) 14%,
+      transparent 36%);
+}
+
+/*
+ * PANEL TINT CLASSES — each tints a panel toward a different colour drawn from
+ * the active palette's OWN colours (--panel-c1..c4, emitted by the generator;
+ * presets use their real palette colours, mono derives them from base-hue
+ * rotations). Applies in EVERY mode (glass and neomorphic). Reusable on any
+ * panel; also auto-cycled across the case-study section panels below.
+ */
+.panel-a { --panel-tint: var(--panel-c1, var(--accent-royal)); }
+.panel-b { --panel-tint: var(--panel-c2, var(--accent-emerald)); }
+.panel-c { --panel-tint: var(--panel-c3, var(--accent-royal)); }
+.panel-d { --panel-tint: var(--panel-c4, var(--accent-emerald)); }
+
+/* Nested-depth variation (NOT a per-section rainbow): the outer panel is the
+ * base glass surface, the section panels step to palette colour 1, and the
+ * feature cards nested inside step to palette colour 2 — so each nested level
+ * visibly differs from the panel it sits in. The actual tint backgrounds are
+ * applied in CaseStudy.astro's scoped styles (so they win the cascade); this
+ * block intentionally no longer sets them here. */
+
+/* Neomorphic: dry grain on the panels AND the badges (so badges are matte-
+ * gritty in neo, not flat — they get the glass bevel/gloss only in glass
+ * themes). */
+:root[data-theme="neomorphic"] .case-study--twopane .case-study-section::after,
+:root[data-theme="neomorphic"] .case-study--multicol .case-study-section::after,
+:root[data-theme="neomorphic"] .case-study--twopane .case-study-feature-item::after,
+:root[data-theme="neomorphic"] .case-study--multicol .case-study-feature-item::after,
+:root[data-theme="neomorphic"] .case-study--twopane .case-study-decision::after,
+:root[data-theme="neomorphic"] .case-study--multicol .case-study-decision::after,
+:root[data-theme="neomorphic"] .case-study-availability::after,
+:root[data-theme="neomorphic"] .case-study-card-availability::after,
+:root[data-theme="neomorphic"] .case-study-tech-tag::after {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  background-size: 120px 120px, 80px 80px;
+  opacity: 0.3;
+}
+
+/*
+ * PANEL TITLES (case-study section headings in the layout modes): larger than
+ * the body text (they were a tiny uppercase label before — nonsensical),
+ * readable, and a colour distinct from the body — the palette's primary accent
+ * at a lightness tuned per theme (light accent on dark panels, deep accent on
+ * light/neo panels) so it stays legible in EVERY mode.
+ */
+.case-study--twopane .case-study-body .case-study-section-heading,
+.case-study--multicol .case-study-body .case-study-section-heading {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: var(--tracking-tight);
+  /* Accent HUE for distinction from body, but lightness forced near-white on
+   * dark panels so it stays readable even when the panel is tinted the same
+   * hue. */
+  color: color-mix(in oklch, var(--accent-royal-bright) 60%, white 40%);
+  margin-bottom: var(--space-lg);
+}
+/* Light / neomorphic / system-light: force the title near-black instead. */
+:root[data-theme="light"] .case-study--twopane .case-study-body .case-study-section-heading,
+:root[data-theme="light"] .case-study--multicol .case-study-body .case-study-section-heading,
+:root[data-theme="neomorphic"] .case-study--twopane .case-study-body .case-study-section-heading,
+:root[data-theme="neomorphic"] .case-study--multicol .case-study-body .case-study-section-heading {
+  color: color-mix(in oklch, var(--accent-royal-deep) 62%, black 38%);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] .case-study--twopane .case-study-body .case-study-section-heading,
+  :root[data-theme="system"] .case-study--multicol .case-study-body .case-study-section-heading {
+    color: color-mix(in oklch, var(--accent-royal-deep) 62%, black 38%);
+  }
+}
+
+/*
+ * Remaining card surfaces that must ALSO get the glass finish: the download
+ * cards, the "continue reading" cards, and the work-overview "also" cards.
+ * Glossy sheen in glass themes, dry grit in neomorphic — same as every other
+ * panel. (They keep their own existing drop shadows.)
+ */
+.case-study-download-link,
+.continue-card,
+.also-card {
+  position: relative;
+}
+.case-study-download-link::after,
+.continue-card::after,
+.also-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+.case-study-download-link > *,
+.continue-card > *,
+.also-card > * {
+  position: relative;
+  z-index: 1;
+}
+/* Glass themes: glossy sheen. */
+:root:not([data-theme="neomorphic"]) .case-study-download-link::after,
+:root:not([data-theme="neomorphic"]) .continue-card::after,
+:root:not([data-theme="neomorphic"]) .also-card::after {
+  background:
+    linear-gradient(125deg,
+      oklch(1 0 0 / 0.16) 0%,
+      oklch(1 0 0 / 0.06) 13%,
+      transparent 34%),
+    linear-gradient(180deg,
+      oklch(1 0 0 / 0.12) 0%,
+      oklch(1 0 0 / 0.04) 12%,
+      transparent 32%);
+}
+/* Neomorphic: dry grit, no blur. */
+:root[data-theme="neomorphic"] .case-study-download-link,
+:root[data-theme="neomorphic"] .continue-card,
+:root[data-theme="neomorphic"] .also-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root[data-theme="neomorphic"] .case-study-download-link::after,
+:root[data-theme="neomorphic"] .continue-card::after,
+:root[data-theme="neomorphic"] .also-card::after,
+:root[data-theme="neomorphic"] .glass-field-shell::after,
+:root[data-theme="neomorphic"] .case-study-download-icon::after {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  background-size: 120px 120px, 80px 80px;
+  opacity: 0.3;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────
+ * TECH TAG — the site's reusable glossy display pill. Matches the
+ * surface treatment used by .case-study-tech-tag (bevel + gloss sheen
+ * in glass themes, gritty matte in neomorphic). Use for non-interactive
+ * skill / tech / tag chips anywhere on the site so they share one
+ * brand-consistent appearance.
+ *
+ * Variants:
+ *   .tech-tag          — neutral surface, secondary text colour
+ *   .tech-tag--accent  — royal-accent tinted surface for "matched" state
+ * ─────────────────────────────────────────────────────────────────────
+ */
+.tech-tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-fg-secondary);
+  background: var(--glass-bg-hover);
+  border: 1px solid var(--glass-border);
+}
+.tech-tag::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+.tech-tag > * {
+  position: relative;
+  z-index: 1;
+}
+.tech-tag--accent {
+  color: var(--color-fg-primary);
+  background: color-mix(in oklch, var(--accent-royal) 18%, transparent);
+  border-color: color-mix(in oklch, var(--accent-royal) 40%, var(--glass-border));
+}
+
+:root:not([data-theme="neomorphic"]) .tech-tag {
+  box-shadow:
+    inset 0 1px 1px var(--highlight-top),
+    inset 0 2px 4px var(--highlight-top-soft),
+    inset 0 -1px 1px var(--highlight-bottom),
+    0 2px 6px oklch(0 0 0 / 0.20);
+}
+:root:not([data-theme="neomorphic"]) .tech-tag::after {
+  background:
+    linear-gradient(125deg,
+      oklch(1 0 0 / 0.22) 0%,
+      oklch(1 0 0 / 0.08) 16%,
+      transparent 40%),
+    linear-gradient(180deg,
+      oklch(1 0 0 / 0.16) 0%,
+      oklch(1 0 0 / 0.05) 14%,
+      transparent 36%);
+}
+:root[data-theme="neomorphic"] .tech-tag::after {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  opacity: 0.3;
 }
 
 /* Utility for visually-hidden content (still accessible to screen readers). */

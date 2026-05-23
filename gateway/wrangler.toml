@@ -1,0 +1,36 @@
+# Cloudflare Workers config for the CV gateway.
+#
+# This Worker brokers requests from princerehman.com to the Anthropic API
+# so the public site never exposes an API key. It also enforces a per-IP
+# rate limit and caches identical (audience + jdText) pairs in KV.
+#
+# Setup (see ./README.md for the full flow):
+#   1. cd gateway && npm install
+#   2. npx wrangler login
+#   3. npx wrangler kv:namespace create CV_CACHE
+#      -> paste the returned `id` into the [[kv_namespaces]] block below
+#   4. npx wrangler secret put ANTHROPIC_API_KEY
+#   5. npx wrangler deploy
+#
+# DO NOT commit the ANTHROPIC_API_KEY anywhere. It only lives in the
+# Cloudflare secret store, set via `wrangler secret put`.
+
+name = "princerehman-cv-gateway"
+main = "src/worker.ts"
+# Reason: pin to a current compat date so behavior is reproducible across
+# deploys. Bump intentionally when adopting newer runtime features.
+compatibility_date = "2025-11-01"
+
+# Public, non-secret config. Edit these to adjust runtime behavior
+# without touching code.
+[vars]
+RATE_LIMIT_PER_HOUR = "10"
+CACHE_TTL_SECONDS = "86400"
+
+# KV namespace used for BOTH the response cache and the per-IP rate
+# limiter. The `id` value below is a placeholder — replace it with the
+# real id printed by `wrangler kv:namespace create CV_CACHE` before
+# deploying.
+[[kv_namespaces]]
+binding = "CV_CACHE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

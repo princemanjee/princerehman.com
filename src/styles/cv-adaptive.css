@@ -1,0 +1,43 @@
+/*
+ * cv-adaptive.css — show/hide/dim selectors keyed on cv-state attrs.
+ * No visual restyling of cards/chips/panels — that's Glass*'s job.
+ *
+ * Contract (see src/lib/cv-state.ts):
+ *   <html>: data-cv-audience, data-cv-skills, data-cv-since, data-cv-hide, data-cv-has-older
+ *   role cards: data-cv-hidden-for, data-cv-skills-match, data-cv-older
+ *
+ * Precedence: hide section > hide audience > hide older > dim non-match.
+ */
+
+/* Section visibility via ?hide= */
+html[data-cv-hide~="summary"] [data-cv-section="summary"],
+html[data-cv-hide~="experience"] [data-cv-section="experience"],
+html[data-cv-hide~="projects"] [data-cv-section="projects"],
+html[data-cv-hide~="skills"] [data-cv-section="skills"],
+html[data-cv-hide~="education"] [data-cv-section="education"],
+html[data-cv-hide~="certifications"] [data-cv-section="certifications"],
+html[data-cv-hide~="publications"] [data-cv-section="publications"],
+html[data-cv-hide~="awards"] [data-cv-section="awards"],
+html[data-cv-hide~="volunteer"] [data-cv-section="volunteer"] { display: none; }
+
+/* Per-audience role visibility */
+html[data-cv-audience="default"] [data-cv-role-card][data-cv-hidden-for~="default"],
+html[data-cv-audience="cto"] [data-cv-role-card][data-cv-hidden-for~="cto"],
+html[data-cv-audience="engineer"] [data-cv-role-card][data-cv-hidden-for~="engineer"],
+html[data-cv-audience="board"] [data-cv-role-card][data-cv-hidden-for~="board"],
+html[data-cv-audience="investor"] [data-cv-role-card][data-cv-hidden-for~="investor"],
+html[data-cv-audience="recruiter"] [data-cv-role-card][data-cv-hidden-for~="recruiter"] { display: none; }
+
+/* Time-axis filter */
+[data-cv-role-card][data-cv-older="true"] { display: none; }
+[data-cv-earlier-experience] { display: none; }
+html[data-cv-has-older="true"] [data-cv-earlier-experience] { display: block; }
+
+/* Skill-filter dimming */
+html[data-cv-skills] [data-cv-role-card][data-cv-skills-match="false"] {
+  opacity: 0.32;
+  filter: grayscale(60%);
+  transition:
+    opacity var(--duration-base, 200ms) var(--easing-out, ease-out),
+    filter var(--duration-base, 200ms) var(--easing-out, ease-out);
+}

@@ -1,0 +1,189 @@
+---
+/**
+ * SectionFilterDrawer: collapsed-by-default per-section visibility panel.
+ *
+ * REFACTOR: panel surface is now a <GlassPanel> and each per-section
+ * visibility toggle is a <GlassButton size="sm">. Active state (i.e.
+ * "section visible") uses the primary variant; the inactive state ("section
+ * hidden") uses the secondary variant. aria-pressed is set on the inner
+ * span so screen-reader semantics still work without a checkbox.
+ *
+ * URL contract:
+ *   ?hide=education,awards  — sections to hide (lowercase SectionKind)
+ *   removed                  — all sections at audience-default visibility
+ */
+
+import GlassPanel from "../GlassPanel.astro";
+import GlassButton from "../GlassButton.astro";
+import Stack from "../Stack.astro";
+
+interface Props {
+  hiddenSections: string[];
+}
+
+const { hiddenSections } = Astro.props;
+
+const SECTIONS: ReadonlyArray<{ kind: string; label: string }> = [
+  { kind: "summary",        label: "Summary"        },
+  { kind: "experience",     label: "Experience"     },
+  { kind: "projects",       label: "Projects"       },
+  { kind: "skills",         label: "Skills"         },
+  { kind: "education",      label: "Education"      },
+  { kind: "certifications", label: "Certifications" },
+  { kind: "publications",   label: "Publications"   },
+  { kind: "awards",         label: "Awards"         },
+  { kind: "volunteer",      label: "Volunteer"      },
+];
+
+const hiddenSet = new Set(hiddenSections.map((s) => s.toLowerCase()));
+function isHidden(kind: string): boolean {
+  return hiddenSet.has(kind.toLowerCase());
+}
+
+const hiddenCount = hiddenSections.length;
+---
+
+<details class="cv-section-filter-drawer" data-cv-section-filter-drawer>
+  <summary class="cv-section-filter-drawer__toggle">
+    <span>More controls</span>
+    {hiddenCount > 0 && (
+      <span
+        class="cv-section-filter-drawer__badge"
+        aria-label={`${hiddenCount} section${hiddenCount === 1 ? "" : "s"} hidden`}>
+        {hiddenCount}
+      </span>
+    )}
+  </summary>
+
+  <div class="cv-section-filter-drawer__panel">
+    <GlassPanel size="md">
+      <Stack gap="sm">
+        <p class="cv-section-filter-drawer__hint">
+          Toggle a section to show or hide it. Changes write to the URL so the view is shareable.
+        </p>
+        <Stack direction="horizontal" gap="xs" wrap align="center">
+          {SECTIONS.map((sec) => {
+            const visible = !isHidden(sec.kind);
+            return (
+              <GlassButton
+                variant={visible ? "primary" : "secondary"}
+                size="sm">
+                <span
+                  data-cv-section={sec.kind}
+                  aria-pressed={visible ? "true" : "false"}
+                  class="cv-section-filter-drawer__chip-inner">
+                  {sec.label}
+                </span>
+              </GlassButton>
+            );
+          })}
+        </Stack>
+      </Stack>
+    </GlassPanel>
+  </div>
+</details>
+
+<style>
+  .cv-section-filter-drawer { margin: var(--space-xs) 0; }
+  .cv-section-filter-drawer__toggle {
+    display: inline-flex; align-items: center; gap: var(--space-2xs);
+    min-height: 44px; padding: 0.4rem 0.85rem; border-radius: var(--radius-full);
+    border: 1px dashed var(--glass-border); background: transparent;
+    color: var(--color-fg-tertiary); font-family: var(--font-ui);
+    font-size: var(--text-sm); font-weight: 500; cursor: pointer; list-style: none;
+  }
+  .cv-section-filter-drawer__toggle::-webkit-details-marker { display: none; }
+  .cv-section-filter-drawer__toggle:hover,
+  .cv-section-filter-drawer__toggle:focus-visible { color: var(--color-fg-primary); border-color: var(--glass-border-strong); outline: none; }
+  .cv-section-filter-drawer__badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.25rem; height: 1.25rem; padding: 0 0.4rem;
+    border-radius: var(--radius-full); background: var(--accent-royal);
+    color: var(--color-fg-primary); font-size: 11px; font-weight: 600;
+  }
+  .cv-section-filter-drawer__panel { margin-top: var(--space-sm); }
+  .cv-section-filter-drawer__hint { margin: 0; font-family: var(--font-ui); font-size: var(--text-xs); color: var(--color-fg-tertiary); line-height: 1.4; }
+  .cv-section-filter-drawer__chip-inner { color: inherit; font: inherit; line-height: 1; }
+</style>
+
+<script>
+  /*
+   * Each section button toggles its corresponding kind in state.hide.
+   *
+   *   pressed (visible) → kind absent from state.hide
+   *   unpressed (hidden) → kind present in state.hide
+   *
+   * Active variant flip on the GlassButton wrapper communicates the
+   * change instantly while CSS adapt rules hide the matching <section>.
+   */
+  import {
+    patchState,
+    onStateChange,
+    readStateFromUrl,
+  } from "../../lib/cv-state";
+
+  (() => {
+    const root = document.querySelector<HTMLElement>(
+      "[data-cv-section-filter-drawer]",
+    );
+    if (!root) return;
+
+    const chips = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-cv-section]"),
+    );
+
+    chips.forEach((chip) => {
+      const button = chip.closest<HTMLElement>("button, a") ?? chip;
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const kind = chip.getAttribute("data-cv-section")?.toLowerCase();
+        if (!kind) return;
+        const current = readStateFromUrl().hide;
+        const idx = current.indexOf(kind);
+        const wasHidden = idx >= 0;
+        const next = wasHidden
+          ? [...current.slice(0, idx), ...current.slice(idx + 1)]
+          : [...current, kind];
+        patchState({ hide: next });
+      });
+    });
+
+    onStateChange((state) => {
+      const hidden = new Set(state.hide.map((s) => s.toLowerCase()));
+      chips.forEach((chip) => {
+        const kind = chip.getAttribute("data-cv-section")?.toLowerCase();
+        if (!kind) return;
+        const visible = !hidden.has(kind);
+        chip.setAttribute("aria-pressed", visible ? "true" : "false");
+        const button = chip.closest<HTMLElement>("button, a");
+        if (button) {
+          button.classList.toggle("glass-btn--primary", visible);
+          button.classList.toggle("glass-btn--secondary", !visible);
+        }
+      });
+
+      // Update the badge count next to "More controls".
+      const summary = root.querySelector<HTMLElement>(
+        ".cv-section-filter-drawer__toggle",
+      );
+      if (!summary) return;
+      let badge = summary.querySelector<HTMLElement>(
+        ".cv-section-filter-drawer__badge",
+      );
+      if (state.hide.length > 0) {
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "cv-section-filter-drawer__badge";
+          summary.appendChild(badge);
+        }
+        badge.textContent = String(state.hide.length);
+        badge.setAttribute(
+          "aria-label",
+          `${state.hide.length} section${state.hide.length === 1 ? "" : "s"} hidden`,
+        );
+      } else if (badge) {
+        badge.remove();
+      }
+    });
+  })();
+</script>

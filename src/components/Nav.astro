@@ -39,6 +39,15 @@ const isActiveSection = (prefix: string): boolean =>
   current === prefix || current.startsWith(prefix + "/");
 
 const workActive = isActiveSection("/work");
+const styleActive = isActiveSection("/styleguide") || isActive("/layouts");
+
+const styleguideChildren = [
+  { path: "/styleguide", label: "Overview", meta: "Tokens, primitives, finishes" },
+  { path: "/styleguide/editor", label: "Editor", meta: "Palette + token live editor" },
+  { path: "/styleguide/swatches", label: "Swatches", meta: "Palette + mono swatch library" },
+  { path: "/styleguide/swatches/editor", label: "Swatch Editor", meta: "4-slider swatch mixer" },
+  { path: "/layouts", label: "Layouts", meta: "Layout primitives lab" },
+];
 ---
 
 <nav class="nav" aria-label="Primary navigation">
@@ -96,6 +105,55 @@ const workActive = isActiveSection("/work");
               aria-current={active ? "page" : undefined}>
               <span class="nav-sub-item-label">{cs.title}</span>
               <span class="nav-sub-item-meta">Case study</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+
+    <a
+      href="/cv"
+      class:list={["nav-item", isActiveSection("/cv") && "nav-item--active"]}
+      aria-current={isActive("/cv") ? "page" : undefined}>
+      CV
+    </a>
+
+    <a
+      href="/contact"
+      class:list={["nav-item", isActive("/contact") && "nav-item--active"]}
+      aria-current={isActive("/contact") ? "page" : undefined}>
+      Contact
+    </a>
+
+    <div class:list={["nav-dropdown", styleActive && "nav-dropdown--active"]}>
+      <a
+        href="/styleguide"
+        class:list={["nav-item", "nav-dropdown-trigger", styleActive && "nav-item--active"]}
+        aria-current={isActive("/styleguide") ? "page" : undefined}
+        aria-haspopup="true">
+        Styleguide
+        <svg viewBox="0 0 12 8" class="nav-caret" aria-hidden="true">
+          <path
+            d="M1 1 L6 6 L11 1"
+            stroke="currentColor"
+            stroke-width="1.6"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </a>
+
+      <div class="nav-dropdown-menu" role="menu">
+        {styleguideChildren.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <a
+              href={item.path}
+              class:list={["nav-sub-item", active && "nav-sub-item--active"]}
+              role="menuitem"
+              aria-current={active ? "page" : undefined}>
+              <span class="nav-sub-item-label">{item.label}</span>
+              <span class="nav-sub-item-meta">{item.meta}</span>
             </a>
           );
         })}

@@ -59,6 +59,15 @@ const isActiveSection = (prefix: string): boolean =>
   current === prefix || current.startsWith(prefix + "/");
 
 const workActive = isActiveSection("/work");
+const styleActive = isActiveSection("/styleguide") || isActive("/layouts");
+
+const styleguideChildren = [
+  { path: "/styleguide", label: "Overview" },
+  { path: "/styleguide/editor", label: "Editor" },
+  { path: "/styleguide/swatches", label: "Swatches" },
+  { path: "/styleguide/swatches/editor", label: "Swatch Editor" },
+  { path: "/layouts", label: "Layouts" },
+];
 ---
 
 <div class="mobile-nav" data-mobile-nav>
@@ -155,6 +164,48 @@ const workActive = isActiveSection("/work");
                   aria-current={active ? "page" : undefined}
                   data-mobile-nav-link>
                   {cs.title}
+                </a>
+              );
+            })}
+          </div>
+
+          <a
+            href="/cv"
+            class:list={["mobile-nav-item", isActiveSection("/cv") && "mobile-nav-item--active"]}
+            aria-current={isActive("/cv") ? "page" : undefined}
+            data-mobile-nav-link>
+            CV
+          </a>
+
+          <a
+            href="/contact"
+            class:list={["mobile-nav-item", isActive("/contact") && "mobile-nav-item--active"]}
+            aria-current={isActive("/contact") ? "page" : undefined}
+            data-mobile-nav-link>
+            Contact
+          </a>
+
+          <a
+            href="/styleguide"
+            class:list={["mobile-nav-item", styleActive && "mobile-nav-item--active"]}
+            aria-current={isActive("/styleguide") ? "page" : undefined}
+            data-mobile-nav-link>
+            Styleguide
+          </a>
+
+          <div class="mobile-nav-sub-list" role="list" aria-label="Styleguide sub-pages">
+            {styleguideChildren.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <a
+                  href={item.path}
+                  class:list={[
+                    "mobile-nav-sub-item",
+                    active && "mobile-nav-sub-item--active",
+                  ]}
+                  aria-current={active ? "page" : undefined}
+                  data-mobile-nav-link>
+                  {item.label}
                 </a>
               );
             })}

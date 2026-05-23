@@ -268,6 +268,7 @@ const CLEARABLE_KEYS: string[] = [
   "--brand-color", "--brand-glow",
   "--color-fg-primary", "--color-fg-secondary", "--color-fg-tertiary",
   "--color-fg-muted",
+  "--panel-c1", "--panel-c2", "--panel-c3", "--panel-c4",
   "--prism-active-hue", "--oz-color",
 ];
 
@@ -287,10 +288,13 @@ export function applyState(state: PrismState, palette: GeneratedPalette): void {
   // Expose the active base hue so the .oz alternate accent can switch to
   // ruby when the hue lands in the green band. See global.css.
   root.style.setProperty("--prism-active-hue", String(Math.round(state.hue)));
+  // OZ = emerald, fixed in EVERY theme (not the theme's secondary accent),
+  // switching to ruby only when the base hue is in the green band so the alt
+  // accent stays distinct against a green-keyed palette.
   const inGreenBand = state.hue >= 100 && state.hue <= 180;
   root.style.setProperty(
     "--oz-color",
-    inGreenBand ? "oklch(0.45 0.20 15)" : "var(--accent-emerald)",
+    inGreenBand ? "oklch(0.50 0.21 18)" : "oklch(0.58 0.15 152)",
   );
 
   // Flag palette presets via a data attribute so special renders (the
@@ -301,6 +305,20 @@ export function applyState(state: PrismState, palette: GeneratedPalette): void {
     root.setAttribute("data-prism-palette", state.swatchId);
   } else {
     root.removeAttribute("data-prism-palette");
+  }
+
+  // Keep the mobile browser chrome (theme-color meta) in sync with the active
+  // theme's top background colour. Convert to a concrete rgb() the browser
+  // resolves, since mobile browsers may not parse oklch() in theme-color.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const topBg = palette["--bg-1"];
+  if (meta && topBg && document.body) {
+    const probe = document.createElement("span");
+    probe.style.color = topBg;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    meta.setAttribute("content", resolved || topBg);
   }
 }
 

@@ -108,7 +108,9 @@ const otherStudies = caseStudiesByOrder.filter((cs) => cs.slug !== study.slug);
 
 <style>
   .case-study-page {
-    max-width: 1200px;
+    /* Widened for the two-pane case-study layout (its content maxes at
+     * 1500). Prose blocks keep their own narrower max-width for readability. */
+    max-width: 1500px;
     margin: 0 auto;
     padding: 0 var(--space-xl);
   }

@@ -49,6 +49,12 @@ interface Props {
   architectureDiagramAlt?: string;
   screenshots?: ScreenshotInfo[];
   downloads?: DownloadInfo[];
+
+  /**
+   * Layout applied as a class on the root panel. Defaults to "twopane" (the
+   * chosen production layout); "standard" keeps the original single column.
+   */
+  layout?: "standard" | "wide" | "multicol" | "twopane";
 }
 
 const {
@@ -68,7 +74,11 @@ const {
   architectureDiagramAlt,
   screenshots,
   downloads,
+  layout = "twopane",
 } = Astro.props;
+
+const panelClass =
+  layout === "standard" ? "case-study" : `case-study case-study--${layout}`;
 
 // Split paragraphs on double newlines so callers can pass multi-paragraph
 // strings naturally without requiring a parser.
@@ -96,7 +106,7 @@ const availabilityLabel =
     : "Open source";
 ---
 
-<GlassPanel size="xl" class="case-study" padded={false}>
+<GlassPanel size="xl" class={panelClass} padded={false}>
   <header class="case-study-header">
     <div class="case-study-title-row">
       <h2 class="case-study-title" style={accentColor ? `color: ${accentColor};` : undefined}>
@@ -112,6 +122,57 @@ const availabilityLabel =
     </div>
     <p class="case-study-tagline">{tagline}</p>
   </header>
+
+  {/* Meta rail: tech stack, downloads, CTA. Placed BEFORE the body in source
+      so the two-pane layout can float it left and let the body's lower panels
+      wrap to full width beneath it. Other layouts use flex `order` (set in the
+      scoped styles) to restore the natural header → body → rail order. */}
+  <div class="case-study-rail">
+  <div class="case-study-tech">
+    <div class="case-study-tech-label">Tech stack</div>
+    <ul class="case-study-tech-list">
+      {techStack.map((tech) => (
+        <li class="case-study-tech-tag">{tech}</li>
+      ))}
+    </ul>
+  </div>
+
+  {downloads && downloads.length > 0 && (
+    <div class="case-study-downloads">
+      <div class="case-study-downloads-label">Available downloads</div>
+      <ul class="case-study-downloads-list">
+        {downloads.map((download) => (
+          <li class="case-study-download">
+            <a
+              class="case-study-download-link"
+              href={download.url}
+              download={download.filename}
+              rel="noopener">
+              <span class="case-study-download-icon" aria-hidden="true">↓</span>
+              <span class="case-study-download-main">
+                <span class="case-study-download-label">{download.label}</span>
+                {download.description && (
+                  <span class="case-study-download-description">
+                    {download.description}
+                  </span>
+                )}
+              </span>
+              {download.fileSize && (
+                <span class="case-study-download-size">{download.fileSize}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <footer class="case-study-footer">
+    <GlassButton href={ctaHref} variant="oz" size="md">
+      {ctaLabel}
+    </GlassButton>
+  </footer>
+  </div>
 
   <div class="case-study-body">
     <section class="case-study-section">
@@ -196,9 +257,10 @@ const availabilityLabel =
 
     {role && (
       <section class="case-study-section">
-        <h3 class="case-study-section-heading">My role</h3>
+        <h3 class="case-study-section-heading">
+          My role <span class="case-study-role-timeframe">— {role.timeframe}</span>
+        </h3>
         <p class="case-study-para">{role.description}</p>
-        <p class="case-study-role-timeframe">{role.timeframe}</p>
       </section>
     )}
 
@@ -207,51 +269,6 @@ const availabilityLabel =
       {statusParas.map((p) => <p class="case-study-para">{p}</p>)}
     </section>
   </div>
-
-  <div class="case-study-tech">
-    <div class="case-study-tech-label">Tech stack</div>
-    <ul class="case-study-tech-list">
-      {techStack.map((tech) => (
-        <li class="case-study-tech-tag">{tech}</li>
-      ))}
-    </ul>
-  </div>
-
-  {downloads && downloads.length > 0 && (
-    <div class="case-study-downloads">
-      <div class="case-study-downloads-label">Available downloads</div>
-      <ul class="case-study-downloads-list">
-        {downloads.map((download) => (
-          <li class="case-study-download">
-            <a
-              class="case-study-download-link"
-              href={download.url}
-              download={download.filename}
-              rel="noopener">
-              <span class="case-study-download-icon" aria-hidden="true">↓</span>
-              <span class="case-study-download-main">
-                <span class="case-study-download-label">{download.label}</span>
-                {download.description && (
-                  <span class="case-study-download-description">
-                    {download.description}
-                  </span>
-                )}
-              </span>
-              {download.fileSize && (
-                <span class="case-study-download-size">{download.fileSize}</span>
-              )}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-
-  <footer class="case-study-footer">
-    <GlassButton href={ctaHref} variant="secondary" size="md">
-      {ctaLabel}
-    </GlassButton>
-  </footer>
 </GlassPanel>
 
 <!--
@@ -527,7 +544,15 @@ const availabilityLabel =
   :global(.case-study) {
     padding: var(--space-3xl);
     margin-bottom: var(--space-3xl);
+    /* Flex column so the rail (moved before the body in source for the
+     * two-pane float) can be re-ordered back below the body in every OTHER
+     * layout. Two-pane overrides display to block to get a float context. */
+    display: flex;
+    flex-direction: column;
   }
+  :global(.case-study) > .case-study-header { order: 0; }
+  :global(.case-study) > .case-study-body   { order: 1; }
+  :global(.case-study) > .case-study-rail   { order: 2; }
 
   /*
    * Header: project name in display serif, availability badge to the right,
@@ -678,8 +703,8 @@ const availabilityLabel =
   :global(.case-study--multicol) .case-study-feature-list,
   :global(.case-study--twopane) .case-study-feature-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--space-sm) var(--space-2xl);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-md) var(--space-lg);
   }
   :global(.case-study--multicol) .case-study-feature-item,
   :global(.case-study--twopane) .case-study-feature-item {
@@ -688,7 +713,7 @@ const availabilityLabel =
   :global(.case-study--multicol) .case-study-decisions-list,
   :global(.case-study--twopane) .case-study-decisions-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--space-lg);
   }
   :global(.case-study--multicol) .case-study-decision-rationale,
@@ -714,7 +739,11 @@ const availabilityLabel =
   :global(.case-study--multicol) .case-study-para,
   :global(.case-study--twopane) .case-study-para {
     max-width: none;
-    break-inside: avoid;
+    /* Allow paragraphs to flow/split across the two columns so the browser
+     * balances column heights. `break-inside: avoid` forced each whole
+     * paragraph into one column, which left the shorter column with a large
+     * empty gap. Auto lets the text fill both columns evenly. */
+    break-inside: auto;
   }
 
   /* A · WIDE — readable single column, just a touch wider than the default. */
@@ -728,8 +757,15 @@ const availabilityLabel =
   :global(.case-study--multicol) .case-study-section,
   :global(.case-study--twopane) .case-study-section {
     margin: 0;
-    padding: var(--space-xl);
-    background: var(--glass-bg);
+    padding: var(--space-2xl);
+    /* Nesting step 1: section panels tint toward palette colour 1, layered
+     * over the glass surface. Defined here (scoped) so it WINS over the plain
+     * --glass-bg the base rule would apply. Every mode. */
+    background:
+      linear-gradient(0deg,
+        color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 20%, transparent),
+        color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 20%, transparent)),
+      var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
   }
@@ -743,33 +779,114 @@ const availabilityLabel =
     gap: var(--space-lg);
   }
 
-  /* C · TWO-PANE — a left meta/actions rail (title, tagline, tech stack,
-   * downloads, CTA) and the content panels filling the right.
+  /* C · TWO-PANE with FULL-WIDTH BREAK-OUT.
    *
-   * The rail items live in column 1 rows 1-4; the body spans every row in
-   * column 2. The trailing `1fr` row absorbs the body's extra height so the
-   * rail items stay grouped at the top instead of being spread apart by the
-   * tall body (shared grid rows would otherwise pull them down). */
+   * The meta rail (tech stack, downloads, CTA) floats left at a fixed width and
+   * sits beside the FIRST body sections. Because it's a float, every body panel
+   * whose top falls below the rail's bottom wraps to the FULL panel width —
+   * reclaiming the gutter that used to sit empty beside the lower sections.
+   *
+   * Mechanics: display:block (not grid/flex) so the float establishes its wrap
+   * context; the rail precedes the body in source; each section is its own BFC
+   * (flow-root) so sections beside the float shrink to fit and sections below
+   * it span full width, instead of bleeding their background under the float. */
   :global(.case-study--twopane) {
     max-width: 1500px;
     margin-inline: auto;
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    grid-template-rows: auto auto auto auto 1fr;
-    column-gap: var(--space-2xl);
-    row-gap: var(--space-xl);
-    align-items: start;
+    display: block;
   }
-  :global(.case-study--twopane) .case-study-header  { grid-column: 1; grid-row: 1; margin: 0; }
-  :global(.case-study--twopane) .case-study-tech      { grid-column: 1; grid-row: 2; margin: 0; border-top: 0; padding-top: 0; }
-  :global(.case-study--twopane) .case-study-downloads { grid-column: 1; grid-row: 3; }
-  :global(.case-study--twopane) .case-study-footer    { grid-column: 1; grid-row: 4; }
-  :global(.case-study--twopane) .case-study-body      { grid-column: 2; grid-row: 1 / -1; margin: 0; }
+  :global(.case-study--twopane) .case-study-header {
+    margin: 0 0 var(--space-xl) 0;
+  }
+  :global(.case-study--twopane) .case-study-rail {
+    float: left;
+    width: 320px;
+    margin: 0 var(--space-2xl) var(--space-lg) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+  :global(.case-study--twopane) .case-study-rail .case-study-tech {
+    margin: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+  :global(.case-study--twopane) .case-study-rail .case-study-downloads {
+    margin: 0;
+  }
+  :global(.case-study--twopane) .case-study-body {
+    display: block;
+    margin: 0;
+  }
+  /* Each section is a BFC so it shrinks beside the float (narrow) until the
+   * float ends, then spans the full width below it. Vertical rhythm via margin
+   * (block flow, not flex gap). */
+  :global(.case-study--twopane) .case-study-body > .case-study-section {
+    display: flow-root;
+    margin-bottom: var(--space-lg);
+  }
+  /* Contain the float so the panel background fully encloses the rail. */
+  :global(.case-study--twopane) .case-study-body::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+  /* "My role" stays a single column in two-pane (the extra ancestor selector
+   * outranks the 2-column prose rule above). */
+  :global(.case-study--twopane) .case-study-body .case-study-section:has(.case-study-role-timeframe) {
+    columns: 1;
+  }
+
+  /* "What it does" stays a padded glass panel like the others; each bullet is
+   * its own glass card inside it (inset by the panel padding, so cards never
+   * run to the column edge). */
+  :global(.case-study--twopane) .case-study-feature-item,
+  :global(.case-study--multicol) .case-study-feature-item {
+    padding: var(--space-lg) var(--space-lg);
+    /* Nesting step 2: feature cards tint toward palette colour 2 (a DIFFERENT
+     * palette colour than their parent section's colour 1), at a stronger
+     * mix, so each card clearly reads as a distinct layer inside the section.
+     * Scoped here so it wins over the base --glass-bg. Every mode. */
+    background:
+      linear-gradient(0deg,
+        color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 36%, transparent),
+        color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 36%, transparent)),
+      var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+  }
+  :global(.case-study--twopane) .case-study-feature-item::before,
+  :global(.case-study--multicol) .case-study-feature-item::before {
+    display: none;
+  }
+
+  /* Tech-decision cards are also nested cards inside their section panel, so
+   * they get the SAME palette-color-2 tint as the feature cards (a different
+   * colour than their parent section's colour 1). Scoped here so it wins over
+   * the flat --glass-bg the base .case-study-decision rule would apply. Every
+   * mode; the sheen/grit finish is registered in global.css. */
+  :global(.case-study--twopane) .case-study-decision,
+  :global(.case-study--multicol) .case-study-decision {
+    background:
+      linear-gradient(0deg,
+        color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 36%, transparent),
+        color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 36%, transparent)),
+      var(--glass-bg);
+    border: 1px solid var(--glass-border);
+  }
+
 
   @media (max-width: 900px) {
+    /* Drop the float and stack: flex column re-applies the base order rules
+     * (header → body → rail) so the meta rail sits at the bottom on mobile. */
     :global(.case-study--twopane) {
       display: flex;
       flex-direction: column;
+    }
+    :global(.case-study--twopane) .case-study-rail {
+      float: none;
+      width: auto;
+      margin: var(--space-xl) 0 0 0;
     }
   }
 
@@ -971,13 +1088,15 @@ const availabilityLabel =
   }
 
   /* Role section: timeframe caption styled as small muted text */
+  /* Now rendered inline inside the "My role" heading, after a hyphen. Normal
+   * case (the heading itself is uppercased) so the timeframe reads as a
+   * subtitle rather than a shouting label. */
   .case-study-role-timeframe {
     font-family: var(--font-ui);
-    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-fg-muted);
     letter-spacing: var(--tracking-tight);
-    margin: var(--space-sm) 0 0 0;
+    text-transform: none;
   }
 
   /*
@@ -1032,12 +1151,32 @@ const availabilityLabel =
     border-color: var(--glass-border-strong);
   }
 
+  /* Floating glass disc holding the glyph — matches the brand-mark / prism
+   * trigger treatment. The finish (sheen/grit) is added in global.css. */
   .case-study-download-icon {
-    font-size: var(--text-xl);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: var(--text-lg);
     color: var(--accent-royal-bright);
     font-weight: 600;
     line-height: 1;
     flex-shrink: 0;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 1px var(--highlight-top),
+      inset 0 -1px 1px var(--highlight-bottom),
+      0 4px 12px oklch(0 0 0 / 0.30),
+      0 8px 20px oklch(0 0 0 / 0.20);
+  }
+  .case-study-download-icon > * {
+    position: relative;
+    z-index: 1;
   }
 
   .case-study-download-main {

@@ -23,7 +23,7 @@
 
 interface Props {
   href?: string;
-  variant?: "primary" | "secondary" | "emerald";
+  variant?: "primary" | "secondary" | "emerald" | "oz";
   size?: "sm" | "md" | "lg";
   type?: "button" | "submit" | "reset";
   class?: string;
@@ -35,6 +35,7 @@ const {
   size = "md",
   type = "button",
   class: className = "",
+  ...rest
 } = Astro.props;
 
 const isLink = Boolean(href);
@@ -42,6 +43,7 @@ const Tag = isLink ? "a" : "button";
 ---
 
 <Tag
+  {...rest}
   href={href}
   type={isLink ? undefined : type}
   class:list={[
@@ -104,7 +106,7 @@ const Tag = isLink ? "a" : "button";
   }
 
   .glass-btn--secondary:hover {
-    transform: translateY(-3px) scale(1.04);
+    transform: translateY(-4px) scale(1.06);
     background: var(--glass-bg-hover);
     box-shadow:
       inset 0 2px 1px var(--highlight-top),
@@ -145,7 +147,7 @@ const Tag = isLink ? "a" : "button";
   }
 
   .glass-btn--primary:hover {
-    transform: translateY(-3px) scale(1.04);
+    transform: translateY(-4px) scale(1.06);
     box-shadow:
       inset 0 2px 1px var(--highlight-top),
       inset 0 4px 6px var(--highlight-top-soft),
@@ -161,6 +163,8 @@ const Tag = isLink ? "a" : "button";
 
   /* ============ EMERALD (alternate, for high-stakes CTAs) ============ */
 
+  /* EMERALD — the THEME's own alternate accent (its secondary accent colour),
+   * so it differs per theme. */
   .glass-btn--emerald {
     background: linear-gradient(
       180deg,
@@ -185,7 +189,7 @@ const Tag = isLink ? "a" : "button";
   }
 
   .glass-btn--emerald:hover {
-    transform: translateY(-3px) scale(1.04);
+    transform: translateY(-4px) scale(1.06);
     box-shadow:
       inset 0 2px 1px var(--highlight-top),
       inset 0 4px 6px var(--highlight-top-soft),
@@ -199,21 +203,65 @@ const Tag = isLink ? "a" : "button";
       0 0 240px color-mix(in oklch, var(--accent-emerald) 45%, transparent);
   }
 
+  /* ============ OZ (universal alternate, in EVERY theme) ============ */
+  /* Emerald in every theme, switching to ruby in the green band. Driven by
+   * --oz-color (set by the runtime), not the theme's secondary accent, so it
+   * is consistent across themes and never turns purple/blue. */
+  .glass-btn--oz {
+    --ozc: var(--oz-color, oklch(0.58 0.15 152));
+    --ozc-bright: color-mix(in oklch, var(--ozc) 80%, white 20%);
+    --ozc-deep: color-mix(in oklch, var(--ozc) 76%, black 24%);
+    background: linear-gradient(
+      180deg,
+      var(--ozc-bright) 0%,
+      var(--ozc) 50%,
+      var(--ozc-deep) 100%
+    );
+    border: 1px solid color-mix(in oklch, var(--ozc-bright) 60%, transparent);
+    color: white;
+    text-shadow: 0 1px 2px oklch(0 0 0 / 0.50);
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-top-soft),
+      inset 0 -4px 6px oklch(0 0 0 / 0.20),
+      inset 3px 0 6px var(--shadow-side),
+      inset -3px 0 6px var(--shadow-side),
+      0 4px 10px oklch(0 0 0 / 0.20),
+      0 16px 38px color-mix(in oklch, var(--ozc-deep) 34%, transparent),
+      0 0 80px color-mix(in oklch, var(--ozc) 55%, transparent),
+      0 0 160px color-mix(in oklch, var(--ozc) 30%, transparent);
+  }
+
+  .glass-btn--oz:hover {
+    transform: translateY(-4px) scale(1.06);
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 4px 6px var(--highlight-top-soft),
+      inset 0 -2px 1px var(--highlight-top-soft),
+      inset 0 -4px 6px oklch(0 0 0 / 0.20),
+      inset 3px 0 6px var(--shadow-side),
+      inset -3px 0 6px var(--shadow-side),
+      0 6px 18px color-mix(in oklch, var(--ozc-deep) 55%, transparent),
+      0 20px 48px color-mix(in oklch, var(--ozc-deep) 60%, transparent),
+      0 0 130px color-mix(in oklch, var(--ozc) 80%, transparent),
+      0 0 240px color-mix(in oklch, var(--ozc) 45%, transparent);
+  }
+
   /* Press: depress / zoom out, overriding the hover lift + zoom. Defined
    * after the variant :hover rules so it wins the equal-specificity cascade
    * while pressed (the element is both :hover and :active during a click). */
   .glass-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
   }
 
-  /* Respect reduced motion preference. */
+  /* Note: the tactile zoom/lift on hover and depress on press are core to the
+   * button design, so they are intentionally NOT disabled under
+   * prefers-reduced-motion. Under reduced motion the transition is shortened
+   * so the size change is near-instant rather than a slow slide. */
   @media (prefers-reduced-motion: reduce) {
     .glass-btn {
-      transition: none;
-    }
-    .glass-btn:hover,
-    .glass-btn:active {
-      transform: none;
+      transition-duration: 60ms;
     }
   }
 </style>

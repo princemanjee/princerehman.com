@@ -49,7 +49,9 @@ const cs = getCaseStudy("fieldforce");
     const panel = document.querySelector<HTMLElement>(".case-study");
     const buttons = document.querySelectorAll<HTMLButtonElement>(".switcher button");
     if (!panel) return;
-    // Start in the default (multi-column) mode.
+    // Start in multi-column for the comparison. Clear any mode class the
+    // component shipped with (it now defaults to two-pane) so we never stack two.
+    panel.classList.remove("case-study--wide", "case-study--multicol", "case-study--twopane");
     panel.classList.add("case-study--multicol");
     buttons.forEach((btn) => {
       btn.addEventListener("click", () => {

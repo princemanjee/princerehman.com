@@ -1,0 +1,589 @@
+---
+/**
+ * /cv — the Adaptive CV page.
+ *
+ * Architecture: client-side adaptation with ALL data baked into the HTML.
+ * Every role / project / section ships in the static markup, and a tiny
+ * client state machine (cv-state.ts) drives visibility / dimming / ordering
+ * via attribute selectors on <html>. No SSR round-trips, no reloads. URL
+ * params remain the canonical source of truth so shareable links work.
+ *
+ * Source selection (this iteration):
+ *   1. The page asks AUDIENCE_ARCHIVE_MAP for a curated archive entry
+ *      matching the requested audience.
+ *   2. When a curated mapping resolves to a real archive entry, the page
+ *      adapts THAT entry into a RenderPlan and renders it as the body.
+ *   3. Otherwise it falls back to the engine via buildRenderPlan(resume,
+ *      audience, ...). Same DOM shape either way, so the client-side
+ *      state machine keeps working unchanged.
+ */
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Container from "../../components/Container.astro";
+import Stack from "../../components/Stack.astro";
+import Grid from "../../components/Grid.astro";
+import GlassPanel from "../../components/GlassPanel.astro";
+import GlassButton from "../../components/GlassButton.astro";
+import PageHeader from "../../components/PageHeader.astro";
+
+import resume from "../../data/resume.json";
+import resumeArchive from "../../data/resumeArchive.json";
+import {
+  AUDIENCES,
+  AUDIENCE_LABELS,
+  AUDIENCE_DESCRIPTIONS,
+  type Audience,
+} from "../../data/cvAudienceTags";
+import { SKILL_INDEX, SKILL_CHIP_DEFAULTS } from "../../data/cvSkillIndex";
+import { AUDIENCE_ARCHIVE_MAP } from "../../data/cvAudienceArchiveMap";
+
+import AudienceSwitcher from "../../components/cv/AudienceSwitcher.astro";
+import SkillFilterChips from "../../components/cv/SkillFilterChips.astro";
+import RoleCard from "../../components/cv/RoleCard.astro";
+import TimeAxisSlider from "../../components/cv/TimeAxisSlider.astro";
+import SectionFilterDrawer from "../../components/cv/SectionFilterDrawer.astro";
+import JdPasteInput from "../../components/cv/JdPasteInput.astro";
+
+import {
+  buildRenderPlan,
+  slugifySkill,
+  type RenderPlan,
+  type Section,
+} from "../../lib/cv-render";
+import {
+  adaptArchiveEntryToRenderPlan,
+} from "../../lib/cv-archive-adapter";
+import type { ResumeArchiveEntry } from "../../lib/cv-archive-match";
+
+// Adaptive CSS — show/hide/dim selectors only. Surface styling stays in
+// the Glass* components.
+import "../../styles/cv-adaptive.css";
+
+const KNOWN_SECTION_KINDS = new Set([
+  "summary", "experience", "projects", "skills", "education",
+  "certifications", "publications", "awards", "volunteer",
+]);
+
+/* ── URL parsing ───────────────────────────────────────────────────── */
+
+const params = Astro.url.searchParams;
+
+const rawAudience = params.get("for");
+const audience: Audience =
+  rawAudience && (AUDIENCES as readonly string[]).includes(rawAudience)
+    ? (rawAudience as Audience)
+    : "default";
+
+const rawSkill = params.get("skill") ?? "";
+const slugToDisplay: Map<string, string> = new Map(
+  SKILL_INDEX.map((entry) => [slugifySkill(entry.skill), entry.skill]),
+);
+const tokenizedSkills = rawSkill
+  .split(",").map((s) => s.trim()).filter((s) => s.length > 0)
+  .map((s) => slugifySkill(s)).filter((slug) => slugToDisplay.has(slug));
+const skillSlugs: string[] = Array.from(new Set(tokenizedSkills));
+const skillFilters: string[] = skillSlugs.map((slug) => slugToDisplay.get(slug)!);
+
+const currentYear = new Date().getFullYear();
+const rawSince = params.get("since");
+let since: number | null = null;
+if (rawSince) {
+  const parsed = Number.parseInt(rawSince, 10);
+  if (Number.isInteger(parsed) && parsed >= 1990 && parsed <= currentYear) {
+    since = parsed;
+  }
+}
+
+const rawHide = params.get("hide") ?? "";
+const hiddenSections: string[] = rawHide
+  .split(",").map((s) => s.trim().toLowerCase()).filter((s) => s.length > 0)
+  .filter((s) => KNOWN_SECTION_KINDS.has(s));
+
+/* ── Plan construction: archive-first, engine fallback ──────────────── */
+
+const archiveEntries: ResumeArchiveEntry[] =
+  Array.isArray((resumeArchive as any)?.entries)
+    ? ((resumeArchive as any).entries as ResumeArchiveEntry[])
+    : [];
+
+let plan: RenderPlan | null = null;
+let planSource: "archive" | "engine" = "engine";
+let archivePick: { company: string; variant: string } | null = null;
+
+const mapping = AUDIENCE_ARCHIVE_MAP[audience];
+if (mapping) {
+  const entry = archiveEntries.find(
+    (e) =>
+      e?.workspace?.company === mapping.company &&
+      e?.workspace?.variant === mapping.variant,
+  );
+  if (entry) {
+    plan = adaptArchiveEntryToRenderPlan(
+      entry,
+      audience,
+      skillFilters,
+      hiddenSections,
+    );
+    planSource = "archive";
+    archivePick = mapping;
+  }
+}
+if (!plan) {
+  plan = buildRenderPlan(resume, audience, skillFilters, {
+    sinceYear: since,
+    hiddenSections,
+  });
+}
+
+const audienceLabel = AUDIENCE_LABELS[audience] ?? "Default";
+const audienceDescription =
+  AUDIENCE_DESCRIPTIONS[audience] ?? "General presentation of the CV.";
+
+const r = resume as any;
+const candidateName: string = r?.basics?.name ?? r?.name ?? "P. R. Manjee";
+const candidateTitle: string =
+  r?.basics?.label ?? r?.basics?.title ?? r?.label ?? "Senior Technology Consultant";
+
+function sec<K extends Section["kind"]>(kind: K): Extract<Section, { kind: K }> | undefined {
+  return plan!.sections.find((s) => s.kind === kind) as
+    | Extract<Section, { kind: K }>
+    | undefined;
+}
+
+const summarySection = sec("summary");
+const experienceSection = sec("experience");
+const projectsSection = sec("projects");
+const skillsSection = sec("skills");
+const educationSection = sec("education");
+const certificationsSection = sec("certifications");
+const publicationsSection = sec("publications");
+const awardsSection = sec("awards");
+const volunteerSection = sec("volunteer");
+
+const allRoles = experienceSection?.roles ?? [];
+const allProjects = projectsSection?.projects ?? [];
+
+/*
+ * Adapter: the engine emits {name,startDate,endDate,skillsMatched}; the
+ * archive adapter does too. RoleCard wants {company,dateRange,matchedSkills}.
+ * Translate at the call site so each side stays canonical to its own contract.
+ */
+function adaptForRoleCard(item: {
+  roleId?: string;
+  name: string;
+  position?: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  summary: string;
+  highlights: string[];
+  emphasis: "primary" | "secondary" | "hidden";
+  skillsMatched: string[];
+  matchesAllActiveSkills: boolean;
+  audiencesData?: string[];
+  hiddenForAudiences?: string[];
+  skillsData?: string[];
+  yearEnd?: number;
+}) {
+  const dateRange = item.endDate
+    ? `${item.startDate} – ${item.endDate}`
+    : item.startDate
+      ? `${item.startDate} – Present`
+      : undefined;
+  return {
+    roleId: item.roleId,
+    company: item.name,
+    position: item.position ?? "",
+    dateRange,
+    location: item.location,
+    summary: item.summary,
+    highlights: item.highlights,
+    emphasis: item.emphasis,
+    matchedSkills: item.skillsMatched,
+    matchesAllActiveSkills: item.matchesAllActiveSkills,
+    audiencesData: item.audiencesData,
+    hiddenForAudiences: item.hiddenForAudiences,
+    skillsData: item.skillsData,
+    yearEnd: item.yearEnd,
+  };
+}
+
+const pageTitle = `CV — ${candidateName} — ${audienceLabel} view`;
+const pageDescription = `${candidateName}, ${candidateTitle}. ${audienceDescription}`;
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Container size="xl" as="main">
+    <Stack gap="3xl">
+      <PageHeader
+        pageTitle="Curriculum Vitae"
+        meta={`Showing the ${audienceLabel} view — ${audienceDescription}`}
+      />
+
+      {/* Audience switcher + time slider band */}
+      <section aria-labelledby="audience-switcher-heading">
+        <Stack gap="md">
+          <h2 id="audience-switcher-heading" class="cv-controls-heading">
+            Tailor this view
+          </h2>
+          <div data-audience-switcher data-current={audience}>
+            <AudienceSwitcher current={audience} />
+          </div>
+          <TimeAxisSlider since={since} />
+        </Stack>
+      </section>
+
+      {/* Skill filter chips + section drawer */}
+      <section aria-labelledby="skill-filter-heading">
+        <Stack gap="md">
+          <h2 id="skill-filter-heading" class="cv-controls-heading">
+            Filter by skill
+          </h2>
+          <SkillFilterChips active={skillFilters} all={SKILL_CHIP_DEFAULTS} />
+          <SectionFilterDrawer hiddenSections={hiddenSections} />
+        </Stack>
+      </section>
+
+      {/* JD-paste live tailoring */}
+      <JdPasteInput initialAudience={audience} />
+
+      {/* Source-of-truth notice for archive-driven views */}
+      {planSource === "archive" && archivePick && (
+        <section aria-label="Content source">
+          <GlassPanel size="sm">
+            <p class="cv-source-note">
+              Showing the tailored package built for <strong>{archivePick.company}</strong>
+              ({archivePick.variant}). Filters and skill chips still apply.
+            </p>
+          </GlassPanel>
+        </section>
+      )}
+
+      {/* Summary */}
+      {summarySection && summarySection.content && (
+        <section aria-labelledby="cv-summary-heading" data-cv-section="summary">
+          <Stack gap="md">
+            <h2 id="cv-summary-heading" class="cv-section-heading">Summary</h2>
+            <GlassPanel size="lg">
+              <p class={`cv-summary cv-summary--${summarySection.emphasis}`}>
+                {summarySection.content}
+              </p>
+            </GlassPanel>
+          </Stack>
+        </section>
+      )}
+
+      {/* Experience */}
+      {allRoles.length > 0 && (
+        <section aria-labelledby="cv-experience-heading" data-cv-section="experience">
+          <Stack gap="lg">
+            <h2 id="cv-experience-heading" class="cv-section-heading">Experience</h2>
+            <Stack gap="md">
+              {allRoles.map((role) => (
+                <RoleCard
+                  role={adaptForRoleCard(role)}
+                  audience={audience}
+                  activeSkills={skillSlugs}
+                  kind="experience"
+                />
+              ))}
+            </Stack>
+            {/*
+             * Earlier Experience reveal. CSS in cv-adaptive.css flips
+             * its display when data-cv-has-older="true" appears on <html>.
+             */}
+            <div data-cv-earlier-experience>
+              <GlassPanel size="sm">
+                <p class="cv-earlier-experience__hint">
+                  Roles older than your selected year are summarized above.
+                </p>
+              </GlassPanel>
+            </div>
+          </Stack>
+        </section>
+      )}
+
+      {/* Projects */}
+      {allProjects.length > 0 && (
+        <section aria-labelledby="cv-projects-heading" data-cv-section="projects">
+          <Stack gap="lg">
+            <h2 id="cv-projects-heading" class="cv-section-heading">Projects</h2>
+            <Stack gap="md">
+              {allProjects.map((project) => (
+                <RoleCard
+                  role={adaptForRoleCard(project)}
+                  audience={audience}
+                  activeSkills={skillSlugs}
+                  kind="project"
+                />
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
+
+      {/* Skills */}
+      {skillsSection && skillsSection.skills.length > 0 && (
+        <section aria-labelledby="cv-skills-heading" data-cv-section="skills">
+          <Stack gap="lg">
+            <h2 id="cv-skills-heading" class="cv-section-heading">Skills</h2>
+            <Grid min="280px" gap="md">
+              {skillsSection.skills.map((group) => (
+                <GlassPanel size="md">
+                  <Stack gap="sm">
+                    <h3 class="cv-skill-category">{group.category}</h3>
+                    <Stack direction="horizontal" gap="xs" wrap>
+                      {group.skills.map((s) => (
+                        <span class="tech-tag" data-cv-skill-token={slugifySkill(s.name)}>
+                          <span>{s.name}</span>
+                        </span>
+                      ))}
+                    </Stack>
+                  </Stack>
+                </GlassPanel>
+              ))}
+            </Grid>
+          </Stack>
+        </section>
+      )}
+
+      {/* Education */}
+      {educationSection && educationSection.items.length > 0 && (
+        <section aria-labelledby="cv-education-heading" data-cv-section="education">
+          <Stack gap="lg">
+            <h2 id="cv-education-heading" class="cv-section-heading">Education</h2>
+            <Stack gap="sm">
+              {educationSection.items.map((item: any) => (
+                <GlassPanel size="md">
+                  <Stack gap="2xs">
+                    <h3 class="cv-line-title">{item.institution ?? item.name ?? ""}</h3>
+                    <p class="cv-line-meta">
+                      {[item.studyType, item.area].filter(Boolean).join(", ")}
+                      {item.startDate || item.endDate ? ` · ${item.startDate ?? ""}${item.endDate ? ` – ${item.endDate}` : ""}` : ""}
+                    </p>
+                    {item.summary && <p class="cv-line-body">{item.summary}</p>}
+                  </Stack>
+                </GlassPanel>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
+
+      {/* Certifications */}
+      {certificationsSection && certificationsSection.items.length > 0 && (
+        <section aria-labelledby="cv-certifications-heading" data-cv-section="certifications">
+          <Stack gap="lg">
+            <h2 id="cv-certifications-heading" class="cv-section-heading">Certifications</h2>
+            <Grid min="320px" gap="sm">
+              {certificationsSection.items.map((item: any) => (
+                <GlassPanel size="sm">
+                  <Stack gap="2xs">
+                    <h3 class="cv-line-title">{item.name ?? ""}</h3>
+                    <p class="cv-line-meta">
+                      {[item.issuer, item.date].filter(Boolean).join(" · ")}
+                    </p>
+                  </Stack>
+                </GlassPanel>
+              ))}
+            </Grid>
+          </Stack>
+        </section>
+      )}
+
+      {/* Publications */}
+      {publicationsSection && publicationsSection.items.length > 0 && (
+        <section aria-labelledby="cv-publications-heading" data-cv-section="publications">
+          <Stack gap="lg">
+            <h2 id="cv-publications-heading" class="cv-section-heading">Publications</h2>
+            <Stack gap="sm">
+              {publicationsSection.items.map((item: any) => (
+                <GlassPanel size="sm">
+                  <Stack gap="2xs">
+                    <h3 class="cv-line-title">{item.name ?? item.title ?? ""}</h3>
+                    <p class="cv-line-meta">
+                      {[item.publisher, item.releaseDate ?? item.date].filter(Boolean).join(" · ")}
+                    </p>
+                    {item.summary && <p class="cv-line-body">{item.summary}</p>}
+                  </Stack>
+                </GlassPanel>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
+
+      {/* Awards */}
+      {awardsSection && awardsSection.items.length > 0 && (
+        <section aria-labelledby="cv-awards-heading" data-cv-section="awards">
+          <Stack gap="lg">
+            <h2 id="cv-awards-heading" class="cv-section-heading">Awards</h2>
+            <Stack gap="sm">
+              {awardsSection.items.map((item: any) => (
+                <GlassPanel size="sm">
+                  <Stack gap="2xs">
+                    <h3 class="cv-line-title">{item.title ?? item.name ?? ""}</h3>
+                    <p class="cv-line-meta">
+                      {[item.awarder, item.date].filter(Boolean).join(" · ")}
+                    </p>
+                    {item.summary && <p class="cv-line-body">{item.summary}</p>}
+                  </Stack>
+                </GlassPanel>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
+
+      {/* Volunteer */}
+      {volunteerSection && volunteerSection.items.length > 0 && (
+        <section aria-labelledby="cv-volunteer-heading" data-cv-section="volunteer">
+          <Stack gap="lg">
+            <h2 id="cv-volunteer-heading" class="cv-section-heading">Volunteer</h2>
+            <Stack gap="sm">
+              {volunteerSection.items.map((item: any) => (
+                <GlassPanel size="md">
+                  <Stack gap="2xs">
+                    <h3 class="cv-line-title">{item.organization ?? item.name ?? ""}</h3>
+                    <p class="cv-line-meta">
+                      {[item.position, item.startDate, item.endDate].filter(Boolean).join(" · ")}
+                    </p>
+                    {item.summary && <p class="cv-line-body">{item.summary}</p>}
+                  </Stack>
+                </GlassPanel>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
+
+      {/* Footer CTA */}
+      <section>
+        <GlassPanel size="lg">
+          <Stack gap="md">
+            <h2 class="cv-section-heading">Working together</h2>
+            <p class="cv-line-body">
+              Currently taking on a small number of engagements per quarter.
+              Reach out early in your evaluation process.
+            </p>
+            <Stack direction="horizontal" gap="md" wrap>
+              <GlassButton href="mailto:princemanjee@gmail.com" variant="primary" size="md">
+                Start a conversation
+              </GlassButton>
+              <GlassButton href="/about" variant="secondary" size="md">
+                More about me
+              </GlassButton>
+            </Stack>
+          </Stack>
+        </GlassPanel>
+      </section>
+    </Stack>
+  </Container>
+
+  {/*
+   * Pre-paint state applier. Reads URL + localStorage and sets the four
+   * <html data-cv-*> attributes synchronously to avoid FOUC.
+   */}
+  <script is:inline>
+    (function () {
+      try {
+        var url = new URL(window.location.href);
+        var params = url.searchParams;
+        var audience = params.get("for");
+        var skill = params.get("skill");
+        var since = params.get("since");
+        var hide = params.get("hide");
+
+        if (!audience && !skill && !since && !hide) {
+          var stored = null;
+          try {
+            stored = JSON.parse(localStorage.getItem("princerehman.cv.state.v1") || "null");
+          } catch (e) { stored = null; }
+          if (stored) {
+            audience = stored.audience || null;
+            if (Array.isArray(stored.skills) && stored.skills.length) skill = stored.skills.join(",");
+            if (typeof stored.since === "number") since = String(stored.since);
+            if (Array.isArray(stored.hide) && stored.hide.length) hide = stored.hide.join(",");
+          }
+        }
+
+        var root = document.documentElement;
+        root.setAttribute("data-cv-audience", audience || "default");
+        if (skill) root.setAttribute("data-cv-skills", skill.split(",").map(function(s){return s.trim();}).filter(Boolean).join(" "));
+        if (since) root.setAttribute("data-cv-since", since);
+        if (hide) root.setAttribute("data-cv-hide", hide.split(",").map(function(s){return s.trim();}).filter(Boolean).join(" "));
+      } catch (e) {
+        document.documentElement.setAttribute("data-cv-audience", "default");
+      }
+    })();
+  </script>
+
+  {/*
+   * Boot module: full state machine. Runs after the inline applier so
+   * <html> already has the right attrs; this script wires the subscriptions.
+   */}
+  <script>
+    import {
+      readStateFromUrl,
+      readStateFromLocalStorage,
+      writeStateToUrl,
+      writeStateToLocalStorage,
+      applyStateToRoot,
+      applyStateToRoles,
+      onStateChange,
+      isDefaultState,
+    } from "../../lib/cv-state";
+
+    const urlState = readStateFromUrl();
+    const initial = isDefaultState(urlState)
+      ? (readStateFromLocalStorage() ?? urlState)
+      : urlState;
+
+    applyStateToRoot(initial);
+    applyStateToRoles(initial);
+    writeStateToUrl(initial, false);
+
+    onStateChange((state) => {
+      writeStateToUrl(state, true);
+      writeStateToLocalStorage(state);
+      applyStateToRoot(state);
+      applyStateToRoles(state);
+    });
+
+    window.addEventListener("popstate", () => {
+      const state = readStateFromUrl();
+      applyStateToRoot(state);
+      applyStateToRoles(state);
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  /*
+   * Panel tinting — see COMPONENTS.md → "Panel tinting".
+   * Cycles --panel-c1..c4 across the CV's top-level sections so adjacent
+   * sections read as distinct palette layers and the chips/cards that sit
+   * on top contrast against a coloured background instead of the same base
+   * glass. Tint mix kept at 18% so the gloss + bevel remain dominant.
+   */
+  [data-cv-section="summary"]      :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 18%, transparent), color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="experience"]   :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 18%, transparent), color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="projects"]     :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c3, var(--accent-royal)) 18%, transparent), color-mix(in oklch, var(--panel-c3, var(--accent-royal)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="skills"]       :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c4, var(--accent-emerald)) 18%, transparent), color-mix(in oklch, var(--panel-c4, var(--accent-emerald)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="education"]    :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 18%, transparent), color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="certifications"] :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 18%, transparent), color-mix(in oklch, var(--panel-c2, var(--accent-emerald)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="publications"] :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c3, var(--accent-royal)) 18%, transparent), color-mix(in oklch, var(--panel-c3, var(--accent-royal)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="awards"]       :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c4, var(--accent-emerald)) 18%, transparent), color-mix(in oklch, var(--panel-c4, var(--accent-emerald)) 18%, transparent)), var(--glass-bg); }
+  [data-cv-section="volunteer"]    :global(.glass-panel) { background: linear-gradient(0deg, color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 18%, transparent), color-mix(in oklch, var(--panel-c1, var(--accent-royal)) 18%, transparent)), var(--glass-bg); }
+
+  .cv-section-heading { font-family: var(--font-display); font-weight: 600; font-size: clamp(var(--text-2xl), 3vw + 0.5rem, var(--text-3xl)); letter-spacing: var(--tracking-tight); color: var(--color-fg-primary); margin: 0; }
+  .cv-controls-heading { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: 500; letter-spacing: var(--tracking-widest); text-transform: uppercase; color: var(--color-fg-muted); margin: 0; }
+  .cv-summary { font-family: var(--font-body); line-height: var(--leading-relaxed); color: var(--color-fg-secondary); margin: 0; max-width: 72ch; }
+  .cv-summary--primary { font-family: var(--font-display); font-size: var(--text-xl); color: var(--color-fg-primary); line-height: var(--leading-snug); }
+  .cv-source-note { margin: 0; font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-fg-tertiary); }
+  .cv-line-title { font-family: var(--font-display); font-weight: 500; font-size: var(--text-lg); color: var(--color-fg-primary); margin: 0; }
+  .cv-line-meta { font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-fg-tertiary); margin: 0; }
+  .cv-line-body { font-family: var(--font-body); font-size: var(--text-base); line-height: var(--leading-relaxed); color: var(--color-fg-secondary); margin: 0; max-width: 72ch; }
+  .cv-skill-category { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600; letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--color-fg-muted); margin: 0; }
+  .cv-earlier-experience__hint { margin: 0; font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-fg-tertiary); }
+</style>
