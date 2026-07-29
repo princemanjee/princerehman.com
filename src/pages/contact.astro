@@ -33,11 +33,15 @@ import GlassSelect from "../components/GlassSelect.astro";
  * though the AJAX path usually handles it. They are the no-JS fallback,
  * and the library reads the endpoint from its own formId config.
  *
- * If the ID is ever blanked out deliberately (see isFormLive below), the
- * page renders its fields inside an inert <div> instead of a <form>, so
- * nothing can post to a dead endpoint and lose a real inquiry. A notice
- * routes the visitor to direct email in that state. Contact is never a
- * dead end.
+ * To switch the form off deliberately, set PUBLIC_FORMSPREE_ID to one of the
+ * DISABLE_VALUES sentinels below ("none", "off", "false", "disabled"). A
+ * blank value does NOT disable it and falls back to the default instead;
+ * see the comment on envFormspreeId for why that distinction matters.
+ *
+ * In the disabled state the page renders its fields inside an inert div
+ * rather than a form, so nothing can post to a dead endpoint and lose a
+ * real inquiry, and a notice routes the visitor to direct email. Contact is
+ * never a dead end.
  *
  * Alternative backends, if Formspree is ever swapped out: Web3Forms,
  * FormSubmit, or a small Cloudflare Worker (this repo already deploys one
@@ -47,16 +51,38 @@ import GlassSelect from "../components/GlassSelect.astro";
 
 const DEFAULT_FORMSPREE_ID = "xeeydpkn";
 
-const rawFormspreeId =
-  import.meta.env.PUBLIC_FORMSPREE_ID ?? DEFAULT_FORMSPREE_ID;
-const formspreeId = String(rawFormspreeId).trim();
+/*
+ * Sentinels that deliberately disable the form. Needed because "empty means
+ * disabled" is not usable here (see below), so switching the form off has to
+ * be something explicit rather than the absence of a value.
+ */
+const DISABLE_VALUES = new Set(["none", "off", "false", "disabled"]);
+
+/*
+ * An empty override must fall back to the default, NOT disable the form.
+ *
+ * deploy.yml passes `${{ vars.PUBLIC_FORMSPREE_ID }}`, and GitHub substitutes
+ * an empty string when that repository variable does not exist. Empty string
+ * is not nullish, so `?? DEFAULT` does not catch it: the first deploy of this
+ * page went live showing the direct-email fallback instead of the form, which
+ * is exactly the silent degradation the baked-in default was meant to prevent.
+ * Treat blank and whitespace as "no override supplied".
+ */
+const envFormspreeId = String(
+  import.meta.env.PUBLIC_FORMSPREE_ID ?? "",
+).trim();
+const formspreeId =
+  envFormspreeId.length > 0 ? envFormspreeId : DEFAULT_FORMSPREE_ID;
 
 /*
  * Guard the historical placeholder so an accidental copy of the old value
- * cannot resurrect a form that posts nowhere.
+ * cannot resurrect a form that posts nowhere, and honour the explicit
+ * disable sentinels.
  */
 const isFormLive =
-  formspreeId.length > 0 && formspreeId !== "YOUR_FORMSPREE_ID";
+  formspreeId.length > 0 &&
+  formspreeId !== "YOUR_FORMSPREE_ID" &&
+  !DISABLE_VALUES.has(formspreeId.toLowerCase());
 
 const formAction = isFormLive
   ? `https://formspree.io/f/${formspreeId}`
