@@ -15,16 +15,22 @@
     "scan:tokens": "node scripts/build-token-usage.mjs",
     "sync:resume": "node scripts/sync-resume.mjs",
     "sync:resume:check": "node scripts/sync-resume.mjs --dry-run --verbose",
+    "test": "npm run test:unit && npm run test:sync",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
     "test:sync": "node --test scripts/sync-resume.test.mjs",
     "build:archive": "node scripts/build-archive.mjs",
     "gateway:dev": "cd gateway && npx wrangler dev",
     "gateway:deploy": "cd gateway && npx wrangler deploy"
   },
   "dependencies": {
+    "@formspree/ajax": "^1.1.5",
     "astro": "^5.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
-    "typescript": "^5.6.0"
+    "jsdom": "^29.1.1",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.10"
   }
 }
