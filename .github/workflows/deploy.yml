@@ -33,6 +33,22 @@ jobs:
 
       - name: Build with Astro
         run: npm run build
+        env:
+          # Formspree form ID for the /contact form. Set this as an Actions
+          # repository variable (Settings > Secrets and variables > Actions >
+          # Variables). Astro inlines PUBLIC_* vars at build time, so it has
+          # to be present here rather than at runtime. If it is unset the
+          # build still succeeds and /contact falls back to direct email.
+          PUBLIC_FORMSPREE_ID: ${{ vars.PUBLIC_FORMSPREE_ID }}
+          # Public URL of the Cloudflare Worker that brokers the Adaptive
+          # CV's live JD-tailoring calls (see gateway/README.md). Same
+          # build-time inlining rule as above: absent here means absent from
+          # the shipped bundle no matter what .env says locally.
+          #
+          # Unset is a supported state. The CV's JD-paste flow then reports
+          # live tailoring as unavailable and falls back to the client-side
+          # archive match, which needs no network at all.
+          PUBLIC_CV_GATEWAY_URL: ${{ vars.PUBLIC_CV_GATEWAY_URL }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

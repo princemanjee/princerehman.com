@@ -91,8 +91,25 @@ function readGatewayUrl(): string {
     .env;
   const url = env?.PUBLIC_CV_GATEWAY_URL;
   if (!url) {
-    throw new Error(
+    /*
+     * Thrown as GatewayError(502) rather than a bare Error on purpose.
+     *
+     * JdPasteInput branches on `.status`: 502 gets the visitor-facing
+     * "Live tailoring is temporarily unreachable, the closest archive match
+     * is available below" copy, while an unrecognised error falls through to
+     * a branch that interpolates `err.message` into the page. A bare Error
+     * therefore printed "PUBLIC_CV_GATEWAY_URL is not set. Configure it in
+     * .env" to whoever pasted a job description, which is a developer note
+     * leaking into a visitor's face.
+     *
+     * An unconfigured gateway and an unreachable gateway are the same thing
+     * from the visitor's side: live tailoring is unavailable, use the
+     * archive path. The operator detail stays in `body` for debugging.
+     */
+    throw new GatewayError(
+      502,
       "PUBLIC_CV_GATEWAY_URL is not set. Configure it in .env (see gateway/README.md).",
+      "Live tailoring is not configured.",
     );
   }
   return url;

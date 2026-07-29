@@ -9,28 +9,64 @@ import GlassTextarea from "../components/GlassTextarea.astro";
 import GlassSelect from "../components/GlassSelect.astro";
 
 /*
- * Contact form demo page.
+ * Contact page.
  *
- * Status: NOT YET WIRED TO A BACKEND. The form's action attribute below
- * points to a Formspree placeholder URL. To make the form functional:
+ * Backend: Formspree, form ID `xeeydpkn`.
  *
- *   1. Sign up for a free Formspree account at https://formspree.io
- *   2. Create a new form, copy the form ID (e.g., "xyzabcde")
- *   3. Replace YOUR_FORMSPREE_ID below with the actual form ID
- *   4. Add Contact to the nav in src/components/Nav.astro (and
- *      MobileNav.astro for mobile) so the page is discoverable
- *   5. Optionally update the "Start a conversation" buttons throughout
- *      the site to point to /contact instead of mailto:
+ * The ID is baked in as the default rather than being CI-only config. A
+ * Formspree form ID is not a secret: it ships in the page source of every
+ * form that uses it, so hiding it buys nothing. Making it the default
+ * instead removes a real failure mode, which is a deploy that silently
+ * renders the direct-email fallback because an Actions variable was never
+ * added. PUBLIC_FORMSPREE_ID still overrides it when set, which is useful
+ * for pointing a branch or a local build at a throwaway test form.
  *
- * Alternative backend services if you do not want Formspree:
- *   - Web3Forms (https://web3forms.com) - free, no signup needed
- *   - FormSubmit (https://formsubmit.co) - free, no signup
- *   - Netlify Forms - if you migrate hosting to Netlify
- *   - Custom backend on a small cloud function (Cloudflare Workers, etc.)
+ * Submission is progressively enhanced:
+ *   - No JS: the native form POSTs to Formspree and the visitor lands on
+ *     Formspree's own thank-you page. Fully functional, just off-site.
+ *   - With JS: @formspree/ajax intercepts the submit, posts in the
+ *     background, and swaps in an inline success message, so the visitor
+ *     never leaves the site. Field-level validation errors render next to
+ *     the offending input and the submit button self-disables in flight.
  *
- * In any case, replace the form action URL and the hidden _subject field
- * format as the chosen service expects.
+ * The `action` and `method` attributes therefore stay on the form even
+ * though the AJAX path usually handles it. They are the no-JS fallback,
+ * and the library reads the endpoint from its own formId config.
+ *
+ * If the ID is ever blanked out deliberately (see isFormLive below), the
+ * page renders its fields inside an inert <div> instead of a <form>, so
+ * nothing can post to a dead endpoint and lose a real inquiry. A notice
+ * routes the visitor to direct email in that state. Contact is never a
+ * dead end.
+ *
+ * Alternative backends, if Formspree is ever swapped out: Web3Forms,
+ * FormSubmit, or a small Cloudflare Worker (this repo already deploys one
+ * in gateway/ for the CV). Any of them only needs the endpoint below and
+ * the hidden field names adjusted to that service's convention.
  */
+
+const DEFAULT_FORMSPREE_ID = "xeeydpkn";
+
+const rawFormspreeId =
+  import.meta.env.PUBLIC_FORMSPREE_ID ?? DEFAULT_FORMSPREE_ID;
+const formspreeId = String(rawFormspreeId).trim();
+
+/*
+ * Guard the historical placeholder so an accidental copy of the old value
+ * cannot resurrect a form that posts nowhere.
+ */
+const isFormLive =
+  formspreeId.length > 0 && formspreeId !== "YOUR_FORMSPREE_ID";
+
+const formAction = isFormLive
+  ? `https://formspree.io/f/${formspreeId}`
+  : undefined;
+
+/*
+ * Dynamic wrapper tag: a real <form> only when there is a live endpoint to
+ * post to, otherwise an inert <div> that cannot submit even on Enter.
+ */
+const FormWrapper = isFormLive ? "form" : "div";
 
 const subjectOptions = [
   { value: "consulting", label: "Consulting engagement" },
@@ -61,20 +97,71 @@ const subjectOptions = [
     <div class="contact-grid">
       {/* Left column: the form. */}
       <GlassPanel size="xl" class="contact-form-panel" padded={false}>
-        <form
+        {/*
+          Status regions for the AJAX path.
+
+          Both sit outside the form wrapper on purpose: the library resolves
+          them by looking inside the form first and then at the form's parent,
+          and keeping them outside means the success message survives the form
+          being hidden on submit.
+
+          The success copy is pre-filled rather than left to the library. Its
+          setter only writes when the element is empty, so pre-filling wins and
+          the visitor gets this message instead of the default "Thank you!".
+          The error region stays empty because its text is the actual server
+          or validation message.
+
+          Visibility is driven by data-fs-active, which the library toggles on
+          these elements. That is why it is used instead of :empty, which
+          cannot hide a pre-filled success banner.
+        */}
+        {isFormLive && (
+          <>
+            <div
+              class="contact-form-status contact-form-status--success"
+              role="status"
+              aria-live="polite"
+              data-fs-success>
+              Message received. I will respond personally within two business
+              days.
+            </div>
+            <div
+              class="contact-form-status contact-form-status--error"
+              role="alert"
+              data-fs-error
+            />
+          </>
+        )}
+
+        <FormWrapper
           class="contact-form"
-          action="https://formspree.io/f/YOUR_FORMSPREE_ID"
-          method="POST">
+          {...isFormLive
+            ? {
+                id: "contact-form",
+                action: formAction,
+                method: "POST",
+                /*
+                 * The bundled enhancement script below cannot read Astro
+                 * frontmatter directly (define:vars would force the script
+                 * inline and break the ESM import), so the form ID travels
+                 * to the client on this attribute instead.
+                 */
+                "data-formspree-id": formspreeId,
+              }
+            : {}}>
           {/*
             Hidden field for Formspree: sets the email subject line so
             messages arrive with a recognizable header instead of the
-            default "New submission from princerehman.com".
+            default "New submission from princerehman.com". Only meaningful
+            when there is a live endpoint, so it is omitted otherwise.
           */}
-          <input
-            type="hidden"
-            name="_subject"
-            value="New inquiry from princerehman.com"
-          />
+          {isFormLive && (
+            <input
+              type="hidden"
+              name="_subject"
+              value="New inquiry from princerehman.com"
+            />
+          )}
 
           {/* Two-column row for name and email (stacks on mobile) */}
           <div class="contact-form-row">
@@ -86,7 +173,9 @@ const subjectOptions = [
                 required
                 autocomplete="name"
                 placeholder="Your full name"
+                data-fs-field
               />
+              <span class="contact-field-error" data-fs-error="name" />
             </GlassField>
 
             <GlassField label="Email" htmlFor="email" required>
@@ -98,7 +187,9 @@ const subjectOptions = [
                 autocomplete="email"
                 inputmode="email"
                 placeholder="you@example.com"
+                data-fs-field
               />
+              <span class="contact-field-error" data-fs-error="email" />
             </GlassField>
           </div>
 
@@ -112,7 +203,9 @@ const subjectOptions = [
               id="company"
               autocomplete="organization"
               placeholder="Your organization"
+              data-fs-field
             />
+            <span class="contact-field-error" data-fs-error="company" />
           </GlassField>
 
           <GlassField label="Topic" htmlFor="subject" required>
@@ -122,7 +215,9 @@ const subjectOptions = [
               placeholder="Choose a topic..."
               options={subjectOptions}
               required
+              data-fs-field
             />
+            <span class="contact-field-error" data-fs-error="subject" />
           </GlassField>
 
           <GlassField
@@ -137,18 +232,39 @@ const subjectOptions = [
               required
               placeholder="Tell me about your project, role, or inquiry..."
               maxlength={4000}
+              data-fs-field
             />
+            <span class="contact-field-error" data-fs-error="message" />
           </GlassField>
 
-          <div class="contact-form-actions">
-            <GlassButton type="submit" variant="primary" size="md">
-              Send message
-            </GlassButton>
-            <p class="contact-form-note">
-              I will respond personally within two business days.
-            </p>
-          </div>
-        </form>
+          {isFormLive ? (
+            <div class="contact-form-actions">
+              <GlassButton
+                type="submit"
+                variant="primary"
+                size="md"
+                data-fs-submit-btn>
+                Send message
+              </GlassButton>
+              <p class="contact-form-note">
+                I will respond personally within two business days.
+              </p>
+            </div>
+          ) : (
+            <div class="contact-form-actions contact-form-actions--pending">
+              <p class="contact-form-pending">
+                This form is not accepting submissions yet. Email me directly
+                and I will respond personally within two business days.
+              </p>
+              <GlassButton
+                variant="primary"
+                size="md"
+                href="mailto:princemanjee@gmail.com?subject=Inquiry%20from%20princerehman.com">
+                Email me directly
+              </GlassButton>
+            </div>
+          )}
+        </FormWrapper>
       </GlassPanel>
 
       {/* Right column: alternative contact paths */}
@@ -203,6 +319,51 @@ const subjectOptions = [
     </div>
   </article>
 </BaseLayout>
+
+{/*
+  Progressive enhancement for the contact form.
+
+  This is a bundled module script, not inline, so the @formspree/ajax import
+  is processed by Vite and shipped as a hashed asset instead of pulling from
+  a third-party CDN at runtime. That keeps the page free of external network
+  dependencies, matching the rest of the site.
+
+  The script is emitted unconditionally because Astro hoists script tags at
+  build time regardless of surrounding conditionals. It no-ops safely when
+  #contact-form is absent, which is exactly the unconfigured-endpoint state.
+
+  Note: do not write a literal script tag in angle brackets anywhere in this
+  comment. Vite's dev-mode dependency scanner matches that pattern with a
+  naive regex and will try to parse the following prose as JavaScript, which
+  breaks `astro dev` while leaving `astro build` working.
+*/}
+<script>
+  import { initForm } from "@formspree/ajax";
+
+  const form = document.querySelector<HTMLFormElement>("#contact-form");
+  const formId = form?.dataset.formspreeId;
+
+  if (form && formId) {
+    initForm({
+      formElement: form,
+      formId,
+      /*
+       * Opt out of Formspree's injected stylesheet. It would layer its own
+       * error colours, success banner and loading spinner over the glass
+       * language; the equivalents are styled from tokens in this page.
+       */
+      useDefaultStyles: false,
+      onSuccess: () => {
+        /*
+         * Collapse the fields so the confirmation banner is what remains.
+         * The banner sits outside the form element, so hiding the form does
+         * not hide the message.
+         */
+        form.classList.add("contact-form--sent");
+      },
+    });
+  }
+</script>
 
 <style>
   .contact {
@@ -270,6 +431,106 @@ const subjectOptions = [
     color: var(--color-fg-muted);
     margin: 0;
     line-height: 1.4;
+  }
+
+  /*
+   * AJAX status regions.
+   *
+   * @formspree/ajax marks these elements with data-fs-active when it has
+   * something to show and removes it when cleared, so that attribute is the
+   * visibility switch. Gating on :empty instead would fail for the success
+   * banner, whose copy is pre-filled in the markup above.
+   *
+   * Formspree's own stylesheet is switched off at init (useDefaultStyles:
+   * false) because it ships its own error colours, success banner and
+   * spinner, none of which match the Prism glass language. These rules are
+   * the replacement.
+   */
+  .contact-form-status {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    margin: 0 0 var(--space-lg) 0;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+  }
+
+  .contact-form-status:not([data-fs-active]) {
+    display: none;
+  }
+
+  /*
+   * Banner text colour is deliberately --color-fg-primary, not the accent.
+   *
+   * The Prism generator regenerates --accent-emerald* per palette, so in a
+   * purple-keyed palette "emerald" resolves to a purple only a shade off the
+   * panel behind it, and accent-coloured banner text becomes almost
+   * unreadable. The semantic instead lives in the border and background
+   * tint, which stay legible whatever hue the palette assigns, while the
+   * copy itself uses the foreground token that every mode guarantees
+   * contrast for.
+   */
+  .contact-form-status--success {
+    color: var(--color-fg-primary);
+    border-color: var(--accent-emerald);
+    background: color-mix(in oklch, var(--accent-emerald) 16%, transparent);
+  }
+
+  /*
+   * Error border and tint reuse the exact rgba values GlassField and
+   * GlassInput already use for their error states rather than introducing a
+   * new colour. The text follows the same readability rule as success.
+   */
+  .contact-form-status--error {
+    color: var(--color-fg-primary);
+    border-color: rgba(255, 130, 110, 0.65);
+    background: rgba(255, 130, 110, 0.12);
+  }
+
+  /* Per-field validation message, sits directly under its input. */
+  .contact-field-error {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.4;
+    color: rgba(255, 140, 130, 0.95);
+    margin-top: var(--space-2xs);
+  }
+
+  .contact-field-error:not([data-fs-active]) {
+    display: none;
+  }
+
+  /*
+   * On a successful AJAX submit the fields collapse so the confirmation
+   * banner is the only thing left to read. The banner is rendered outside
+   * the form element, so it survives this.
+   */
+  .contact-form--sent {
+    display: none;
+  }
+
+  /*
+   * Unconfigured-backend state. The notice reads above the email fallback
+   * button rather than beside it, so this row stacks instead of running
+   * horizontally like the live submit row does. Surface treatment is
+   * deliberately absent: per COMPONENTS.md, notices get type and colour
+   * from tokens, not a bespoke panel background.
+   */
+  .contact-form-actions--pending {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .contact-form-pending {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--color-fg-secondary);
+    margin: 0;
+    max-width: 52ch;
   }
 
   /* Alternative contact paths sidebar */

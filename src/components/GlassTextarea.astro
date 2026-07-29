@@ -56,10 +56,12 @@ const {
   autocomplete,
   ariaDescribedBy,
   class: className = "",
+  ...rest
 } = Astro.props;
 ---
 
 <textarea
+  {...rest}
   name={name}
   id={id}
   placeholder={placeholder}

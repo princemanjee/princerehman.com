@@ -73,6 +73,7 @@ const {
   step,
   ariaDescribedBy,
   class: className = "",
+  ...rest
 } = Astro.props;
 ---
 
@@ -80,6 +81,7 @@ const {
     <input> can't have pseudo-elements itself. */}
 <span class="glass-field-shell">
   <input
+    {...rest}
     type={type}
     name={name}
     id={id}
