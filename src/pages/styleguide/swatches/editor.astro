@@ -5,13 +5,13 @@
  * Route: /styleguide/swatches/editor
  *
  * Purpose: let the operator dial (hueA, hueB, intensityA, intensityB) and
- * see the same configuration rendered across all 9 permutations of
+ * see the same configuration rendered across all 12 permutations of
  *   {analogous, split-complementary, complementary}  (the 3 mixing models)
- *   × {light, dark, hybrid}                          (the 3 theme modes)
+ *   × {light, dark, hybrid, neomorphic}                (the 4 theme modes)
  * simultaneously, so a single drag of the hue slider visibly answers the
  * question "does this hue work in every mode?"
  *
- * The page does NOT mutate the global <html data-theme>. Each of the 9
+ * The page does NOT mutate the global <html data-theme>. Each of the 12
  * tiles is a self-contained preview that scopes the generated CSS custom
  * properties to its own wrapper (via inline style="--bg-1: ...; ..."), so
  * the surrounding styleguide chrome keeps using the visitor's chosen theme
@@ -57,15 +57,15 @@ const swatchOptions = swatches.map((s) => ({
 
 <BaseLayout
   title="Prism Swatch Editor — 4-slider playground"
-  description="Drive (hueA, hueB, intensityA, intensityB) across all 9 model × mode permutations.">
+  description="Drive (hueA, hueB, intensityA, intensityB) across all 12 model × mode permutations.">
   <Container size="2xl">
     <Stack gap="2xl">
       <Stack gap="sm" as="header">
         <p class="eyebrow">Prism · Phase 2 · editor</p>
         <h1 class="page-title">Swatch editor</h1>
         <p class="lede">
-          Four sliders drive the generator across the full 3-model by
-          3-mode matrix below. The tiles render in isolation, so the rest
+          The sliders drive the generator across the full 3-model by
+          4-mode matrix below. The tiles render in isolation, so the rest
           of the page keeps the theme you walked in with.
         </p>
       </Stack>
@@ -84,6 +84,20 @@ const swatchOptions = swatches.map((s) => ({
             <input type="range" id="hueB" class="slider" min="0" max="360" step="1" value="152" data-control="hueB" />
             <input type="number" class="num" min="0" max="360" step="1" value="152" data-control="hueB-num" aria-label="Hue B value" />
             <span class="unit">deg</span>
+          </div>
+          {/*
+            Auto is the default. While it is on, accent B comes from the mixing
+            model's rotation of Hue A, which is what makes the three model
+            columns differ. Pinning Hue B overrides that, so the model stops
+            affecting the accents. The note spells that trade-off out rather
+            than leaving the page looking broken when it is pinned.
+          */}
+          <div class="slider-row slider-row--toggle">
+            <label class="slider-label" for="hueBAuto">Hue B source</label>
+            <label class="toggle">
+              <input type="checkbox" id="hueBAuto" data-control="hueBAuto" checked />
+              <span data-hue-b-auto-text>Auto (derived from model)</span>
+            </label>
           </div>
           <div class="slider-row">
             <label class="slider-label" for="intensityA">Intensity A</label>
@@ -116,7 +130,7 @@ const swatchOptions = swatches.map((s) => ({
         </div>
       </div>
 
-      <!-- ─── 3×3 preview matrix ───────────────────────────────── -->
+      <!-- ─── 3 models × 4 modes preview matrix ────────────────── -->
       <div class="matrix-wrap">
         <table class="matrix" aria-label="Mixing-model by theme-mode preview matrix">
           <thead>
@@ -143,10 +157,26 @@ const swatchOptions = swatches.map((s) => ({
                       <div class="tile-bg" data-tile-bg>
                         <div class="tile-panel" data-tile-panel>
                           <div class="tile-wordmark" data-tile-wordmark>Aa</div>
-                          <div class="tile-chips">
-                            <span class="tile-chip" data-tile-chip="base" aria-hidden="true"></span>
-                            <span class="tile-chip" data-tile-chip="bright" aria-hidden="true"></span>
-                            <span class="tile-chip" data-tile-chip="deep" aria-hidden="true"></span>
+                          {/*
+                            Two chip rows, not one. The tile previously showed
+                            only the primary (royal) triad, which sits at Hue A
+                            in every model by design. So the one thing the
+                            mixing model most visibly controls, the alt accent,
+                            was computed into the tile's CSS variables and then
+                            never painted, making all three model rows look
+                            identical at a glance. The second row fixes that.
+                          */}
+                          <div class="tile-chip-stack">
+                            <div class="tile-chips">
+                              <span class="tile-chip" data-tile-chip="base" aria-hidden="true"></span>
+                              <span class="tile-chip" data-tile-chip="bright" aria-hidden="true"></span>
+                              <span class="tile-chip" data-tile-chip="deep" aria-hidden="true"></span>
+                            </div>
+                            <div class="tile-chips tile-chips--alt">
+                              <span class="tile-chip" data-tile-chip="alt-base" aria-hidden="true"></span>
+                              <span class="tile-chip" data-tile-chip="alt-bright" aria-hidden="true"></span>
+                              <span class="tile-chip" data-tile-chip="alt-deep" aria-hidden="true"></span>
+                            </div>
                           </div>
                           <div class="tile-text">
                             <p class="tile-text-primary" data-tile-text-primary>The quick brown fox</p>
@@ -171,7 +201,7 @@ const swatchOptions = swatches.map((s) => ({
       <section class="details" aria-label="OKLCH math details">
         <header class="details-header">
           <h2 class="details-title">Primary accents</h2>
-          <p class="details-sub">OKLCH values produced for each of the 9 tiles' primary accent after intensity A is applied.</p>
+          <p class="details-sub">OKLCH values produced for each of the 12 tiles' primary accent after intensity A is applied.</p>
         </header>
         <div class="details-grid">
           {MODELS.map((model) => MODES.map((mode) => (
@@ -192,7 +222,7 @@ const swatchOptions = swatches.map((s) => ({
   // ─── Client-side editor logic ───────────────────────────────────
   //
   // Imports the pure palette generator and the persistence helpers,
-  // wires the four sliders to the 9 preview tiles, and keeps the
+  // wires the sliders to the 12 preview tiles, and keeps the
   // localStorage snapshot in sync (debounced).
   //
   // Generating 9 palettes on every input event is cheap (the generator
@@ -327,7 +357,7 @@ const swatchOptions = swatches.map((s) => ({
     return (Lmax + 0.05) / (Lmin + 0.05);
   }
 
-  // ─── Render: paint the 9 tiles and the details rows ──────────
+  // ─── Render: paint the 12 tiles and the details rows ─────────
   function render(): void {
     for (const model of MODELS) {
       for (const mode of MODES) {
@@ -343,25 +373,47 @@ const swatchOptions = swatches.map((s) => ({
           hue: state.hueA,
           contrast: "AA",
         });
-        // Secondary triad: generator with hueB; we take its --accent-royal
-        // family (the primary it produces) and remap onto the emerald
-        // CSS variables. This realises the spec's "Hue B is the alt-accent
-        // axis" rule without leaning on the secondary-hue rotation that
-        // the model param would otherwise apply.
-        const secondaryPalette = generatePalette({
-          mode: mode as ThemeMode,
-          model: model as MixingModel,
-          hue: state.hueB,
-          contrast: "AA",
-        });
+        /*
+         * Accent B has two sources, and which one wins is the difference
+         * between this page demonstrating the mixing model and appearing
+         * broken.
+         *
+         * AUTO (default): take the emerald triad straight out of the primary
+         * palette. The generator already rotated it away from hueA by the
+         * mixing-model angle, so the three models produce three visibly
+         * different alt accents.
+         *
+         * PINNED: generate a second palette at hueB and remap its PRIMARY
+         * triad onto the emerald variables, per the spec's "Hue B is the
+         * alt-accent axis" rule. This deliberately discards the model's
+         * rotation, which is correct when the operator has explicitly chosen
+         * both hues, but it is why a pinned hueB makes the model look inert.
+         */
+        const secondaryPalette = state.hueBAuto
+          ? null
+          : generatePalette({
+              mode: mode as ThemeMode,
+              model: model as MixingModel,
+              hue: state.hueB,
+              contrast: "AA",
+            });
 
         // Apply intensity multipliers to the accent chroma.
         const royal = applyIntensityToOklch(primaryPalette["--accent-royal"], state.intensityA)!;
         const royalBright = applyIntensityToOklch(primaryPalette["--accent-royal-bright"], state.intensityA)!;
         const royalDeep = applyIntensityToOklch(primaryPalette["--accent-royal-deep"], state.intensityA)!;
-        const emerald = applyIntensityToOklch(secondaryPalette["--accent-royal"], state.intensityB)!;
-        const emeraldBright = applyIntensityToOklch(secondaryPalette["--accent-royal-bright"], state.intensityB)!;
-        const emeraldDeep = applyIntensityToOklch(secondaryPalette["--accent-royal-deep"], state.intensityB)!;
+        const emerald = applyIntensityToOklch(
+          secondaryPalette ? secondaryPalette["--accent-royal"] : primaryPalette["--accent-emerald"],
+          state.intensityB,
+        )!;
+        const emeraldBright = applyIntensityToOklch(
+          secondaryPalette ? secondaryPalette["--accent-royal-bright"] : primaryPalette["--accent-emerald-bright"],
+          state.intensityB,
+        )!;
+        const emeraldDeep = applyIntensityToOklch(
+          secondaryPalette ? secondaryPalette["--accent-royal-deep"] : primaryPalette["--accent-emerald-deep"],
+          state.intensityB,
+        )!;
 
         // Build the inline style payload. Iterating TILE_VARS keeps the
         // tile self-contained and overwrites any leftover values from a
@@ -386,13 +438,20 @@ const swatchOptions = swatches.map((s) => ({
         styleParts.push(`--color-fg-secondary: ${TEXT_TOKENS[mode as ThemeMode].secondary}`);
         tile.setAttribute("style", styleParts.join("; "));
 
-        // Paint the three accent chips inline (they read --accent-royal*).
-        const chipBase = tile.querySelector<HTMLElement>('[data-tile-chip="base"]');
-        const chipBright = tile.querySelector<HTMLElement>('[data-tile-chip="bright"]');
-        const chipDeep = tile.querySelector<HTMLElement>('[data-tile-chip="deep"]');
-        if (chipBase) chipBase.style.background = royal;
-        if (chipBright) chipBright.style.background = royalBright;
-        if (chipDeep) chipDeep.style.background = royalDeep;
+        // Paint both accent triads. Row one is primary (--accent-royal*, pinned
+        // to Hue A). Row two is the alt accent (--accent-emerald*), which is
+        // what the mixing model rotates, so it is the row that visibly differs
+        // between analogous, split-complementary and complementary.
+        const paintChip = (kind: string, value: string) => {
+          const el = tile.querySelector<HTMLElement>(`[data-tile-chip="${kind}"]`);
+          if (el) el.style.background = value;
+        };
+        paintChip("base", royal);
+        paintChip("bright", royalBright);
+        paintChip("deep", royalDeep);
+        paintChip("alt-base", emerald);
+        paintChip("alt-bright", emeraldBright);
+        paintChip("alt-deep", emeraldDeep);
 
         // Contrast: primary accent vs. the tile's bg-2 (the dominant
         // mid stop, which is closer to what the chip actually sits on
@@ -449,12 +508,41 @@ const swatchOptions = swatches.map((s) => ({
       state[key] = n;
       range.value = String(n);
       num.value = String(n);
+      /*
+       * Touching Hue B pins it. While auto is on, hueB feeds nothing, so a
+       * drag would otherwise move a slider and change absolutely nothing on
+       * screen. Treating the interaction as intent to pin keeps the control
+       * from looking dead, and the checkbox updates to show what happened.
+       */
+      if (key === "hueB" && state.hueBAuto) {
+        state.hueBAuto = false;
+      }
+      if (key === "hueB") syncHueBAutoUi();
       scheduleRender();
       scheduleSave();
     };
 
     range.addEventListener("input", (e) => apply((e.target as HTMLInputElement).value));
     num.addEventListener("input", (e) => apply((e.target as HTMLInputElement).value));
+  }
+
+  /*
+   * Reflect the auto/pinned state in the controls. The Hue B slider stays
+   * enabled but reads as inactive while auto is on, so its retained value is
+   * still visible and can be adjusted before pinning.
+   */
+  function syncHueBAutoUi(): void {
+    const box = document.querySelector<HTMLInputElement>('[data-control="hueBAuto"]');
+    if (box) box.checked = state.hueBAuto;
+    const text = document.querySelector<HTMLElement>("[data-hue-b-auto-text]");
+    if (text) {
+      text.textContent = state.hueBAuto
+        ? "Auto (derived from model)"
+        : `Pinned to ${Math.round(state.hueB)}deg (model ignored for accent B)`;
+    }
+    for (const k of ["hueB", "hueB-num"]) {
+      slider(k)?.classList.toggle("is-inactive", state.hueBAuto);
+    }
   }
 
   function setAll(s: SwatchEditorState): void {
@@ -465,6 +553,7 @@ const swatchOptions = swatches.map((s) => ({
       if (range) range.value = String(state[key]);
       if (num) num.value = String(state[key]);
     }
+    syncHueBAutoUi();
     render();
     scheduleSave();
   }
@@ -473,6 +562,15 @@ const swatchOptions = swatches.map((s) => ({
   bindControl("hueB");
   bindControl("intensityA");
   bindControl("intensityB");
+
+  document
+    .querySelector<HTMLInputElement>('[data-control="hueBAuto"]')
+    ?.addEventListener("change", (e) => {
+      state.hueBAuto = (e.target as HTMLInputElement).checked;
+      syncHueBAutoUi();
+      scheduleRender();
+      scheduleSave();
+    });
 
   // ─── Persistence buttons ─────────────────────────────────────
   document.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", () => {
@@ -625,6 +723,36 @@ const swatchOptions = swatches.map((s) => ({
     color: var(--color-fg-muted);
   }
 
+  /*
+   * Hue B source row. Spans the slider + number + unit columns with one
+   * control, so it opts out of the four-column grid the slider rows use.
+   */
+  .slider-row--toggle {
+    grid-template-columns: 90px 1fr;
+  }
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    color: var(--color-fg-secondary);
+    cursor: pointer;
+  }
+  .toggle input {
+    accent-color: var(--accent-royal);
+    cursor: pointer;
+  }
+
+  /*
+   * Hue B reads as inactive while auto is on. Deliberately not `disabled`:
+   * the retained value stays legible and adjustable, and touching it pins it.
+   */
+  .slider.is-inactive,
+  .num.is-inactive {
+    opacity: 0.45;
+  }
+
   .persistence {
     display: flex;
     flex-direction: column;
@@ -679,13 +807,24 @@ const swatchOptions = swatches.map((s) => ({
     overflow-x: auto;
     padding-bottom: 8px;
   }
+  /*
+   * The matrix fills the available width and lets the four mode columns share
+   * it, rather than sizing tiles at a fixed 280px. At fixed width the four
+   * columns totalled ~1281px inside a ~1104px container, so the Neomorphic
+   * column sat off-screen behind a horizontal scrollbar. For a grid whose
+   * entire purpose is side-by-side comparison, a column you have to scroll to
+   * find is the same as a column that is not there. overflow-x stays as a
+   * safety net for genuinely narrow viewports.
+   */
   .matrix {
+    width: 100%;
+    table-layout: fixed;
     border-collapse: separate;
     border-spacing: 12px;
     margin: 0 -12px;
   }
   .corner {
-    width: 130px;
+    width: 108px;
   }
   .col-header {
     padding-bottom: 8px;
@@ -698,7 +837,7 @@ const swatchOptions = swatches.map((s) => ({
     color: var(--color-fg-muted);
   }
   .row-header {
-    width: 130px;
+    width: 108px;
     padding-right: 8px;
     text-align: right;
     vertical-align: middle;
@@ -721,7 +860,7 @@ const swatchOptions = swatches.map((s) => ({
    * outer page's theme survives intact.
    */
   .tile {
-    width: 280px;
+    width: 100%;
     border-radius: var(--radius-md);
     overflow: hidden;
     border: 1px solid var(--glass-border-strong);
@@ -763,13 +902,33 @@ const swatchOptions = swatches.map((s) => ({
     text-shadow: 0 0 8px var(--brand-glow);
     line-height: 1;
   }
-  .tile-chips {
+  /*
+   * Both chip rows share the panel grid's (col 2, row 1) cell. They are nested
+   * in this stack rather than placed as separate grid items because row 2 of
+   * the panel grid belongs to the specimen text, so a second grid row would
+   * have collided with it.
+   */
+  .tile-chip-stack {
     grid-column: 2;
     grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-end;
+  }
+  .tile-chips {
     display: flex;
     gap: 6px;
     justify-content: flex-end;
     align-items: center;
+  }
+  /*
+   * Alt-accent row. Slightly smaller so the primary triad still reads as the
+   * dominant accent, while the model-driven row is unmistakably present.
+   */
+  .tile-chips--alt .tile-chip {
+    width: 14px;
+    height: 14px;
   }
   .tile-chip {
     width: 18px;
@@ -884,6 +1043,6 @@ const swatchOptions = swatches.map((s) => ({
   @media (max-width: 900px) {
     .control-bar { grid-template-columns: 1fr; }
     .sliders { grid-template-columns: 1fr; }
-    .tile { width: 240px; }
+    .tile { width: 100%; }
   }
 </style>

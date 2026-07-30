@@ -369,6 +369,20 @@ function wrapHue(h: number): number {
 }
 
 /**
+ * Interpolate between two hues along the SHORTER arc of the colour wheel.
+ *
+ * Naive numeric interpolation would travel the long way round whenever the two
+ * hues straddle 0/360 (mixing 350 and 10 would pass through green instead of
+ * landing on red), so the delta is normalised into -180..180 first.
+ *
+ * `t` of 0 returns `from`, 1 returns `to`.
+ */
+function mixHue(from: number, to: number, t: number): number {
+  let delta = ((wrapHue(to) - wrapHue(from) + 540) % 360) - 180;
+  return wrapHue(wrapHue(from) + delta * t);
+}
+
+/**
  * Primary accent hue: rotated away from the base by the mixing-model
  * angle. The background sits at the base hue; the accent sits at this
  * derived hue so it reads as a deliberate contrasting accent.
@@ -586,11 +600,28 @@ function brandColorFor(kind: ResolvedMode["kind"], baseHue: number): string {
   return formatOklch(0.32, 0.18, baseHue, 0.95);
 }
 
-function brandGlowFor(kind: ResolvedMode["kind"], baseHue: number): string {
+/*
+ * The ambient glow sits between the base and the model's secondary hue rather
+ * than on the base alone.
+ *
+ * It used to be pure baseHue, which made it identical across all three mixing
+ * models. The glow is one of the largest soft-light areas on the page, so
+ * leaving it out of the model's reach was a big part of why switching models
+ * looked like nothing had happened. Blending rather than jumping to the
+ * secondary keeps the glow recognisably related to the theme colour.
+ */
+const BRAND_GLOW_SECONDARY_MIX = 0.4;
+
+function brandGlowFor(
+  kind: ResolvedMode["kind"],
+  baseHue: number,
+  secondaryHue: number = baseHue,
+): string {
+  const glowHue = mixHue(baseHue, secondaryHue, BRAND_GLOW_SECONDARY_MIX);
   if (kind === "dark" || kind === "hybrid") {
-    return formatOklch(0.87, 0.06, baseHue, 0.55);
+    return formatOklch(0.87, 0.06, glowHue, 0.55);
   }
-  return formatOklch(0.55, 0.18, baseHue, 0.2);
+  return formatOklch(0.55, 0.18, glowHue, 0.2);
 }
 
 // ---------------------------------------------------------------------------
@@ -887,11 +918,9 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
 
   // Background regeneration. For glass modes the gradient TRAVELS from the
   // base hue (leading, dominant stop) toward the mixing-model's secondary
-  // hue at the trailing stop — back-loaded (exponent 1.4) so the base hue
-  // occupies most of the gradient. This makes the mixing-model choice clearly
-  // visible across the whole page background while the base hue stays
-  // dominant. Neomorphic keeps its sand template (rotated by the slider) so
-  // the locked warm-sand default is preserved.
+  // hue at the trailing stops, so the base hue stays dominant while the model
+  // still restructures the gradient. Neomorphic keeps its warm-sand template,
+  // rotated by the slider and nudged by a scaled share of the model offsets.
   const bgConfig = MODE_BACKGROUNDS[resolved.kind];
   const isNeoMode = resolved.kind === "neomorphic";
   const rotation = bgConfig.rotate ? baseHue - REFERENCE_HUE : 0;
@@ -904,13 +933,34 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   //   complementary       — a clean base↔complement two-tone (bold duotone)
   // The escalating spread (≈36° → ≈210° span → 180° hard split) makes the
   // three models read as clearly distinct styles.
+  // The leading stop carries a small per-model offset of its own. It used to be
+  // 0 for all three models, which made --bg-1 (the dominant background colour,
+  // and the largest single area of paint on the page) bit-identical across
+  // models. The offsets stay small so the base hue still reads as the theme
+  // colour, but the page no longer opens on exactly the same wash regardless
+  // of the model chosen.
   const stopOffsets =
     request.model === "analogous" ? [0, 12, 24, 36]
-    : request.model === "split-complementary" ? [0, 150, 210, 150]
-    : [0, 0, 180, 180];
+    : request.model === "split-complementary" ? [-18, 150, 210, 150]
+    : [14, 0, 180, 180];
+
+  /*
+   * Neomorphic used to return here before stopOffsets were consulted, so the
+   * mixing model was a total no-op in that mode: all three models produced
+   * byte-identical output, which is why the swatch editor's neomorphic row
+   * showed three tiles that could not be told apart.
+   *
+   * It now takes the model offsets, but scaled, and measured from the rotated
+   * sand template rather than from the base hue. That preserves the locked
+   * warm-sand identity (the leading stop barely moves) while still letting the
+   * trailing stops separate the three models.
+   */
+  const NEO_MODEL_SCALE = 0.5;
   const bg = bgConfig.stops.map((s, i) => {
-    if (isNeoMode) return formatOklch(s.l, s.c, wrapHue(s.h + rotation));
     const off = stopOffsets[Math.min(i, stopOffsets.length - 1)];
+    if (isNeoMode) {
+      return formatOklch(s.l, s.c, wrapHue(s.h + rotation + off * NEO_MODEL_SCALE));
+    }
     return formatOklch(s.l, s.c, wrapHue(baseHue + off));
   });
   // overlay-1 follows the base hue; overlay-2 echoes the secondary
@@ -1017,6 +1067,6 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     "--accent-emerald-bright": formatOklch(LbrightAlt, C, secondaryHue),
     "--accent-emerald-deep": formatOklch(LdeepAlt, C, secondaryHue),
     "--brand-color": brandColorFor(resolved.kind, baseHue),
-    "--brand-glow": brandGlowFor(resolved.kind, baseHue),
+    "--brand-glow": brandGlowFor(resolved.kind, baseHue, secondaryHue),
   };
 }

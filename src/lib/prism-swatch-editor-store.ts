@@ -29,22 +29,37 @@
 export interface SwatchEditorState {
   hueA: number;          // 0..360, base hue for accent A (royal track)
   hueB: number;          // 0..360, base hue for accent B (emerald track)
+  /**
+   * When true, accent B is DERIVED from hueA by the mixing model instead of
+   * being pinned to hueB.
+   *
+   * Why this exists: pinning hueB and choosing a mixing model are the same
+   * decision. Deriving a second hue from the first is the model's entire job,
+   * so a pinned hueB left the model with nothing to control except a few
+   * background gradient stops. That is what made the editor look inert, with
+   * three "different" models rendering near-identical tiles.
+   *
+   * hueB is still retained while auto is on, so toggling back restores the
+   * exact value that was pinned before.
+   */
+  hueBAuto: boolean;
   intensityA: number;    // 0..100, percent of full chroma applied to A's accents
   intensityB: number;    // 0..100, percent of full chroma applied to B's accents
-  schemaVersion: 1;
+  schemaVersion: 2;
 }
 
 /**
- * Royal (263°) + Emerald (152°) at full intensity matches the Phase 1
- * shipping defaults in tokens.css, so first-load shows the canonical
- * baseline.
+ * Royal (263°) at full intensity matches the Phase 1 shipping defaults in
+ * tokens.css. hueB keeps the canonical emerald (152°) as its pinned value, but
+ * starts in auto so the mixing model visibly drives accent B on first load.
  */
 export const FACTORY_DEFAULT: SwatchEditorState = {
   hueA: 263,
   hueB: 152,
+  hueBAuto: true,
   intensityA: 100,
   intensityB: 100,
-  schemaVersion: 1,
+  schemaVersion: 2,
 };
 
 const STORAGE_KEY = "prism-swatch-editor-state";
@@ -84,12 +99,21 @@ function coerceState(raw: unknown): SwatchEditorState | null {
   const hasAnyField =
     "hueA" in r || "hueB" in r || "intensityA" in r || "intensityB" in r;
   if (!hasAnyField) return null;
+  /*
+   * v1 saves have no hueBAuto key. They migrate to auto ON, which is the
+   * whole point of the change: a v1 save is by definition one where accent B
+   * was pinned and the mixing model therefore did almost nothing. Their hueB
+   * value is preserved verbatim, so switching auto off restores exactly what
+   * was saved. Nothing is discarded, it is just not applied until re-pinned.
+   */
   return {
     hueA: clampHue(r.hueA ?? FACTORY_DEFAULT.hueA),
     hueB: clampHue(r.hueB ?? FACTORY_DEFAULT.hueB),
+    hueBAuto:
+      typeof r.hueBAuto === "boolean" ? r.hueBAuto : FACTORY_DEFAULT.hueBAuto,
     intensityA: clampPct(r.intensityA ?? FACTORY_DEFAULT.intensityA),
     intensityB: clampPct(r.intensityB ?? FACTORY_DEFAULT.intensityB),
-    schemaVersion: 1,
+    schemaVersion: 2,
   };
 }
 
