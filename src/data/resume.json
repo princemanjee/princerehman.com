@@ -2,8 +2,8 @@
   "_snapshotMeta": {
     "source": "JobApplyFramework/Assets/resume.json",
     "snapshotDate": "2026-07-30",
-    "sha256": "86039e9b2d37c3eb4e06c82aa3c163bc0a3c2c8bf20bf1b83392c8bce121f5e1",
-    "syncedAt": "2026-07-30T19:40:33.002Z"
+    "sha256": "170adf35652492f089b258447b1d9720dc7c476db288dbefede3150217911896",
+    "syncedAt": "2026-07-30T20:06:42.074Z"
   },
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
@@ -947,8 +947,9 @@
       "name": "Reasoning Strategies for AI Decision Making: A Practical Guide",
       "publisher": "Medium",
       "releaseDate": "2025-12-22",
-      "url": "https://medium.com/@princemanjee/reasoning-strategies-for-ai-decision-making-a-practical-guide-520cf517fe9a?source=friends_link&sk=a3867849002cb82f2c6bdba25ae2e8fb",
-      "summary": ""
+      "url": "https://cv.princerehman.com/EngineeredPromptLibrary/",
+      "summary": "",
+      "mediumUrl": "https://medium.com/@princemanjee/reasoning-strategies-for-ai-decision-making-a-practical-guide-520cf517fe9a?source=friends_link&sk=a3867849002cb82f2c6bdba25ae2e8fb"
     },
     {
       "name": "Claire's Transformation Plan",
