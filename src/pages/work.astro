@@ -36,44 +36,94 @@ import { caseStudiesByOrder } from "../data/caseStudies";
     </div>
 
     {/*
-      "Also building" section: brief mentions of the other pinned repos that
-      are research, archives, or smaller in scope than full case studies.
-      Each links directly to its own GitHub README for the full thinking.
+      Research section: the three papers, each linking to its published web
+      version rather than to a repository or a PDF.
+
+      Panopticon and Photonic are GitHub project pages under the
+      princemanjee.github.io user site, whose custom domain is
+      cv.princerehman.com, so each repo is served as a folder there. Note this
+      is cv.princerehman.com and NOT princerehman.com: this Astro repo is a
+      separate Pages site and does not serve those folders
+      (princerehman.com/PanopticonParadigm/ is a 404).
+
+      Reasoning Strategies has no such folder because EngineeredPromptLibrary
+      has GitHub Pages disabled, so it points at the published Medium article,
+      which is its only web version today. If Pages is ever enabled on that
+      repo, swap this to match the other two.
+    */}
+    <section class="work-research">
+      <h2 class="section-heading">Research</h2>
+      <p class="work-also-lede">
+        Three published papers on surveillance architecture, machine reasoning, and
+        post-electronic computing. Each link opens the paper to read in full.
+      </p>
+
+      <div class="work-also-grid">
+        <a href="https://cv.princerehman.com/PanopticonParadigm/" class="also-card">
+          <h3 class="also-card-title">The Panopticon Paradigm</h3>
+          <p class="also-card-body">
+            Structural subversion and the controlled illusion of digital privacy.
+            Examines the mechanisms behind digital surveillance and why
+            consumer-grade privacy controls are illusory by design.
+          </p>
+        </a>
+
+        <a
+          href="https://medium.com/@princemanjee/reasoning-strategies-for-ai-decision-making-a-practical-guide-520cf517fe9a?source=friends_link&sk=a3867849002cb82f2c6bdba25ae2e8fb"
+          class="also-card">
+          <h3 class="also-card-title">Reasoning Strategies for AI Decision Making</h3>
+          <p class="also-card-body">
+            A practical guide to cognitive templates for machine reasoning. The
+            research that produced the Engineered Prompt Library below.
+          </p>
+        </a>
+
+        <a href="https://cv.princerehman.com/PhotonicComputing/" class="also-card">
+          <h3 class="also-card-title">Photonic Computing</h3>
+          <p class="also-card-body">
+            A light-based architectural response to the end of electronic scaling.
+            Covers the physics, the benchmarks, the honest risks, and a hybrid
+            deployment recommendation.
+          </p>
+        </a>
+      </div>
+    </section>
+
+    {/*
+      "Also building" section: repositories that are archives or tooling rather
+      than papers or full case studies.
+
+      The Engineered Prompt Library card carries two destinations (the archive
+      itself and the paper it came out of), so it is a plain container with
+      explicit links rather than a card-wide anchor. Nesting an anchor inside
+      an anchor is invalid HTML and browsers recover from it unpredictably.
     */}
     <section class="work-also-building">
       <h2 class="section-heading">Also building</h2>
       <p class="work-also-lede">
-        Three additional public repositories that round out the work. Research papers
-        and archives rather than full case studies. Each links to its own README.
+        Applied archives that came out of the research above.
       </p>
 
       <div class="work-also-grid">
-        <a href="https://github.com/princemanjee/EngineeredPromptLibrary" class="also-card">
-          <h3 class="also-card-title">Engineered Prompt Library</h3>
+        <div class="also-card also-card--static">
+          <h3 class="also-card-title">
+            <a href="https://github.com/princemanjee/EngineeredPromptLibrary" class="also-card-link">
+              Engineered Prompt Library
+            </a>
+          </h3>
           <p class="also-card-body">
-            Versioned prompt and context engineering archive. Includes the Reasoning
-            Strategies for AI Decision Making paper that informed the AIOrchBuilder
-            agent contracts.
+            Versioned prompt and context engineering archive: master templates,
+            plugins, and four generations of prompt libraries. These files exist as
+            a direct result of the
+            {" "}
+            <a
+              href="https://medium.com/@princemanjee/reasoning-strategies-for-ai-decision-making-a-practical-guide-520cf517fe9a?source=friends_link&sk=a3867849002cb82f2c6bdba25ae2e8fb"
+              class="also-card-link">Reasoning Strategies for AI Decision Making</a>
+            {" "}
+            research: the paper defined the cognitive templates, and the library is
+            those templates built out and versioned for production use.
           </p>
-        </a>
-
-        <a href="https://github.com/princemanjee/PhotonicComputing" class="also-card">
-          <h3 class="also-card-title">Photonic Computing</h3>
-          <p class="also-card-body">
-            Research paper on light-based architectural responses to the end of
-            electronic scaling, with companion video, infographics, and supporting
-            documents.
-          </p>
-        </a>
-
-        <a href="https://github.com/princemanjee/PanopticonParadigm" class="also-card">
-          <h3 class="also-card-title">Panopticon Paradigm</h3>
-          <p class="also-card-body">
-            Research paper examining the structural mechanisms behind digital
-            surveillance and why consumer-grade privacy controls are illusory by
-            design.
-          </p>
-        </a>
+        </div>
       </div>
     </section>
 
@@ -204,6 +254,36 @@ import { caseStudiesByOrder } from "../data/caseStudies";
       0 8px 20px oklch(0 0 0 / 0.35),
       0 20px 48px oklch(0 0 0 / 0.40),
       0 0 80px var(--brand-glow);
+  }
+
+  /*
+   * Static variant: a card that holds its own links rather than being one big
+   * link. It keeps the surface treatment but drops the hover lift, so the
+   * whole block does not read as clickable when only the links inside are.
+   */
+  .also-card--static:hover {
+    transform: none;
+    background: var(--glass-bg);
+    box-shadow:
+      inset 0 2px 1px var(--highlight-top),
+      inset 0 -2px 1px var(--highlight-bottom),
+      0 4px 12px oklch(0 0 0 / 0.25),
+      0 12px 32px oklch(0 0 0 / 0.30);
+  }
+
+  .also-card-link {
+    color: var(--accent-royal-bright);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--duration-base) var(--easing-out),
+      border-color var(--duration-base) var(--easing-out);
+  }
+  .also-card-link:hover {
+    border-bottom-color: var(--accent-royal-bright);
+  }
+  .also-card-title .also-card-link {
+    color: inherit;
   }
 
   .also-card-title {

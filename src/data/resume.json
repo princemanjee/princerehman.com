@@ -1,9 +1,9 @@
 {
   "_snapshotMeta": {
     "source": "JobApplyFramework/Assets/resume.json",
-    "snapshotDate": "2026-05-21",
-    "sha256": "98ace50dc897d5c139bf71c526ba5430db13094f1dfc17c0ca4d47a50e93925c",
-    "syncedAt": "2026-05-21T10:56:28.471Z"
+    "snapshotDate": "2026-07-30",
+    "sha256": "86039e9b2d37c3eb4e06c82aa3c163bc0a3c2c8bf20bf1b83392c8bce121f5e1",
+    "syncedAt": "2026-07-30T19:40:33.002Z"
   },
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
@@ -344,19 +344,19 @@
   ],
   "education": [
     {
-      "institution": "Massachusetts Institute of Technology",
-      "area": "Information Systems",
-      "studyType": "MS",
-      "startDate": "2001-12",
-      "endDate": "2002-12"
-    },
-    {
       "institution": "University of Notre Dame",
       "area": "Electrical Engineering",
       "studyType": "BS",
       "startDate": "1998-12",
       "endDate": "2001-12",
       "score": "3.5"
+    },
+    {
+      "institution": "Massachusetts Institute of Technology",
+      "area": "Information Systems",
+      "studyType": "MS",
+      "startDate": "2001-12",
+      "endDate": "2002-12"
     },
     {
       "institution": "Columbia College Chicago",
@@ -931,15 +931,17 @@
       "name": "Photonic Computing: A Light-Based Architectural Response to the End of Electronic Scaling",
       "publisher": "Medium",
       "releaseDate": "2026-04-21",
-      "url": "https://medium.com/@princemanjee/photonic-computing-a-light-based-architectural-response-to-the-end-of-electronic-scaling-e36af481e679?source=friends_link&sk=017127607c34e79871e7d7e1a78e51ce",
-      "summary": ""
+      "url": "https://cv.princerehman.com/PhotonicComputing/",
+      "summary": "",
+      "mediumUrl": "https://medium.com/@princemanjee/photonic-computing-a-light-based-architectural-response-to-the-end-of-electronic-scaling-e36af481e679?source=friends_link&sk=017127607c34e79871e7d7e1a78e51ce"
     },
     {
       "name": "The Panopticon Paradigm: Structural Subversion and the Controlled Illusion of Digital Privacy",
       "publisher": "Medium",
       "releaseDate": "2026-02-09",
-      "url": "https://medium.com/@princemanjee/the-panopticon-paradigm-s%CC%B6t%CC%B6r%CC%B6u%CC%B6c%CC%B6t%CC%B6u%CC%B6r%CC%B6a%CC%B6l%CC%B6-%CC%B6s%CC%B6u%CC%B6b%CC%B6v%CC%B6e%CC%B6r%CC%B6s%CC%B6i%CC%B6o%CC%B6n%CC%B6-%CC%B6a%CC%B6n%CC%B6d%CC%B6-%CC%B6t%CC%B6h%CC%B6e%CC%B6-d408565109e2?source=friends_link&sk=6511133e3da83f9a434c56961f0701e5",
-      "summary": ""
+      "url": "https://cv.princerehman.com/PanopticonParadigm/",
+      "summary": "",
+      "mediumUrl": "https://medium.com/@princemanjee/the-panopticon-paradigm-s%CC%B6t%CC%B6r%CC%B6u%CC%B6c%CC%B6t%CC%B6u%CC%B6r%CC%B6a%CC%B6l%CC%B6-%CC%B6s%CC%B6u%CC%B6b%CC%B6v%CC%B6e%CC%B6r%CC%B6s%CC%B6i%CC%B6o%CC%B6n%CC%B6-%CC%B6a%CC%B6n%CC%B6d%CC%B6-%CC%B6t%CC%B6h%CC%B6e%CC%B6-d408565109e2?source=friends_link&sk=6511133e3da83f9a434c56961f0701e5"
     },
     {
       "name": "Reasoning Strategies for AI Decision Making: A Practical Guide",
