@@ -475,6 +475,60 @@ function oklchToSrgb(L: number, C: number, hDeg: number): SrgbTriplet {
   };
 }
 
+/**
+ * True when an OKLCH colour is displayable in sRGB.
+ *
+ * The test runs on the LINEAR rgb values straight out of oklabToLinearRgb,
+ * deliberately not on oklchToSrgb's output: linearToSrgb applies clamp01, so
+ * every channel it returns is inside 0..1 by construction and an
+ * out-of-gamut colour is indistinguishable from an in-gamut one by the time
+ * it gets there.
+ *
+ * The epsilon absorbs floating-point noise at the boundary.
+ */
+function oklchInGamut(L: number, C: number, hue: number): boolean {
+  const { r, g, b } = oklabToLinearRgb(oklchToLab(L, C, hue));
+  const EPS = 0.0005;
+  const ok = (v: number) => v >= -EPS && v <= 1 + EPS;
+  return ok(r) && ok(g) && ok(b);
+}
+
+/**
+ * Largest chroma <= C that keeps (L, hue) inside sRGB, found by bisection.
+ *
+ * This matters because linearToSrgb clamps each channel. An out-of-gamut
+ * colour therefore does not produce an obviously wrong measurement; it
+ * produces a naive clip, which shifts the colour's hue and saturation and
+ * makes the measured ratio describe a colour nobody chose. Every hybrid accent
+ * was out of gamut at chroma 0.22, so the guardrail was steering on clipped
+ * values rather than on the colour it thought it was evaluating.
+ *
+ * Reducing chroma at constant lightness and hue is broadly what CSS Color 4
+ * prescribes for gamut mapping, so measuring and emitting the mapped colour
+ * keeps our numbers and the browser's rendering in agreement.
+ */
+function chromaInGamut(L: number, C: number, hue: number): number {
+  if (oklchInGamut(L, C, hue)) return C;
+  let lo = 0;
+  let hi = C;
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (oklchInGamut(L, mid, hue)) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
+/** Format an OKLCH triple, reducing chroma if needed to stay displayable. */
+function formatOklchInGamut(
+  L: number,
+  C: number,
+  hue: number,
+  alpha?: number,
+): string {
+  return formatOklch(L, chromaInGamut(L, C, hue), hue, alpha);
+}
+
 function relativeLuminance(rgb: SrgbTriplet): number {
   const r = srgbToLinear(rgb.r);
   const g = srgbToLinear(rgb.g);
@@ -572,20 +626,61 @@ function adjustForSurfaceContrast(
   surfaceL: number,
 ): number {
   const surface = oklchToSrgb(surfaceL, 0, hue);
-  let candidateL = baseL;
-  // Push lighter if surface is dark, darker if surface is light.
-  const direction = surfaceL < 0.5 ? +1 : -1;
 
-  let iterations = 0;
-  while (iterations < 20) {
-    const accent = oklchToSrgb(candidateL, C, hue);
-    const ratio = wcagContrast(accent, surface);
-    if (ratio >= 3.0) break;
-    candidateL = clamp01(candidateL + direction * 0.02);
-    iterations += 1;
-    if (candidateL === 0 || candidateL === 1) break;
-  }
-  return candidateL - baseL;
+  /*
+   * Direction is chosen from the side the configured accent ALREADY sits on,
+   * not from whether the surface is dark.
+   *
+   * The old rule was `surfaceL < 0.5 ? +1 : -1`. Hybrid's surfaceL is exactly
+   * 0.50, so that test was false and the accent was pushed DARKER, straight
+   * toward the surface it was supposed to contrast with. It never reached 3:1,
+   * ran the full 20 iterations, and landed at L 0.28 from a configured 0.68,
+   * ending up darker than hybrid's own --bg-2 (0.42) and measuring about
+   * 1.4:1. It also inverted the mode's stated intent, since hybrid lifts its
+   * triad specifically so accents read as raised and lit against a mid-tone
+   * panel.
+   *
+   * The mode config already encodes which side the accent belongs on, so the
+   * sign of (baseL - surfaceL) is the intent. The old heuristic survives only
+   * as the tie-breaker for an exact match.
+   */
+  const preferred =
+    baseL > surfaceL ? +1 : baseL < surfaceL ? -1 : surfaceL < 0.5 ? +1 : -1;
+
+  /*
+   * Measure the colour that will actually be displayed. At the extreme
+   * lightnesses this search reaches, the requested chroma is frequently outside
+   * sRGB, and an unmapped measurement is not a real contrast ratio.
+   */
+  const ratioAt = (L: number): number =>
+    wcagContrast(oklchToSrgb(L, chromaInGamut(L, C, hue), hue), surface);
+
+  const search = (direction: number): { L: number; ratio: number } => {
+    let candidateL = baseL;
+    let ratio = ratioAt(candidateL);
+    let iterations = 0;
+    while (iterations < 40 && ratio < 3.0) {
+      const next = clamp01(candidateL + direction * 0.02);
+      if (next === candidateL) break; // clamped at 0 or 1, cannot improve
+      candidateL = next;
+      ratio = ratioAt(candidateL);
+      iterations += 1;
+    }
+    return { L: candidateL, ratio };
+  };
+
+  const first = search(preferred);
+  if (first.ratio >= 3.0) return first.L - baseL;
+
+  /*
+   * The preferred side could not reach the floor before clamping. Try the
+   * other side and keep whichever ends up more readable, so a failed search
+   * can never return a delta that leaves the accent WORSE than where it
+   * started. That was the other half of the hybrid failure: the old loop
+   * returned its final candidate unconditionally.
+   */
+  const second = search(-preferred);
+  return (second.ratio > first.ratio ? second.L : first.L) - baseL;
 }
 
 // ---------------------------------------------------------------------------
@@ -1060,12 +1155,18 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     "--neo-surface": surfaces["--neo-surface"],
     "--neo-shadow-light": surfaces["--neo-shadow-light"],
     "--neo-shadow-dark": surfaces["--neo-shadow-dark"],
-    "--accent-royal": formatOklch(LbasePrim, C, primaryHue),
-    "--accent-royal-bright": formatOklch(LbrightPrim, C, primaryHue),
-    "--accent-royal-deep": formatOklch(LdeepPrim, C, primaryHue),
-    "--accent-emerald": formatOklch(LbaseAlt, C, secondaryHue),
-    "--accent-emerald-bright": formatOklch(LbrightAlt, C, secondaryHue),
-    "--accent-emerald-deep": formatOklch(LdeepAlt, C, secondaryHue),
+    /*
+     * Accents are emitted gamut-mapped so the value in the CSS is the value the
+     * contrast guardrail measured. Emitting an out-of-gamut colour and leaving
+     * the browser to map it meant the ratio we validated and the colour a
+     * visitor saw were two different colours.
+     */
+    "--accent-royal": formatOklchInGamut(LbasePrim, C, primaryHue),
+    "--accent-royal-bright": formatOklchInGamut(LbrightPrim, C, primaryHue),
+    "--accent-royal-deep": formatOklchInGamut(LdeepPrim, C, primaryHue),
+    "--accent-emerald": formatOklchInGamut(LbaseAlt, C, secondaryHue),
+    "--accent-emerald-bright": formatOklchInGamut(LbrightAlt, C, secondaryHue),
+    "--accent-emerald-deep": formatOklchInGamut(LdeepAlt, C, secondaryHue),
     "--brand-color": brandColorFor(resolved.kind, baseHue),
     "--brand-glow": brandGlowFor(resolved.kind, baseHue, secondaryHue),
   };
