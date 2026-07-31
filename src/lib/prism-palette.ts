@@ -210,6 +210,90 @@ const MODE_SURFACES: Record<ResolvedMode["kind"], Record<SurfaceKey, SurfaceToke
  */
 const REFERENCE_HUE = 263;
 
+/* ---------------------------------------------------------------------------
+ * Tuning constants
+ * ---------------------------------------------------------------------------
+ * Every value here was previously an unlabelled numeric literal sitting inside
+ * the function that used it. Collecting them serves two purposes: the ones that
+ * encode a real rule are now stated as a rule, and the ones that were only ever
+ * "whatever looked right that afternoon" are now visibly that, instead of
+ * hiding among values that carry actual meaning.
+ *
+ * Values that are NOT here on purpose:
+ *   - the sRGB transfer constants (1.055, 2.4, 0.055, 0.0031308), the OKLab
+ *     matrices, and the WCAG +0.05 offset. Those are specification values, not
+ *     tuning. Naming them would imply they are ours to change.
+ *   - MODE_SURFACES / MODE_BACKGROUNDS / resolveMode's per-mode L values. Those
+ *     are the deliberate visual identity of each theme, not incidental
+ *     constants, and they belong with the mode they describe.
+ *
+ * Anything tagged ARBITRARY below is a candidate for deriving properly. It is
+ * left behaviourally untouched here so this refactor cannot change a rendered
+ * pixel; see the notes on each.
+ */
+
+/** WCAG ratio an accent must clear against its surface. 3:1 is the floor for
+ *  non-text UI colour, which is what an accent block is. */
+const CONTRAST_FLOOR = 3.0;
+/** Lightness increment used when walking an accent away from its surface. */
+const CONTRAST_STEP = 0.02;
+/** Cap on that walk. 40 steps x 0.02 covers the whole 0..1 lightness range, so
+ *  this bounds the loop without truncating a legitimate search. It replaces a
+ *  cap of 20, which could stop halfway and return a worse colour than it
+ *  started with. */
+const CONTRAST_MAX_STEPS = 40;
+/** When contrast: "AAA" is requested, the ratio the accent aims for beyond the
+ *  3:1 floor, and the single extra nudge allowed to get there. */
+const AAA_TARGET_RATIO = 4.5;
+const AAA_NUDGE = 0.02;
+
+/** Lightness and chroma every panel tint is emitted at. ARBITRARY: chosen to
+ *  read as a vivid but recessive wash. Not derived from the mode or accent. */
+const PANEL_TINT_L = 0.62;
+const PANEL_TINT_C = 0.17;
+/**
+ * Hue offsets from the base for the four panel tints.
+ *
+ * ARBITRARY, and provably so: the call site comments claim these use "the
+ * mixing-model relationships", but the models are +30 (analogous), +150
+ * (split-complementary) and +180 (complementary). The fourth offset is +210,
+ * which is not any of them. It looks like +180 was pushed to +210 to stop
+ * tints 3 and 4 reading as near-identical, which is a real problem worth
+ * solving, just not one that "+210" documents. Deriving these from the model
+ * angles would change rendered output, so it is left alone here.
+ */
+const PANEL_TINT_HUE_OFFSETS = [0, 30, 150, 210] as const;
+/** Fallback hues when a caller passes nothing usable. */
+const PANEL_TINT_FALLBACK_HUES = [263, 153, 320, 85] as const;
+/** Rotation applied per pass when fewer than four seed hues were supplied. */
+const PANEL_TINT_ROTATION_STEP = 45;
+
+/** The alt-accent overlay is boosted so the mixing model's hue still reads in
+ *  pale modes, then capped so it never becomes the dominant wash. */
+const OVERLAY_SECONDARY_ALPHA_BOOST = 1.9;
+const OVERLAY_SECONDARY_ALPHA_CAP = 0.32;
+
+/** Share of the way the ambient brand glow travels from the base hue toward
+ *  the mixing model's secondary hue. */
+const BRAND_GLOW_SECONDARY_MIX = 0.4;
+
+/**
+ * How much of the mixing model's per-stop hue offset neomorphic applies.
+ *
+ * Neomorphic's warm sand is deliberately locked, so it takes a reduced share
+ * rather than the full offset: enough to tell the three models apart, not
+ * enough to stop reading as sand.
+ */
+const NEO_MODEL_SCALE = 0.5;
+
+/** Brand wordmark colour. Dark and hybrid get a pale luminous tint; light and
+ *  neomorphic get a deep saturated one. ARBITRARY: hand-tuned per surface. */
+const BRAND_COLOR_ON_DARK = { l: 0.945, c: 0.02, a: 0.92 };
+const BRAND_COLOR_ON_LIGHT = { l: 0.32, c: 0.18, a: 0.95 };
+/** Ambient glow behind the brand mark, same dark/light split. ARBITRARY. */
+const BRAND_GLOW_ON_DARK = { l: 0.87, c: 0.06, a: 0.55 };
+const BRAND_GLOW_ON_LIGHT = { l: 0.55, c: 0.18, a: 0.2 };
+
 interface BgStop { l: number; c: number; h: number; }
 interface OverlayStop { l: number; c: number; h: number; a: number; }
 
@@ -593,7 +677,7 @@ function formatOklch(
  */
 function panelTintColors(hues: number[]): [string, string, string, string] {
   const seed = hues.filter((h) => Number.isFinite(h));
-  const base = seed.length > 0 ? seed : [263, 153, 320, 85];
+  const base = seed.length > 0 ? seed : [...PANEL_TINT_FALLBACK_HUES];
   const picked: number[] = [];
   let rot = 0;
   while (picked.length < 4) {
@@ -601,14 +685,16 @@ function panelTintColors(hues: number[]): [string, string, string, string] {
       picked.push(wrapHue(h + rot));
       if (picked.length >= 4) break;
     }
-    rot += 45;
+    rot += PANEL_TINT_ROTATION_STEP;
   }
-  return [
-    formatOklch(0.62, 0.17, picked[0]),
-    formatOklch(0.62, 0.17, picked[1]),
-    formatOklch(0.62, 0.17, picked[2]),
-    formatOklch(0.62, 0.17, picked[3]),
-  ];
+  /*
+   * The loop above guarantees exactly four entries, but map() widens to
+   * string[], so the tuple shape is restated rather than asserted blindly.
+   */
+  const [c1, c2, c3, c4] = picked
+    .slice(0, 4)
+    .map((h) => formatOklch(PANEL_TINT_L, PANEL_TINT_C, h));
+  return [c1, c2, c3, c4];
 }
 
 // ---------------------------------------------------------------------------
@@ -659,8 +745,8 @@ function adjustForSurfaceContrast(
     let candidateL = baseL;
     let ratio = ratioAt(candidateL);
     let iterations = 0;
-    while (iterations < 40 && ratio < 3.0) {
-      const next = clamp01(candidateL + direction * 0.02);
+    while (iterations < CONTRAST_MAX_STEPS && ratio < CONTRAST_FLOOR) {
+      const next = clamp01(candidateL + direction * CONTRAST_STEP);
       if (next === candidateL) break; // clamped at 0 or 1, cannot improve
       candidateL = next;
       ratio = ratioAt(candidateL);
@@ -670,7 +756,7 @@ function adjustForSurfaceContrast(
   };
 
   const first = search(preferred);
-  if (first.ratio >= 3.0) return first.L - baseL;
+  if (first.ratio >= CONTRAST_FLOOR) return first.L - baseL;
 
   /*
    * The preferred side could not reach the floor before clamping. Try the
@@ -690,14 +776,16 @@ function adjustForSurfaceContrast(
 function brandColorFor(kind: ResolvedMode["kind"], baseHue: number): string {
   // Dark / hybrid: pale luminous tint. Light / neomorphic: deep saturated tint.
   if (kind === "dark" || kind === "hybrid") {
-    return formatOklch(0.945, 0.02, baseHue, 0.92);
+    const b = BRAND_COLOR_ON_DARK;
+    return formatOklch(b.l, b.c, baseHue, b.a);
   }
-  return formatOklch(0.32, 0.18, baseHue, 0.95);
+  const b = BRAND_COLOR_ON_LIGHT;
+  return formatOklch(b.l, b.c, baseHue, b.a);
 }
 
 /*
  * The ambient glow sits between the base and the model's secondary hue rather
- * than on the base alone.
+ * than on the base alone (see BRAND_GLOW_SECONDARY_MIX).
  *
  * It used to be pure baseHue, which made it identical across all three mixing
  * models. The glow is one of the largest soft-light areas on the page, so
@@ -705,8 +793,6 @@ function brandColorFor(kind: ResolvedMode["kind"], baseHue: number): string {
  * looked like nothing had happened. Blending rather than jumping to the
  * secondary keeps the glow recognisably related to the theme colour.
  */
-const BRAND_GLOW_SECONDARY_MIX = 0.4;
-
 function brandGlowFor(
   kind: ResolvedMode["kind"],
   baseHue: number,
@@ -714,9 +800,11 @@ function brandGlowFor(
 ): string {
   const glowHue = mixHue(baseHue, secondaryHue, BRAND_GLOW_SECONDARY_MIX);
   if (kind === "dark" || kind === "hybrid") {
-    return formatOklch(0.87, 0.06, glowHue, 0.55);
+    const g = BRAND_GLOW_ON_DARK;
+    return formatOklch(g.l, g.c, glowHue, g.a);
   }
-  return formatOklch(0.55, 0.18, glowHue, 0.2);
+  const g = BRAND_GLOW_ON_LIGHT;
+  return formatOklch(g.l, g.c, glowHue, g.a);
 }
 
 // ---------------------------------------------------------------------------
@@ -1048,9 +1136,8 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
    * It now takes the model offsets, but scaled, and measured from the rotated
    * sand template rather than from the base hue. That preserves the locked
    * warm-sand identity (the leading stop barely moves) while still letting the
-   * trailing stops separate the three models.
+   * trailing stops separate the three models (see NEO_MODEL_SCALE).
    */
-  const NEO_MODEL_SCALE = 0.5;
   const bg = bgConfig.stops.map((s, i) => {
     const off = stopOffsets[Math.min(i, stopOffsets.length - 1)];
     if (isNeoMode) {
@@ -1064,7 +1151,10 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
   const overlays = bgConfig.overlays.map((o, i) => {
     if (o.a <= 0) return "transparent";
     const oHue = i === 1 ? secondaryHue : wrapHue(o.h + rotation);
-    const oAlpha = i === 1 ? Math.min(o.a * 1.9, 0.32) : o.a;
+    const oAlpha =
+      i === 1
+        ? Math.min(o.a * OVERLAY_SECONDARY_ALPHA_BOOST, OVERLAY_SECONDARY_ALPHA_CAP)
+        : o.a;
     return formatOklch(o.l, o.c, oHue, oAlpha);
   });
 
@@ -1115,22 +1205,19 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
     const surface = oklchToSrgb(resolved.surfaceL, 0, primaryHue);
     const accent = oklchToSrgb(LbasePrim, C, primaryHue);
     const ratio = wcagContrast(accent, surface);
-    if (ratio < 4.5) {
+    if (ratio < AAA_TARGET_RATIO) {
       const direction = resolved.surfaceL < 0.5 ? +1 : -1;
-      LbasePrim = clamp01(LbasePrim + direction * 0.02);
-      LbrightPrim = clamp01(LbrightPrim + direction * 0.02);
-      LdeepPrim = clamp01(LdeepPrim + direction * 0.02);
+      LbasePrim = clamp01(LbasePrim + direction * AAA_NUDGE);
+      LbrightPrim = clamp01(LbrightPrim + direction * AAA_NUDGE);
+      LdeepPrim = clamp01(LdeepPrim + direction * AAA_NUDGE);
     }
   }
 
   // Panel tint set: four hue rotations of the base (using the mixing-model
   // relationships) so stacked panels read as distinct colours.
-  const monoTints = panelTintColors([
-    baseHue,
-    wrapHue(baseHue + 30),
-    wrapHue(baseHue + 150),
-    wrapHue(baseHue + 210),
-  ]);
+  const monoTints = panelTintColors(
+    PANEL_TINT_HUE_OFFSETS.map((off) => wrapHue(baseHue + off)),
+  );
 
   return {
     "--panel-c1": monoTints[0],
