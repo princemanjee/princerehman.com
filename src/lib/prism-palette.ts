@@ -252,17 +252,13 @@ const AAA_NUDGE = 0.02;
 const PANEL_TINT_L = 0.62;
 const PANEL_TINT_C = 0.17;
 /**
- * Hue offsets from the base for the four panel tints.
+ * How many distinct tints the panel-nesting system needs.
  *
- * ARBITRARY, and provably so: the call site comments claim these use "the
- * mixing-model relationships", but the models are +30 (analogous), +150
- * (split-complementary) and +180 (complementary). The fourth offset is +210,
- * which is not any of them. It looks like +180 was pushed to +210 to stop
- * tints 3 and 4 reading as near-identical, which is a real problem worth
- * solving, just not one that "+210" documents. Deriving these from the model
- * angles would change rendered output, so it is left alone here.
+ * Their hues are computed from this by panelTintHues rather than listed, so
+ * changing the count re-derives a valid set instead of requiring someone to
+ * hand-pick another angle.
  */
-const PANEL_TINT_HUE_OFFSETS = [0, 30, 150, 210] as const;
+const PANEL_TINT_COUNT = 4;
 /** Fallback hues when a caller passes nothing usable. */
 const PANEL_TINT_FALLBACK_HUES = [263, 153, 320, 85] as const;
 /** Rotation applied per pass when fewer than four seed hues were supplied. */
@@ -409,7 +405,7 @@ function resolveMode(mode: ThemeMode): ResolvedMode {
         surfaceL: 0.2,
         textL: 0.96,
         chroma: 0.2,
-        L: { base: 0.6, bright: 0.69, deep: 0.49 },
+        L: accentTriad(0.6, 0.09, 0.11),
       };
     case "hybrid":
       // Accent runs distinctly brighter than the mid-tone hybrid surface
@@ -422,7 +418,7 @@ function resolveMode(mode: ThemeMode): ResolvedMode {
         surfaceL: 0.50,
         textL: 0.97,
         chroma: 0.22,
-        L: { base: 0.68, bright: 0.78, deep: 0.60 },
+        L: accentTriad(0.68, 0.10, 0.08),
       };
     case "light":
       return {
@@ -430,7 +426,7 @@ function resolveMode(mode: ThemeMode): ResolvedMode {
         surfaceL: 0.95,
         textL: 0.22,
         chroma: 0.215,
-        L: { base: 0.5, bright: 0.58, deep: 0.42 },
+        L: accentTriad(0.5, 0.08, 0.08),
       };
     case "neomorphic":
       return {
@@ -438,7 +434,7 @@ function resolveMode(mode: ThemeMode): ResolvedMode {
         surfaceL: 0.88,
         textL: 0.32,
         chroma: 0.18,
-        L: { base: 0.5, bright: 0.58, deep: 0.42 },
+        L: accentTriad(0.5, 0.08, 0.08),
       };
   }
 }
@@ -652,6 +648,28 @@ function round(n: number, digits: number): number {
   return Math.round(n * k) / k;
 }
 
+/**
+ * Accent lightness triad for a mode.
+ *
+ * `bright` and `deep` are the base lifted and lowered, not three independent
+ * numbers. They were previously written as twelve absolute values across four
+ * modes, which hid the rule and hid the exceptions to it: every mode lowers
+ * `deep` by 0.08 except dark, which drops 0.11, and every mode lifts `bright`
+ * by 0.08 except dark (0.09) and hybrid (0.10).
+ *
+ * Stating them as deltas makes both the rule and its three deviations legible.
+ * The deviations are preserved exactly here rather than normalised, because
+ * normalising them changes rendered colour and that is a design call, not a
+ * refactor.
+ */
+function accentTriad(
+  base: number,
+  brightDelta: number,
+  deepDelta: number,
+): { base: number; bright: number; deep: number } {
+  return { base, bright: base + brightDelta, deep: base - deepDelta };
+}
+
 function formatOklch(
   L: number,
   C: number,
@@ -666,6 +684,30 @@ function formatOklch(
   }
   const ar = round(alpha, 2);
   return `oklch(${Lr} ${Cr} ${hr} / ${ar})`;
+}
+
+/**
+ * Hues for the panel tints: an even distribution around the wheel from the
+ * base, which for a count of four is the square (tetradic) scheme.
+ *
+ * This replaces a hand-written [0, +30, +150, +210] whose call site claimed it
+ * followed "the mixing-model relationships". It did not. The models are +30,
+ * +150 and +180, and +210 matched none of them; it reads like +180 nudged
+ * outward so tints 3 and 4 would stop looking alike.
+ *
+ * That instinct was right and the fix was the wrong shape. These tints are one
+ * fixed set shared by every mixing model, so anchoring them to model angles
+ * was never meaningful. What they actually owe the design is mutual
+ * distinctness, since their whole job is making nested panels separable. An
+ * even split delivers exactly that, maximising the minimum separation between
+ * any two tints (90 degrees at a count of four) instead of leaving two of them
+ * 30 degrees apart and patching it with a magic number.
+ */
+function panelTintHues(baseHue: number): number[] {
+  const step = 360 / PANEL_TINT_COUNT;
+  return Array.from({ length: PANEL_TINT_COUNT }, (_, i) =>
+    wrapHue(baseHue + i * step),
+  );
 }
 
 /**
@@ -1215,9 +1257,7 @@ export function generatePalette(request: PaletteRequest): GeneratedPalette {
 
   // Panel tint set: four hue rotations of the base (using the mixing-model
   // relationships) so stacked panels read as distinct colours.
-  const monoTints = panelTintColors(
-    PANEL_TINT_HUE_OFFSETS.map((off) => wrapHue(baseHue + off)),
-  );
+  const monoTints = panelTintColors(panelTintHues(baseHue));
 
   return {
     "--panel-c1": monoTints[0],
