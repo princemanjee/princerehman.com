@@ -40,6 +40,28 @@
   --space-3xl: 4rem;
   --space-4xl: 6rem;
 
+  /* Content width scale.
+   *
+   * Single source of truth for how wide content is allowed to run. These were
+   * previously raw pixel values repeated across a dozen files: 1200px alone
+   * appeared five times, in about, contact, work, the footer and global.css,
+   * so widening "the page" meant finding and matching every copy.
+   *
+   * Widened 20% over the original scale (640/800/1024/1200/1440/1500) to use
+   * more of the screen.
+   *
+   * These govern LAYOUT width only. Prose blocks stay on ch-based measures,
+   * which are a readability constraint rather than a layout one: a paragraph
+   * running much past ~75 characters gets harder to read, not better, so those
+   * deliberately do not scale with this.
+   */
+  --content-width-sm:  768px;  /* was 640  */
+  --content-width-md:  960px;  /* was 800  */
+  --content-width-lg:  1232px; /* was 1024 */
+  --content-width-xl:  1440px; /* was 1200 */
+  --content-width-2xl: 1728px; /* was 1440 */
+  --content-width-3xl: 1800px; /* was 1500 */
+
   --radius-sm:   8px;
   --radius-md:   16px;
   --radius-lg:   24px;

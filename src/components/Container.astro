@@ -5,12 +5,18 @@
  * Phase 1 layout primitive. Use it to constrain content to a readable
  * width and provide consistent gutters across pages.
  *
- * Sizes map to common reading widths:
- *   sm  — 640px   short-form copy, modals
- *   md  — 800px   long-form prose
- *   lg  — 1024px  general page content (default)
- *   xl  — 1200px  wider grids, case studies
- *   2xl — 1440px  full-bleed dashboards
+ * Sizes read from the --content-width-* tokens in tokens.css, which are the
+ * single source of truth for how wide content runs anywhere on the site:
+ *   sm  — 768px   short-form copy, modals
+ *   md  — 960px   long-form prose
+ *   lg  — 1232px  general page content (default)
+ *   xl  — 1440px  wider grids, case studies
+ *   2xl — 1728px  full-bleed dashboards
+ *
+ * These are layout widths, not reading measures. Prose inside a Container is
+ * still held to a ch-based max-width by the consuming page, because a line of
+ * text running much past ~75 characters is harder to read regardless of how
+ * much screen is available.
  *
  * Pass an HTML element via `as` to render as something other than div
  * (section, article, etc.). All other props are passed through.
@@ -36,11 +42,11 @@ const { size = "lg", as: Tag = "div", class: className = "" } = Astro.props;
     padding-inline: var(--space-lg);
   }
 
-  .container--sm  { max-width: 640px; }
-  .container--md  { max-width: 800px; }
-  .container--lg  { max-width: 1024px; }
-  .container--xl  { max-width: 1200px; }
-  .container--2xl { max-width: 1440px; }
+  .container--sm  { max-width: var(--content-width-sm); }
+  .container--md  { max-width: var(--content-width-md); }
+  .container--lg  { max-width: var(--content-width-lg); }
+  .container--xl  { max-width: var(--content-width-xl); }
+  .container--2xl { max-width: var(--content-width-2xl); }
 
   @media (max-width: 600px) {
     .container {

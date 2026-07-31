@@ -748,7 +748,7 @@ const availabilityLabel =
 
   /* A · WIDE — readable single column, just a touch wider than the default. */
   :global(.case-study--wide) {
-    max-width: 1120px;
+    max-width: 1344px;
     margin-inline: auto;
   }
 
@@ -772,7 +772,7 @@ const availabilityLabel =
 
   /* B · MULTI-COLUMN — wider container; panels stack, content columns inside. */
   :global(.case-study--multicol) {
-    max-width: 1360px;
+    max-width: 1632px;
     margin-inline: auto;
   }
   :global(.case-study--multicol) .case-study-body {
@@ -791,7 +791,7 @@ const availabilityLabel =
    * (flow-root) so sections beside the float shrink to fit and sections below
    * it span full width, instead of bleeding their background under the float. */
   :global(.case-study--twopane) {
-    max-width: 1500px;
+    max-width: var(--content-width-3xl);
     margin-inline: auto;
     display: block;
   }
