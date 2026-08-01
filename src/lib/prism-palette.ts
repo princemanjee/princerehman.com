@@ -259,6 +259,17 @@ const PANEL_TINT_C = 0.17;
  * hand-pick another angle.
  */
 const PANEL_TINT_COUNT = 4;
+
+/**
+ * Strongest tint wash a panel can carry, used when guaranteeing text contrast.
+ *
+ * Consumers mix a panel tint over the glass surface at their own ratio: 18% for
+ * the CV's section panels, 20% and 36% for the nested levels in a case study.
+ * The contrast guarantee has to hold on the most heavily washed of those, so it
+ * binds here rather than at the lightest one. Raise this if any consumer ever
+ * mixes more strongly, or the guarantee stops covering that surface.
+ */
+const PANEL_TINT_MAX_MIX = 0.36;
 /** Fallback hues when a caller passes nothing usable. */
 const PANEL_TINT_FALLBACK_HUES = [263, 153, 320, 85] as const;
 /** Rotation applied per pass when fewer than four seed hues were supplied. */
@@ -909,11 +920,10 @@ function minContrastAcross(text: SrgbTriplet, surfaces: SrgbTriplet[]): number {
  */
 function guaranteeTextColor(
   text: ParsedOklch,
-  surfaces: ParsedOklch[],
+  surfRgbs: SrgbTriplet[],
   threshold: number,
 ): ParsedOklch {
-  if (surfaces.length === 0) return text;
-  const surfRgbs = surfaces.map(srgbOf);
+  if (surfRgbs.length === 0) return text;
   if (minContrastAcross(srgbOf(text), surfRgbs) >= threshold) return text;
   const blackMin = minContrastAcross(srgbOf(FAILOVER_BLACK), surfRgbs);
   const whiteMin = minContrastAcross(srgbOf(FAILOVER_WHITE), surfRgbs);
@@ -949,11 +959,10 @@ function blendOver(text: SrgbTriplet, surf: SrgbTriplet, alpha: number): SrgbTri
  */
 function minAlphaForContrast(
   text: ParsedOklch,
-  worstSurf: ParsedOklch,
+  s: SrgbTriplet,
   threshold: number,
 ): number {
   const t = srgbOf(text);
-  const s = srgbOf(worstSurf);
   if (wcagContrast(blendOver(t, s, 1), s) < threshold) return 1; // unreachable
   let lo = 0;
   let hi = 1;
@@ -991,7 +1000,7 @@ const TEXT_ALPHA_SHAPE = [1, 0.744, 0.372, 0] as const;
 
 function textAlphaLadder(
   text: ParsedOklch,
-  surfaces: ParsedOklch[],
+  surfaces: SrgbTriplet[],
   threshold: number,
 ): [number, number, number, number] {
   /*
@@ -1141,7 +1150,34 @@ export function generatePresetPalette(
   // text fails, fail over to black/white; then raise each token's alpha until
   // its composited contrast also clears the threshold.
   const threshold = textThreshold(contrast);
-  const textSurfaces = [...scheme.bg, ...scheme.panel].map(parse);
+  /*
+   * Every surface text can actually land on, in sRGB so composited variants
+   * can join the list.
+   *
+   * Panels are not rendered bare: consumers mix a panel tint over them (18% on
+   * the CV's section panels, up to 36% for the nested cards in a case study),
+   * which shifts panel luminance by roughly 1.2x and eats the contrast margin.
+   * Binding the text guarantee to the bare panel left 43% of
+   * text-on-tinted-panel combinations under their target. The washed variants
+   * are included at the strongest mix so the worst real case is covered.
+   */
+  const bareSurfaces = [...scheme.bg, ...scheme.panel]
+    .map(parse)
+    .filter((x): x is ParsedOklch => x !== null)
+    .map(srgbOf);
+  const panelRgbs = scheme.panel
+    .map(parse)
+    .filter((x): x is ParsedOklch => x !== null)
+    .map(srgbOf);
+  const tintedSurfaces: SrgbTriplet[] = [];
+  for (const panelRgb of panelRgbs) {
+    for (const tint of presetTints) {
+      const tp = parse(tint);
+      if (!tp) continue;
+      tintedSurfaces.push(blendOver(srgbOf(tp), panelRgb, PANEL_TINT_MAX_MIX));
+    }
+  }
+  const textSurfaces = [...bareSurfaces, ...tintedSurfaces];
   const textP = guaranteeTextColor(parse(scheme.text), textSurfaces, threshold);
   const [aPrimary, aSecondary, aTertiary, aMuted] = textAlphaLadder(
     textP,
