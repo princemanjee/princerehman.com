@@ -920,18 +920,6 @@ function guaranteeTextColor(
   return whiteMin >= blackMin ? FAILOVER_WHITE : FAILOVER_BLACK;
 }
 
-/** The surface (among the set) that contrasts least with the given text. */
-function worstSurfaceFor(text: ParsedOklch, surfaces: ParsedOklch[]): ParsedOklch {
-  const t = srgbOf(text);
-  let worst = surfaces[0];
-  let worstRatio = Infinity;
-  for (const s of surfaces) {
-    const r = wcagContrast(t, srgbOf(s));
-    if (r < worstRatio) { worstRatio = r; worst = s; }
-  }
-  return worst;
-}
-
 /** Gamma-sRGB composite of translucent text painted over a surface. */
 function blendOver(text: SrgbTriplet, surf: SrgbTriplet, alpha: number): SrgbTriplet {
   return {
@@ -946,20 +934,94 @@ function blendOver(text: SrgbTriplet, surf: SrgbTriplet, alpha: number): SrgbTri
  * the worst surface. Caps at 1. Because the base text color is guaranteed to
  * pass at full opacity, this always terminates with a passing alpha.
  */
-function alphaForContrast(
+/**
+ * Lowest text alpha that still clears the contrast threshold on its worst
+ * surface, found by bisection.
+ *
+ * Contrast is monotonic in alpha here: at alpha 0 the composite IS the surface
+ * (ratio 1), and every increment moves it toward the text colour, so bisection
+ * is safe.
+ *
+ * This replaces a routine that walked UP from a desired alpha in 0.02 steps and
+ * stopped at the first passing value. That produced the text-hierarchy collapse
+ * described on TEXT_ALPHA_SHAPE: every level was handed the same threshold, so
+ * every level that started too low converged on the same first passing alpha.
+ */
+function minAlphaForContrast(
   text: ParsedOklch,
   worstSurf: ParsedOklch,
-  desired: number,
   threshold: number,
 ): number {
   const t = srgbOf(text);
   const s = srgbOf(worstSurf);
-  let a = desired;
-  for (let i = 0; i < 50 && a < 1; i++) {
-    if (wcagContrast(blendOver(t, s, a), s) >= threshold) return round(a, 2);
-    a += 0.02;
+  if (wcagContrast(blendOver(t, s, 1), s) < threshold) return 1; // unreachable
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (wcagContrast(blendOver(t, s, mid), s) >= threshold) hi = mid;
+    else lo = mid;
   }
-  return 1;
+  return hi;
+}
+
+/**
+ * Build the four text alphas for a palette.
+ *
+ * The old code asked for a fixed ladder (0.97 / 0.86 / 0.70 / 0.54) and raised
+ * any rung that failed contrast. Because all four rungs were held to the SAME
+ * threshold, the lower ones kept getting raised onto each other: an audit of
+ * every preset x mode x contrast combination found 59% had at least two levels
+ * resolve to an identical alpha, and charcoal-noir/hybrid/AAA collapsed three
+ * of the four to 0.94. The hierarchy silently disappeared exactly where the
+ * surface was most demanding.
+ *
+ * The floor is not negotiable: all body text has to clear the threshold. So
+ * rather than start from fixed values and push up, the ladder is rebased onto
+ * the range that is actually available, [minimum passing alpha .. top]. Every
+ * rung clears the threshold by construction, and the rungs stay ordered and
+ * distinct as long as the range has any width at all.
+ *
+ * The shape is the original ladder normalised to fractions of its own span, so
+ * the designed rhythm of the hierarchy is preserved, just stretched or
+ * compressed to fit what the surface permits.
+ */
+const TEXT_ALPHA_TOP = 0.97;
+const TEXT_ALPHA_SHAPE = [1, 0.744, 0.372, 0] as const;
+
+function textAlphaLadder(
+  text: ParsedOklch,
+  surfaces: ParsedOklch[],
+  threshold: number,
+): [number, number, number, number] {
+  /*
+   * Bind against EVERY surface, not against a single pre-picked "worst" one.
+   *
+   * worstSurfaceFor ranks surfaces at full text opacity, but the composite at
+   * partial alpha sits between the surface and the text, and which surface is
+   * hardest can reorder as alpha drops. Selecting a worst surface first and
+   * solving only for that one left pride/hybrid/AA muted at 4.25 against a 4.5
+   * target: it cleared the chosen surface and failed a different stop. Taking
+   * the maximum required alpha across all of them makes the binding constraint
+   * the actual binding constraint.
+   */
+  const aMin = surfaces.length
+    ? Math.max(...surfaces.map((s) => minAlphaForContrast(text, s, threshold)))
+    : 0;
+  // If even the top of the intended range is below the floor, open the range
+  // upward to 1 so the rungs still have somewhere to spread.
+  const aTop = aMin >= TEXT_ALPHA_TOP ? 1 : TEXT_ALPHA_TOP;
+  const span = Math.max(0, aTop - aMin);
+  /*
+   * Round UP, never to-nearest. aMin is the exact point where the threshold is
+   * met, so rounding the bottom rung down by even 0.005 puts it back under the
+   * floor: an audit caught muted landing at 6.95 against a AAA target of 7, and
+   * at 4.25 and 4.45 against AA targets of 4.5. Rounding up can only ever
+   * increase contrast, so it is safe for every rung.
+   */
+  const ceil2 = (x: number) => Math.min(1, Math.ceil(x * 100) / 100);
+  const [p, s, t, m] = TEXT_ALPHA_SHAPE.map((f) => ceil2(aMin + span * f));
+  return [p, s, t, m];
 }
 
 /**
@@ -1081,11 +1143,11 @@ export function generatePresetPalette(
   const threshold = textThreshold(contrast);
   const textSurfaces = [...scheme.bg, ...scheme.panel].map(parse);
   const textP = guaranteeTextColor(parse(scheme.text), textSurfaces, threshold);
-  const worstSurf = worstSurfaceFor(textP, textSurfaces);
-  const aPrimary = alphaForContrast(textP, worstSurf, 0.97, threshold);
-  const aSecondary = alphaForContrast(textP, worstSurf, 0.86, threshold);
-  const aTertiary = alphaForContrast(textP, worstSurf, 0.70, threshold);
-  const aMuted = alphaForContrast(textP, worstSurf, 0.54, threshold);
+  const [aPrimary, aSecondary, aTertiary, aMuted] = textAlphaLadder(
+    textP,
+    textSurfaces,
+    threshold,
+  );
   const ta = (a: number) => formatOklch(textP.l, textP.c, textP.h, a);
 
   const aP = parse(scheme.accents[0] ?? "oklch(0.6 0.18 263)");
