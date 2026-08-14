@@ -1,9 +1,9 @@
 {
   "_snapshotMeta": {
     "source": "JobApplyFramework/Assets/resume.json",
-    "snapshotDate": "2026-07-30",
-    "sha256": "170adf35652492f089b258447b1d9720dc7c476db288dbefede3150217911896",
-    "syncedAt": "2026-07-30T20:06:42.074Z"
+    "snapshotDate": "2026-08-08",
+    "sha256": "fe5512d7578f9a281ba01abbe185305ad9654aed1b0775de2b5f0ae702138d35",
+    "syncedAt": "2026-08-08T19:22:24.992Z"
   },
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
@@ -678,17 +678,56 @@
         "Prompt Engineering",
         "AI Literacy",
         "Automation Strategy",
+        "Agentic Workflows",
+        "Multi-Agent Orchestration",
+        "Retrieval Augmented Generation (RAG)",
+        "Vector Databases",
+        "Embeddings",
+        "Semantic Search",
+        "Model Context Protocol (MCP)",
+        "Tool Use and Function Calling",
+        "Model Evaluation",
+        "Model Routing",
+        "Responsible AI Use",
+        "AI Governance",
+        "Copilot Readiness",
+        "AI Workflow Integration",
+        "Local LLMs",
         "OpenAI",
         "Anthropic",
         "Google AI",
         "Grok",
-        "Ollama",
+        "Huggingface"
+      ]
+    },
+    {
+      "name": "AI Development Tooling & Agentic Engineering",
+      "level": "Expert",
+      "keywords": [
+        "Claude Code",
+        "Claude Design",
+        "Claude CLI",
+        "Claude Agent SDK",
+        "Gemini CLI",
+        "Antigravity",
+        "Trae",
+        "Arena.ai",
+        "Bonzai Frontier Models",
         "LM Studio",
-        "Huggingface",
-        "Local LLMs",
-        "Model Evaluation",
-        "Responsible AI Use",
-        "AI Workflow Integration"
+        "Ollama",
+        "OpenWebUI",
+        "Custom Skills Development",
+        "Custom Plugin Development",
+        "Agent Extensions",
+        "Cross-Platform Skill Portability (Claude and Gemini)",
+        "MCP Server Development",
+        "Slash Commands and Subagents",
+        "n8n",
+        "Agentic Pipeline Design",
+        "Vector Store Design",
+        "Chunking and Retrieval Strategy",
+        "Evaluation Harnesses",
+        "Prompt Libraries and Versioning"
       ]
     },
     {
@@ -723,6 +762,68 @@
     }
   ],
   "projects": [
+    {
+      "name": "Custom Agent Skills, Plugins and Extensions for Claude and Gemini",
+      "description": "Built custom skills, plugins and extensions across both the Anthropic and Google agent platforms, and established a bidirectional porting path between the two so a capability authored for one runs on the other. Working daily across Claude Code, Claude Design, the Claude and Gemini command line tools, Antigravity, Trae, Arena.ai and Bonzai frontier models surfaced how much capability is locked to a single vendor's packaging rather than to the underlying model.",
+      "highlights": [
+        "Authored custom skills, plugins and extensions for both Claude and Gemini agent platforms.",
+        "Converted skills between the Claude and Gemini formats in both directions, so capability is portable rather than tied to one vendor.",
+        "Ran local and hosted models side by side through LM Studio, Ollama and OpenWebUI to compare cost, latency and output quality on the same task.",
+        "Standardized the results into versioned prompt and context engineering libraries used to make model behaviour repeatable across teams."
+      ],
+      "keywords": [
+        "Claude Code",
+        "Gemini CLI",
+        "Model Context Protocol",
+        "Agent Skills",
+        "Plugins",
+        "Extensions",
+        "LM Studio",
+        "Ollama",
+        "OpenWebUI",
+        "Local LLMs",
+        "Antigravity",
+        "Trae",
+        "Arena.ai",
+        "Bonzai"
+      ],
+      "startDate": "2025-01",
+      "endDate": "",
+      "roles": [
+        "Builder",
+        "AI Engineer"
+      ],
+      "entity": "Independent",
+      "type": "application"
+    },
+    {
+      "name": "Agentic Workflows and Retrieval Augmented Generation",
+      "description": "Designed and built agentic workflows in n8n, backed by purpose-built vector databases for retrieval augmented generation. Each store is scoped to a single domain rather than pooled, because retrieval quality degrades once unrelated content shares an index.",
+      "highlights": [
+        "Built multi-step agentic workflows in n8n that call models, tools and downstream systems under defined conditions rather than on a fixed schedule.",
+        "Stood up special-purpose vector databases for RAG, scoped per domain to keep retrieval precision high as the corpus grows.",
+        "Tuned chunking, embedding and retrieval strategy against measured answer quality instead of default settings.",
+        "Applied the same governance stance as the orchestration work: defined tool permissions and a reconstructable trail of what the agent did."
+      ],
+      "keywords": [
+        "n8n",
+        "Agentic Workflows",
+        "RAG",
+        "Vector Databases",
+        "Embeddings",
+        "Semantic Search",
+        "Workflow Automation",
+        "AI Orchestration"
+      ],
+      "startDate": "2025-01",
+      "endDate": "",
+      "roles": [
+        "Architect",
+        "Builder"
+      ],
+      "entity": "Independent",
+      "type": "application"
+    },
     {
       "name": "CONFIDENTIAL | Cybersecurity & Disaster Recovery Lead",
       "description": "Brought in on a 30‑day emergency contract to help Cognesense recover from a severe ransomware incident caused by a SonicWall router exploit. I led an on-site technical response team to stabilize operations, isolate infected assets, and manage communications with attackers. I developed custom playbooks for network restoration, oversaw forensic data analysis, and guided negotiations to minimize damage. Once operations were stabilized, I re‑architected the organization’s systems to improve resilience and trained staff on incident response, reducing exposure to future exploits.",
